@@ -43,9 +43,9 @@ such as: take-off, landing, polynomial trajectories.
 #include <math.h>
 
 /* FreeRtos includes */
-#include "FreeRTOS.h"
-#include "task.h"
-#include "semphr.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
 
 // Crazyswarm includes
 #include "crtp.h"
@@ -53,7 +53,11 @@ such as: take-off, landing, polynomial trajectories.
 #include "planner.h"
 #include "log.h"
 #include "param.h"
+#include "stm32_legacy.h"
 #include "static_mem.h"
+
+#define DEBUG_MODULE "CTRL_HL"
+#include "debug_cf.h"
 
 // Local types
 enum TrajectoryLocation_e {
@@ -303,6 +307,7 @@ void crtpCommanderHighLevelTask(void * prm)
 
   while(1) {
     crtpReceivePacketBlock(CRTP_PORT_SETPOINT_HL, &p);
+	DEBUG_PRINTD("6.crtpCommanderHighLevelTask crtpReceivePacketBlock data = %02x !", p.data[0]);
 
     switch(p.data[0])
     {
@@ -357,6 +362,7 @@ int takeoff(const struct data_takeoff* data)
   int result = 0;
   if (isInGroup(data->groupMask)) {
     xSemaphoreTake(lockTraj, portMAX_DELAY);
+    DEBUG_PRINTD("take off !!!!!");
     float t = usecTimestamp() / 1e6;
     result = plan_takeoff(&planner, pos, yaw, data->height, 0.0f, data->duration, t);
     xSemaphoreGive(lockTraj);

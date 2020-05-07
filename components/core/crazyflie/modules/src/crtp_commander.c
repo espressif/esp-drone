@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie Firmware
+ * ESPlane Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2017 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,11 +27,11 @@
 #include <stdbool.h>
 
 #include "crtp_commander.h"
-
 #include "cfassert.h"
 #include "commander.h"
 #include "crtp.h"
-
+#define DEBUG_MODULE "CRTP_CMD"
+#include "debug_cf.h"
 
 static bool isInit;
 

@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
- *
+ * ESPlane Firmware
+ * 
+ * Copyright 2019-2020  Espressif Systems (Shanghai) 
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -45,13 +46,13 @@
 #define PID_YAW_RATE_KD  0.0
 #define PID_YAW_RATE_INTEGRATION_LIMIT     166.7
 
-#define PID_ROLL_KP  6.0
-#define PID_ROLL_KI  3.0
+#define PID_ROLL_KP  5.9
+#define PID_ROLL_KI  2.9
 #define PID_ROLL_KD  0.0
 #define PID_ROLL_INTEGRATION_LIMIT    20.0
 
-#define PID_PITCH_KP  6.0
-#define PID_PITCH_KI  3.0
+#define PID_PITCH_KP  5.9
+#define PID_PITCH_KI  2.9
 #define PID_PITCH_KD  0.0
 #define PID_PITCH_INTEGRATION_LIMIT   20.0
 

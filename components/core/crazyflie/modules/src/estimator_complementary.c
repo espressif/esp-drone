@@ -5,8 +5,9 @@
  * | / ,--´  |    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *    +------`   /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
+ * ESPlane Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2019 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,11 +26,9 @@
  * estimator_complementary.c - a complementary estimator
  */
 
-#include "stm32f4xx.h"
-
-#include "FreeRTOS.h"
-#include "queue.h"
-
+#define DEBUG_MODULE "ESTIMATOR_C"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 #include "stabilizer.h"
 #include "estimator_complementary.h"
 #include "sensfusion6.h"
@@ -109,7 +108,8 @@ static bool latestTofMeasurement(tofMeasurement_t* tofMeasurement) {
 static bool overwriteMeasurement(xQueueHandle queue, void *measurement)
 {
   portBASE_TYPE result;
-  bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+  //TODO:
+  bool isInInterrupt = false;//(SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
 
   if (isInInterrupt) {
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;

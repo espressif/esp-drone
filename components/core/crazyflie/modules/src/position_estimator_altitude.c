@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie Firmware
+ * ESPlane Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2016 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,15 +25,14 @@
  * position_estimator_altitude.c: Altitude-only position estimator
  */
 
-#include "stm32f4xx.h"
-
-#include "FreeRTOS.h"
-#include "task.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include "log.h"
 #include "param.h"
 #include "num.h"
 #include "position_estimator.h"
+#include "stm32_legacy.h"
 
 #define G 9.81f;
 

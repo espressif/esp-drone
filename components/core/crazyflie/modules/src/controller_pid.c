@@ -1,4 +1,4 @@
-
+#define DEBUG_MODULE "CTRL_P"
 #include "stabilizer.h"
 #include "stabilizer_types.h"
 
@@ -8,6 +8,7 @@
 #include "controller_pid.h"
 
 #include "log.h"
+#include "debug_cf.h"
 #include "param.h"
 #include "math3d.h"
 
@@ -39,6 +40,7 @@ bool controllerPidTest(void)
   bool pass = true;
 
   pass &= attitudeControllerTest();
+  DEBUG_PRINTD("controller_Pid_Test = %d", pass);
 
   return pass;
 }

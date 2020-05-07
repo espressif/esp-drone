@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
+ * ESPlane Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,22 +27,23 @@
 
 #include <stdbool.h>
 #include <errno.h>
-
 /*FreeRtos includes*/
-#include "FreeRTOS.h"
-#include "task.h"
-#include "semphr.h"
-#include "queue.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
+#include "freertos/queue.h"
 
 #include "config.h"
-
 #include "crtp.h"
 #include "info.h"
 #include "cfassert.h"
 #include "queuemonitor.h"
 #include "static_mem.h"
-
 #include "log.h"
+
+#define DEBUG_MODULE "CRTP"
+#include "debug_cf.h"
+#include "stm32_legacy.h"
 
 
 static bool isInit;

@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie Firmware
+ * ESPlane Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2016 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,6 +34,10 @@
 #include "pid.h"
 #include "num.h"
 #include "position_controller.h"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 struct pidInit_s {
   float kp;
@@ -98,7 +103,7 @@ static struct this_s this = {
 
   .pidVZ = {
     .init = {
-      .kp = 25,
+      .kp = 22,
       .ki = 15,
       .kd = 0,
     },
@@ -107,8 +112,8 @@ static struct this_s this = {
 
   .pidX = {
     .init = {
-      .kp = 2.0f,
-      .ki = 0,
+      .kp = 1.9f,
+      .ki = 0.1f,
       .kd = 0,
     },
     .pid.dt = DT,
@@ -116,8 +121,8 @@ static struct this_s this = {
 
   .pidY = {
     .init = {
-      .kp = 2.0f,
-      .ki = 0,
+      .kp = 1.9f,
+      .ki = 0.1f,
       .kd = 0,
     },
     .pid.dt = DT,
@@ -125,7 +130,7 @@ static struct this_s this = {
 
   .pidZ = {
     .init = {
-      .kp = 2.0f,
+      .kp = 1.6f,
       .ki = 0.5,
       .kd = 0,
     },

@@ -24,6 +24,7 @@
  */
 
 #include "controller_indi.h"
+#include "cf_math.h"
 
 static float thrust_threshold = 300.0f;
 static float bound_control_input = 32000.0f;

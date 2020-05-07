@@ -27,20 +27,22 @@
 #include <errno.h>
 
 /* FreeRtos includes */
-#include "FreeRTOS.h"
-#include "task.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include "config.h"
 #include "crtp.h"
 #include "param.h"
 #include "crc.h"
 #include "console.h"
-#include "debug.h"
+#define DEBUG_MODULE "PARAM"
+#include "debug_cf.h"
+#include "stm32_legacy.h"
 #include "static_mem.h"
 
 #if 0
-#define PARAM_DEBUG(fmt, ...) DEBUG_PRINT("D/param " fmt, ## __VA_ARGS__)
-#define PARAM_ERROR(fmt, ...) DEBUG_PRINT("E/param " fmt, ## __VA_ARGS__)
+#define PARAM_DEBUG(fmt, ...) DEBUG_PRINTD("D/param " fmt, ## __VA_ARGS__)
+#define PARAM_ERROR(fmt, ...) DEBUG_PRINTD("E/param " fmt, ## __VA_ARGS__)
 #else
 #define PARAM_DEBUG(...)
 #define PARAM_ERROR(...)

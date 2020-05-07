@@ -29,11 +29,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "imu_types.h"
-#include "lighthouse_geometry.h"
+//#include "lighthouse_geometry.h"
 
 /* Data structure used by the stabilizer subsystem.
  * All have a timestamp to be set when the data is calculated.
  */
+
+// Naive 3d vector type. new type copy from lighthouse_geometry.h
+#define vec3d_size 3
+typedef float vec3d[vec3d_size];
+typedef float mat3d[vec3d_size][vec3d_size];
+
 
 /** Attitude in euler angle form */
 typedef struct attitude_s {

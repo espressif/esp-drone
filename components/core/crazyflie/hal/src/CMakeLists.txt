@@ -1,0 +1,10 @@
+idf_component_register(SRCS "buzzer.c" 
+                "freeRTOSdebug.c" 
+                "ledseq.c" 
+                "pm_esplane.c" 
+                "sensors_mpu6050_hm5883L_ms5611.c" 
+                "sensors.c" 
+                "usec_time.c" 
+                "wifilink.c"
+            INCLUDE_DIRS "." "include"
+                REQUIRES i2c_bus deck_esp32 mpu6050 ms5611 hmc5883l pmw3901 vl53l1 vl53l0 utils platform main)

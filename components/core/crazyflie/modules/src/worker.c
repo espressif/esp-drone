@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
+ * ESPlane Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,17 +24,20 @@
  *
  * worker.c - Worker system that can execute asynchronous actions in tasks
  */
-#include "worker.h"
+
 
 #include <errno.h>
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+
+#include "worker.h"
 #include "queuemonitor.h"
 #include "static_mem.h"
 
 #include "console.h"
+#include "stm32_legacy.h"
 
 #define WORKER_QUEUE_LENGTH 5
 

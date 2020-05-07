@@ -28,7 +28,7 @@
 #include "outlierFilter.h"
 #include "stabilizer_types.h"
 #include "log.h"
-#include "debug.h"
+#include "debug_cf.h"
 
 #define BUCKET_ACCEPTANCE_LEVEL 3
 #define MAX_BUCKET_FILL 10

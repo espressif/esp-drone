@@ -31,9 +31,10 @@
  */
 
 #include "msp.h"
-#include "debug.h"
 #include "sensfusion6.h"
 #include "commander.h"
+#define DEBUG_MODULE "MSP"
+#include "debug_cf.h"
 
 // MSP command IDs
 #define MSP_STATUS    101
@@ -192,21 +193,21 @@ bool mspIsRequestValid(MspObject* pMspObject)
       pMspObject->requestHeader.preamble[1] != MSP_PREAMBLE_1)
   {
     // Invalid preamble
-    DEBUG_PRINT("MSP Request has invalid preamble %d %d\n", pMspObject->requestHeader.preamble[0], pMspObject->requestHeader.preamble[1]);
+    DEBUG_PRINTD("MSP Request has invalid preamble %d %d\n", pMspObject->requestHeader.preamble[0], pMspObject->requestHeader.preamble[1]);
     return false;
   }
 
   if(pMspObject->requestHeader.direction != MSP_DIRECTION_IN)
   {
     // Requests should be inputs
-    DEBUG_PRINT("MSP Request has invalid direction %d\n", pMspObject->requestHeader.direction);
+    DEBUG_PRINTD("MSP Request has invalid direction %d\n", pMspObject->requestHeader.direction);
     return false;
   }
 
   if(pMspObject->requestHeader.size != 0)
   {
     // Requests should not have a payload
-    DEBUG_PRINT("MSP Request has invalid size %d\n", pMspObject->requestHeader.size);
+    DEBUG_PRINTD("MSP Request has invalid size %d\n", pMspObject->requestHeader.size);
     return false;
   }
 
@@ -214,7 +215,7 @@ bool mspIsRequestValid(MspObject* pMspObject)
       mspComputeCrc((uint8_t*)&pMspObject->requestHeader, sizeof(pMspObject->requestHeader)))
   {
     // CRC does not match
-    DEBUG_PRINT("MSP Request has invalid crc (%d != %d)\n", pMspObject->requestCrc, mspComputeCrc((uint8_t*)&pMspObject->requestHeader, sizeof(pMspObject->requestHeader)));
+    DEBUG_PRINTD("MSP Request has invalid crc (%d != %d)\n", pMspObject->requestCrc, mspComputeCrc((uint8_t*)&pMspObject->requestHeader, sizeof(pMspObject->requestHeader)));
     return false;
   }
 

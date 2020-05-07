@@ -28,13 +28,13 @@
 
 #include <stdbool.h>
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/timers.h"
+#include "freertos/semphr.h"
+
 #include "ledseq.h"
-
-#include "FreeRTOS.h"
-#include "timers.h"
-#include "semphr.h"
-
 #include "led.h"
+#include "stm32_legacy.h"
 
 #ifdef CALIBRATED_LED_MORSE
   #define DOT 100
@@ -212,7 +212,7 @@ bool ledseqTest(void)
   status = isInit & ledTest();
   #ifdef TURN_OFF_LEDS
   ledseqEnable(false);
-  ledSet(LED_BLUE_L, 0);
+  ledSet(LED_BLUE, 0);
   #else
   ledseqEnable(true);
   #endif

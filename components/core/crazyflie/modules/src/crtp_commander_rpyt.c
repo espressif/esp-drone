@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie Firmware
+ * ESPlane Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2017 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,8 +32,9 @@
 #include "commander.h"
 #include "crtp.h"
 #include "param.h"
-#include "FreeRTOS.h"
+#include "freertos/FreeRTOS.h"
 #include "num.h"
+#include "stm32_legacy.h"
 
 #define MIN_THRUST  1000
 #define MAX_THRUST  60000

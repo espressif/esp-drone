@@ -23,17 +23,17 @@
  *
  * power_distribution_stock.c - Crazyflie stock power distribution code
  */
-#define DEBUG_MODULE "PWR_DIST"
-
-#include "power_distribution.h"
 
 #include <string.h>
+
+#include "power_distribution.h"
 #include "log.h"
 #include "param.h"
 #include "num.h"
 #include "platform.h"
 #include "motors.h"
-#include "debug.h"
+#define DEBUG_MODULE "PWR_DIST"
+#include "debug_cf.h"
 
 static bool motorSetEnable = false;
 

@@ -60,12 +60,13 @@
 #include "estimator_kalman.h"
 #include "kalman_supervisor.h"
 
-#include "stm32f4xx.h"
 
-#include "FreeRTOS.h"
-#include "queue.h"
-#include "task.h"
-#include "semphr.h"
+#include "stm32_legacy.h"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "sensors.h"
 #include "static_mem.h"
 
@@ -77,7 +78,7 @@
 #include "statsCnt.h"
 
 #define DEBUG_MODULE "ESTKALMAN"
-#include "debug.h"
+#include "debug_cf.h"
 
 
 // #define KALMAN_USE_BARO_UPDATE
@@ -257,14 +258,25 @@ static const bool useBaroUpdate = false;
  * Supporting and utility functions
  */
 
-static inline void mat_trans(const arm_matrix_instance_f32 * pSrc, arm_matrix_instance_f32 * pDst)
-  { configASSERT(ARM_MATH_SUCCESS == arm_mat_trans_f32(pSrc, pDst)); }
-static inline void mat_inv(const arm_matrix_instance_f32 * pSrc, arm_matrix_instance_f32 * pDst)
-  { configASSERT(ARM_MATH_SUCCESS == arm_mat_inverse_f32(pSrc, pDst)); }
-static inline void mat_mult(const arm_matrix_instance_f32 * pSrcA, const arm_matrix_instance_f32 * pSrcB, arm_matrix_instance_f32 * pDst)
-  { configASSERT(ARM_MATH_SUCCESS == arm_mat_mult_f32(pSrcA, pSrcB, pDst)); }
-static inline float arm_sqrt(float32_t in)
-  { float pOut = 0; arm_status result = arm_sqrt_f32(in, &pOut); configASSERT(ARM_MATH_SUCCESS == result); return pOut; }
+static inline void mat_trans(const xtensa_matrix_instance_f32 *pSrc, xtensa_matrix_instance_f32 *pDst)
+{
+    configASSERT(XTENSA_MATH_SUCCESS == xtensa_mat_trans_f32(pSrc, pDst));
+}
+static inline void mat_inv(const xtensa_matrix_instance_f32 *pSrc, xtensa_matrix_instance_f32 *pDst)
+{
+    configASSERT(XTENSA_MATH_SUCCESS == xtensa_mat_inverse_f32(pSrc, pDst));
+}
+static inline void mat_mult(const xtensa_matrix_instance_f32 *pSrcA, const xtensa_matrix_instance_f32 *pSrcB, xtensa_matrix_instance_f32 *pDst)
+{
+    configASSERT(XTENSA_MATH_SUCCESS == xtensa_mat_mult_f32(pSrcA, pSrcB, pDst));
+}
+static inline float xtensa_sqrt(float32_t in)
+{
+    float pOut = 0;
+    xtensa_status result = xtensa_sqrt_f32(in, &pOut);
+    configASSERT(XTENSA_MATH_SUCCESS == result);
+    return pOut;
+}
 
 static void kalmanTask(void* parameters);
 static bool predictStateForward(uint32_t osTick, float dt);
@@ -604,7 +616,7 @@ void estimatorKalmanInit(void) {
 static bool appendMeasurement(xQueueHandle queue, void *measurement)
 {
   portBASE_TYPE result;
-  bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+  bool isInInterrupt = 0; //TODO:= (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
 
   if (isInInterrupt) {
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;

@@ -29,6 +29,10 @@
 #include "log.h"
 #include "param.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #define M_PI_F ((float) M_PI)
 
 //#define MADWICK_QUATERNION_IMU

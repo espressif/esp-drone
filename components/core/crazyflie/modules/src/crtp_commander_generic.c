@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie Firmware
+ * ESPlane Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2017 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,14 +28,15 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "crtp_commander.h"
+#include "freertos/FreeRTOS.h"
 
+#include "crtp_commander.h"
 #include "commander.h"
 #include "param.h"
 #include "crtp.h"
 #include "num.h"
 #include "quatcompress.h"
-#include "FreeRTOS.h"
+#include "stm32_legacy.h"
 
 /* The generic commander format contains a packet type and data that has to be
  * decoded into a setpoint_t structure. The aim is to make it future-proof

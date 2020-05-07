@@ -25,8 +25,8 @@
  */
 
 #include <string.h>
-#include "FreeRTOS.h"
-#include "task.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include "config.h"
 #include "deck.h"
@@ -36,7 +36,7 @@
 #include "param.h"
 #include "log.h"
 
-#include "stm32fxxx.h"
+#include "stm32_legacy.h"
 #include "static_mem.h"
 
 /* Flag indicating if the proximityInit() function has been called or not. */
