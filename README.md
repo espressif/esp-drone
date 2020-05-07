@@ -8,9 +8,9 @@
 
 **ESPlane2-S2** is an open source **drone solution** based on espressif **ESP32-S2** Wi-Fi chip, which can be controlled through **Wi-Fi** network using mobile APP or gamepad. ESPlane2-S2 supports multiple fly modes, `stabilize`, `height-hold`, `position-hold` and more. ESPlane2-S2 solution has **simple hardware structure**,**clear and extendible code architecture**, can be used in **STEAM education** and other fields. The main code ported from **Crazyflie** open source project, using the **GPL3.0** open source protocol.
 
-**For User**: [01-ESPlane2.0 Operate Guide](esplane2.0-kai-fa-bi-ji/00esplane-shang-wei-ji-an-zhuang-zhi-yin.md)
+**For User**: [01-ESPlane2.0 Operate Guide](https://qljz1993.gitbook.io/esplane/v/english/operater-guide/00esplane-shang-wei-ji-an-zhuang-zhi-yin)
 
-**For Developer**: [01-ESPlane2.0 Develop Guide](esplane2.0-kai-fa-bi-ji/00esplane-kai-fa-zhi-yin.md)
+**For Developer**: [01-ESPlane2.0 Develop Guide](https://qljz1993.gitbook.io/esplane/v/english/developer-guide/00esplane-kai-fa-zhi-yin)
 
 ![ESPlane](https://img-blog.csdnimg.cn/20191030202043361.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
 
@@ -37,17 +37,6 @@
 |PMW3901|	HSPI | | 
 
 #### LED
-
-
-```
-#define LINK_LED         LED_BLUE
-//#define CHG_LED          LED_RED
-#define LOWBAT_LED       LED_RED
-//#define LINK_DOWN_LED  LED_BLUE
-#define SYS_LED          LED_GREEN 
-#define ERR_LED1         LED_RED
-#define ERR_LED2         LED_RED
-```
 
 | State | LED | Action |
 |--|--|--|
@@ -81,7 +70,7 @@
 | GPIO2 | ADC\_7\_BAT | VBAT/2 |
 | GPIO1 |EXT_IO1  |  |
 
-#### Extend PIN
+#### Deck Extend PIN
 
 | Left | IO |Function | Right | IO |Function|
 | :---: | :---: | :---: | :---: | :---: | :---:|
@@ -115,8 +104,7 @@
 
 |ESPlane|CommitID| ESP-IDF|CommitID|
 | :---: | :---: | :---: | :---: |
-|master||release/v3.3 update20200306|6f9a7264ce20c6132fbd8309112630d0eb490fe4|
-|Esplane-S2||master update20200404|d85d3d969ff4b42e2616fd40973d637ff337fae6|
+|develop||master update20200404|d85d3d969ff4b42e2616fd40973d637ff337fae6|
 
 
 ### THANKS

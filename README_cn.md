@@ -37,17 +37,6 @@ ESPlane2-S2 是基于乐鑫 ESP32-S2 开发的小型无人机解决方案，可�
 
 #### 指示灯
 
-
-```
-#define LINK_LED         LED_BLUE
-//#define CHG_LED          LED_RED
-#define LOWBAT_LED       LED_RED
-//#define LINK_DOWN_LED  LED_BLUE
-#define SYS_LED          LED_GREEN 
-#define ERR_LED1         LED_RED
-#define ERR_LED2         LED_RED
-```
-
 | State | LED | Action |
 |--|--|--|
 |SENSORS READY|BLUE|SOLID|
@@ -114,8 +103,7 @@ ESPlane2-S2 是基于乐鑫 ESP32-S2 开发的小型无人机解决方案，可�
 
 |ESPlane|CommitID| ESP-IDF|CommitID|
 | :---: | :---: | :---: | :---: |
-|master||release/v3.3 update20200306|6f9a7264ce20c6132fbd8309112630d0eb490fe4|
-|Esplane-S2||master update20200404|d85d3d969ff4b42e2616fd40973d637ff337fae6|
+|develop||master update20200404|d85d3d969ff4b42e2616fd40973d637ff337fae6|
 
 
 ### 五、感谢/THANKS
