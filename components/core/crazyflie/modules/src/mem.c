@@ -48,7 +48,7 @@
 
 #include "console.h"
 #include "assert.h"
-#include "debug.h"
+#include "debug_cf.h"
 
 #include "log.h"
 #include "param.h"

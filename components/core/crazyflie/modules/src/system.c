@@ -45,7 +45,7 @@
 #include "configblock.h"
 #include "worker.h"
 #include "freeRTOSdebug.h"
-#include "uart1.h"
+//#include "uart1.h"
 //#include "uart2.h"
 #include "wifi_esp32.h"
 #include "comm.h"
@@ -61,7 +61,7 @@
 #include "sysload.h"
 #include "estimator_kalman.h"
 //#include "deck.h"
-#include "extrx.h"
+//#include "extrx.h"
 #include "app.h"
 #include "stm32_legacy.h"
 #define DEBUG_MODULE "SYS"
@@ -247,7 +247,7 @@ void systemStart()
 {
   xSemaphoreGive(canStartMutex);
 #ifndef DEBUG_EP2
-  watchdogInit();
+  //watchdogInit();
 #endif
 }
 
@@ -291,14 +291,6 @@ bool systemCanFly(void)
 //   { __asm volatile ("wfi"); }
 // #endif
 // }
-
-/*System parameters (mostly for test, should be removed from here) */
-PARAM_GROUP_START(cpu)
-PARAM_ADD(PARAM_UINT16 | PARAM_RONLY, flash, MCU_FLASH_SIZE_ADDRESS)
-PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id0, MCU_ID_ADDRESS+0)
-PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id1, MCU_ID_ADDRESS+4)
-PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id2, MCU_ID_ADDRESS+8)
-PARAM_GROUP_STOP(cpu)
 
 PARAM_GROUP_START(system)
 PARAM_ADD(PARAM_INT8, selftestPassed, &selftestPassed)

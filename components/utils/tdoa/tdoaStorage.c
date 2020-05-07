@@ -31,7 +31,7 @@ Data storage encapsulation for the TDoA engine
 #include <string.h>
 
 #define DEBUG_MODULE "TDOA_STORAGE"
-#include "debug.h"
+#include "debug_cf.h"
 
 #include "tdoaStorage.h"
 

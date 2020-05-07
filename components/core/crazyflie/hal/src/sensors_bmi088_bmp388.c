@@ -41,7 +41,7 @@
 #include "configblock.h"
 #include "param.h"
 #include "log.h"
-#include "debug.h"
+#include "debug_cf.h"
 #include "nvicconf.h"
 #include "ledseq.h"
 #include "sound.h"

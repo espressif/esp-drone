@@ -44,8 +44,9 @@ static bool isInit;
 
 void commInit(void)
 {
-  if (isInit)
+  if (isInit){
     return;
+    }
     /* These functions  are moved to be initialized early so
      * that DEBUG_PRINTD can be used early */
     //wifilinkInit();

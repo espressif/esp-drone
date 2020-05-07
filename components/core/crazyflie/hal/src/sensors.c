@@ -30,7 +30,7 @@
 
 #include "sensors.h"
 #include "platform.h"
-#include "debug.h"
+#include "debug_cf.h"
 
 // https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
 #define xstr(s) str(s)

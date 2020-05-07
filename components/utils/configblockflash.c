@@ -31,7 +31,7 @@
 
 #include "config.h"
 #include "configblock.h"
-#include "debug.h"
+#include "debug_cf.h"
 
 /* Internal format of the config block */
 #define MAGIC 0x43427830

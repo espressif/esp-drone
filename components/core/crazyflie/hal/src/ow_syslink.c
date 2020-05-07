@@ -32,7 +32,7 @@
 
 #include "ow.h"
 #include "assert.h"
-#include "debug.h"
+#include "debug_cf.h"
 
 static xSemaphoreHandle waitForReply;
 static xSemaphoreHandle lockCmdBuf;

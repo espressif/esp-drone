@@ -271,7 +271,7 @@ TESTABLE_STATIC bool isNewSync(uint32_t timestamp, uint32_t lastSync) {
 }
 
 #ifndef UNIT_TEST_MODE
-#include "debug.h"
+#include "debug_cf.h"
 #else
 #include <stdio.h>
 #define DEBUG_PRINT printf

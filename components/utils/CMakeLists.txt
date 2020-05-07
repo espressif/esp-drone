@@ -13,5 +13,5 @@ idf_component_register(SRCS "abort.c"
                 "sleepus.c"
                 "statsCnt.c"
                 "version.c"
-                       INCLUDE_DIRS "." "include"
-                       REQUIRES platform hal modules config)
+              INCLUDE_DIRS "." "include"
+              REQUIRES platform hal modules config)

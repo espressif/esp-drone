@@ -35,7 +35,7 @@
 #include "statsCnt.h"
 
 #define DEBUG_MODULE "LH"
-#include "debug.h"
+#include "debug_cf.h"
 #include "uart1.h"
 
 #include "pulse_processor.h"
