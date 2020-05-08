@@ -52,7 +52,7 @@
 #define MOTOR_M3  2
 #define MOTOR_M4  3
 
-#ifdef TARGET_ESPLANE_S2
+#ifdef CONFIG_TARGET_ESPLANE_V2_S2
     #define MOTOR3_GPIO  CONFIG_MOTOR01_PIN         // M1 for ESP32FC
     #define MOTOR4_GPIO  CONFIG_MOTOR02_PIN        // M2 for ESP32FC
     #define MOTOR1_GPIO  CONFIG_MOTOR03_PIN        // M3 for ESP32FC

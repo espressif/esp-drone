@@ -334,7 +334,7 @@ void processAccGyroMeasurements(const uint8_t *buffer)
 
     Axis3f accScaled;
 
-#ifdef TARGET_ESPLANE_S2
+#ifdef CONFIG_TARGET_ESPLANE_V2_S2
     /* sensors step 2.1 read from buffer */
     accelRaw.y = (((int16_t)buffer[0]) << 8) | buffer[1];
     accelRaw.x = (((int16_t)buffer[2]) << 8) | buffer[3];
@@ -365,7 +365,7 @@ void processAccGyroMeasurements(const uint8_t *buffer)
     }
 
     /* sensors step 2.4 convert  digtal value to physical angle */
-#ifdef TARGET_ESPLANE_S2
+#ifdef CONFIG_TARGET_ESPLANE_V2_S2
     sensorData.gyro.x = -(gyroRaw.x - gyroBias.x) * SENSORS_DEG_PER_LSB_CFG;
 #else
     sensorData.gyro.x = (gyroRaw.x - gyroBias.x) * SENSORS_DEG_PER_LSB_CFG;
@@ -376,7 +376,7 @@ void processAccGyroMeasurements(const uint8_t *buffer)
     /* sensors step 2.5 low pass filter */
     applyAxis3fLpf((lpf2pData *)(&gyroLpf), &sensorData.gyro);
 
-#ifdef TARGET_ESPLANE_S2
+#ifdef CONFIG_TARGET_ESPLANE_V2_S2
     accScaled.x = -(accelRaw.x) * SENSORS_G_PER_LSB_CFG / accScale;
 #else
     accScaled.x = (accelRaw.x) * SENSORS_G_PER_LSB_CFG / accScale;   
