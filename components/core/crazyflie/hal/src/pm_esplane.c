@@ -266,8 +266,12 @@ void pmTask(void *param)
     PMStates pmStateOld = battery;
     uint32_t tickCount = 0;
 
-    //TODO:
+#ifdef configUSE_APPLICATION_TASK_TAG
+	#if configUSE_APPLICATION_TASK_TAG == 1
     vTaskSetApplicationTaskTag(0, (void *)TASK_PM_ID_NBR);
+    #endif
+#endif
+
     tickCount = xTaskGetTickCount();
     batteryLowTimeStamp = tickCount;
     batteryCriticalLowTimeStamp = tickCount;

@@ -228,7 +228,12 @@ static void stabilizerTask(void* param)
 {
   uint32_t tick;
   uint32_t lastWakeTime;
+
+#ifdef configUSE_APPLICATION_TASK_TAG
+	#if configUSE_APPLICATION_TASK_TAG == 1
   vTaskSetApplicationTaskTag(0, (void*)TASK_STABILIZER_ID_NBR);
+  #endif
+#endif
 
   //Wait for the system to be fully started to start stabilization loop
   systemWaitStart();

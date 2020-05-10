@@ -138,7 +138,11 @@ static void proximityTask(void* param)
 {
   uint32_t lastWakeTime;
 
+#ifdef configUSE_APPLICATION_TASK_TAG
+	#if configUSE_APPLICATION_TASK_TAG == 1
   vTaskSetApplicationTaskTag(0, (void*)TASK_PROXIMITY_ID_NBR);
+  #endif
+#endif
 
   //Wait for the system to be fully started to start stabilization loop
   systemWaitStart();
