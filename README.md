@@ -63,10 +63,10 @@
 | GPIO8 | LED\_RED | LED\_1 |
 | GPIO9 | LED\_GREEN | LED\_2 |
 | GPIO7 | LED\_BLUE | LED\_3 |
-| GPIO3 | MOT\_1 |  |
-| GPIO4 | MOT\_2 |  |
-| GPIO5 | MOT\_3 |  |
-| GPIO6 | MOT\_4 |  |
+| GPIO3 | MOT\_1 |5  |
+| GPIO4 | MOT\_2 |6  |
+| GPIO5 | MOT\_3 |3  |
+| GPIO6 | MOT\_4 |4  |
 | GPIO2 | ADC\_7\_BAT | VBAT/2 |
 | GPIO1 |EXT_IO1  |  |
 
