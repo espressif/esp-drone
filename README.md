@@ -100,12 +100,25 @@
 |GPIO45 |  CAM_Y4| 
 |GPIO46  |CAM_Y3  | 
 
-####  ESP-IDF Version
+####  Modify ESP-IDF component
 
-|ESPlane|CommitID| ESP-IDF|CommitID|
-| :---: | :---: | :---: | :---: |
-|develop||master update20200404|d85d3d969ff4b42e2616fd40973d637ff337fae6|
+Open the linker script template of ESP32(S2) `${IDF_PATH}/components/esp32/ld/esp32.project.ld.in` or` ${IDF_PATH}/components/esp32s2/ld/esp32s2.project.ld.in` , add the following code to the end of `.flash.rodata` section.
 
+```
+   /* Parameters and log system datas */
+    _param_start = .;
+    KEEP(*(.param))
+    KEEP(*(.param.*))
+    _param_stop = .;
+    . = ALIGN(4);
+    _log_start = .;
+    KEEP(*(.log))
+    KEEP(*(.log.*))
+    _log_stop = .;
+    . = ALIGN(4);
+```
+
+The code above can place variables with '.param.* ' or '.log.* ' section attribute in a continuous storage area, to speed up the traversal of variables.
 
 ### THANKS
 

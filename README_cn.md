@@ -99,12 +99,24 @@ ESPlane2-S2 是基于乐鑫 ESP32-S2 开发的小型无人机解决方案，可�
 |GPIO45 |  CAM_Y4| 
 |GPIO46  |CAM_Y3  | 
 
-### 四、 esp_idf 版本
+### 四、 ESP-IDF 组件修改
 
-|ESPlane|CommitID| ESP-IDF|CommitID|
-| :---: | :---: | :---: | :---: |
-|develop||master update20200404|d85d3d969ff4b42e2616fd40973d637ff337fae6|
+打开 ESP32(S2) 的链接脚本模板`${IDF_PATH}/components/esp32/ld/esp32.project.ld.in` 或者` ${IDF_PATH}/components/esp32s2/ld/esp32s2.project.ld.in`, 将以下代码添加到 `.flash.rodata` 段的末尾.
 
+```
+   /* Parameters and log system datas */
+    _param_start = .;
+    KEEP(*(.param))
+    KEEP(*(.param.*))
+    _param_stop = .;
+    . = ALIGN(4);
+    _log_start = .;
+    KEEP(*(.log))
+    KEEP(*(.log.*))
+    _log_stop = .;
+    . = ALIGN(4);
+```
+以上代码可以实现，将具有 `.param.*` 或 `.log.*` 段属性的变量，放置在连续的存储区域，从而加快变量遍历速度。
 
 ### 五、感谢/THANKS
 
