@@ -7,9 +7,9 @@ menu "ESPlane2.0 config"
 
         config TARGET_ESPLANE_V1
             bool "esplane with esp32 onboard(old version )"
-            
+
         config TARGET_ESPLANE_V2_S2
-            bool "esplane with esp32-s2 onboard"    
+            bool "esplane with esp32-s2 onboard"
 
     endchoice
 
@@ -28,7 +28,7 @@ menu "ESPlane2.0 config"
 
         config ROLL_CALIB
             int "ROLL_CALIB deg*100"
-            range -200 200 
+            range -200 200
             default 0
             help
                 if ROLL error angle is 0.90,set this 90
@@ -41,7 +41,7 @@ menu "ESPlane2.0 config"
             range 1024 2048
             default 1024 if TARGET_ESPLANE_V2_S2
             default 2048 if TARGET_ESPLANE_V1
-            
+
     endmenu
 
     menu "sensors config"
@@ -62,7 +62,7 @@ menu "ESPlane2.0 config"
             default 10 if TARGET_ESPLANE_V2_S2
             help
                 GPIO number (IOxx) I2C0_PIN_SCL
-        
+
         config I2C1_PIN_SDA
             int "I2C1_PIN_SDA GPIO number"
             range 0 34 if TARGET_ESPLANE_V1
@@ -75,11 +75,11 @@ menu "ESPlane2.0 config"
         config I2C1_PIN_SCL
             int "I2C1_PIN_SCL GPIO number"
             range 0 34 if TARGET_ESPLANE_V1
-            default 17 if TARGET_ESPLANE_V1   
+            default 17 if TARGET_ESPLANE_V1
             range 0 43 if TARGET_ESPLANE_V2_S2
             default 41 if TARGET_ESPLANE_V2_S2
             help
-                GPIO number (IOxx) I2C1_PIN_SCL  
+                GPIO number (IOxx) I2C1_PIN_SCL
 
         config SPI_PIN_MISO
             int "SPI_PIN_MISO GPIO number"
@@ -88,7 +88,7 @@ menu "ESPlane2.0 config"
             range 0 43 if TARGET_ESPLANE_V2_S2
             default 37 if TARGET_ESPLANE_V2_S2
             help
-                GPIO number (IOxx) SPI_PIN_MISO 
+                GPIO number (IOxx) SPI_PIN_MISO
 
         config SPI_PIN_MOSI
             int "SPI_PIN_MOSI GPIO number"
@@ -97,7 +97,7 @@ menu "ESPlane2.0 config"
             range 0 43 if TARGET_ESPLANE_V2_S2
             default 35 if TARGET_ESPLANE_V2_S2
             help
-                GPIO number (IOxx) SPI_PIN_MOSI  
+                GPIO number (IOxx) SPI_PIN_MOSI
 
         config SPI_PIN_CLK
             int "SPI_PIN_CLK GPIO number"
@@ -106,7 +106,7 @@ menu "ESPlane2.0 config"
             range 0 43 if TARGET_ESPLANE_V2_S2
             default 36 if TARGET_ESPLANE_V2_S2
             help
-                GPIO number (IOxx) SPI_PIN_CLK 
+                GPIO number (IOxx) SPI_PIN_CLK
 
         config SPI_PIN_CS0
             int "SPI_PIN_CS0 GPIO number"
@@ -115,7 +115,7 @@ menu "ESPlane2.0 config"
             range 0 43 if TARGET_ESPLANE_V2_S2
             default 34 if TARGET_ESPLANE_V2_S2
             help
-                GPIO number (IOxx) SPI_PIN_CS0 
+                GPIO number (IOxx) SPI_PIN_CS0
 
         config BUZ1_PIN_POS
             int "BUZ1_PIN_POS GPIO number"
@@ -124,7 +124,7 @@ menu "ESPlane2.0 config"
             range 0 43 if TARGET_ESPLANE_V2_S2
             default 39 if TARGET_ESPLANE_V2_S2
             help
-                GPIO number (IOxx) BUZ1_PIN_POS 
+                GPIO number (IOxx) BUZ1_PIN_POS
 
         config BUZ2_PIN_NEG
             int "BUZ2_PIN_NEG GPIO number"
@@ -133,7 +133,7 @@ menu "ESPlane2.0 config"
             range 0 43 if TARGET_ESPLANE_V2_S2
             default 38 if TARGET_ESPLANE_V2_S2
             help
-                GPIO number (IOxx) BUZ2_PIN_NEG      
+                GPIO number (IOxx) BUZ2_PIN_NEG
 
         config MPU_PIN_INT
             int "MPU_PIN_INT GPIO number"
@@ -142,16 +142,7 @@ menu "ESPlane2.0 config"
             range 0 43 if TARGET_ESPLANE_V2_S2
             default 12 if TARGET_ESPLANE_V2_S2
             help
-                GPIO number (IOxx) MPU_PIN_INT       
-     
-        config ADC1_PIN
-            int "ADC1_PIN GPIO number"
-            range 0 35 if TARGET_ESPLANE_V1
-            default 35 if TARGET_ESPLANE_V1
-            range 0 43 if TARGET_ESPLANE_V2_S2
-            default 2 if TARGET_ESPLANE_V2_S2
-            help
-                GPIO number (IOxx) ADC1_PIN   
+                GPIO number (IOxx) MPU_PIN_INT
 
         config EXT01_PIN
             int "EXT01_PIN GPIO number"
@@ -160,8 +151,8 @@ menu "ESPlane2.0 config"
             range 0 43 if TARGET_ESPLANE_V2_S2
             default 1 if TARGET_ESPLANE_V2_S2
             help
-                GPIO number (IOxx) EXT01_PIN  
-    endmenu      
+                GPIO number (IOxx) EXT01_PIN
+    endmenu
 
     menu "led config"
         config LED_PIN_BLUE
@@ -181,7 +172,7 @@ menu "ESPlane2.0 config"
             default 9 if TARGET_ESPLANE_V2_S2
             help
                 GPIO number (IOxx) LED_PIN_GREEN
-        
+
         config LED_PIN_RED
             int "LED_PIN_RED GPIO number"
             range 0 34 if TARGET_ESPLANE_V1
@@ -211,7 +202,7 @@ menu "ESPlane2.0 config"
             default 4 if TARGET_ESPLANE_V2_S2
             help
                 GPIO number (IOxx) MOTOR02_PIN
-        
+
         config MOTOR03_PIN
             int "MOTOR03_PIN GPIO number"
             range 0 34 if TARGET_ESPLANE_V1
@@ -228,9 +219,9 @@ menu "ESPlane2.0 config"
             range 0 43 if TARGET_ESPLANE_V2_S2
             default 6 if TARGET_ESPLANE_V2_S2
             help
-                GPIO number (IOxx) MOTOR04_PIN        
+                GPIO number (IOxx) MOTOR04_PIN
     endmenu
 
-    #source "${PROJECT_DIR}/components/motors/Kconfig" 
+    #source "${PROJECT_DIR}/components/motors/Kconfig"
 
 endmenu

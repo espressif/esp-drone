@@ -73,7 +73,7 @@ void spiBegin(void)
     //Initialize the SPI bus
 #ifdef TARGET_MCU_ESP32S2
     ret = spi_bus_initialize(HSPI_HOST, &buscfg, 0);
-#else
+#elif defined TARGET_MCU_ESP32S2
     ret = spi_bus_initialize(HSPI_HOST, &buscfg, 1);
 #endif
     ESP_ERROR_CHECK(ret);
