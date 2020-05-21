@@ -55,6 +55,7 @@ float dpixely_previous = 0;
 
 static uint8_t outlierCount = 0;
 
+static bool isInit1 = false;
 static bool isInit2 = false;
 
 motionBurst_t currentMotion;
@@ -124,9 +125,40 @@ static void flowdeckTask(void *param)
     }
 }
 
+// static void flowdeck1Init()
+// {
+//   if (isInit1 || isInit2) {
+//     return;
+//   }
+
+//   // Initialize the VL53L0 sensor using the zRanger deck driver
+//   const DeckDriver *zRanger = deckFindDriverByName("bcZRanger");
+//   zRanger->init(NULL);
+
+//   if (pmw3901Init(NCS_PIN))
+//   {
+//     xTaskCreate(flowdeckTask, FLOW_TASK_NAME, FLOW_TASK_STACKSIZE, NULL,
+//                 FLOW_TASK_PRI, NULL);
+
+//     isInit1 = true;
+//   }
+// }
+
+// static bool flowdeck1Test()
+// {
+//   if (!isInit1) {
+//     DEBUG_PRINTD("Error while initializing the PMW3901 sensor\n");
+//   }
+
+//   // Test the VL53L0 driver
+//   const DeckDriver *zRanger = deckFindDriverByName("bcZRanger");
+
+//   return zRanger->test();
+// }
+
 void flowdeck2Init()
 {
-    if ( isInit2) {
+	if (isInit1 || isInit2) {
         return;
     }
 
@@ -169,5 +201,6 @@ PARAM_ADD(PARAM_UINT8, disable, &useFlowDisabled)
 PARAM_GROUP_STOP(motion)
 
 PARAM_GROUP_START(deck)
+PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, bcFlow, &isInit1)
 PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, bcFlow2, &isInit2)
 PARAM_GROUP_STOP(deck)

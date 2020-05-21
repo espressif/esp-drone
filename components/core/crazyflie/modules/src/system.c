@@ -53,6 +53,7 @@
 #include "commander.h"
 #include "console.h"
 #include "wifilink.h"
+#include "mem.h"
 //#include "proximity.h"
 //#include "watchdog.h"
 #include "queuemonitor.h"
@@ -173,7 +174,7 @@ void systemTask(void *arg)
   //  platformSetLowInterferenceRadioMode();
   //}
   soundInit();
-  //memInit();
+  memInit();
 
 #ifdef PROXIMITY_ENABLED
   proximityInit();
@@ -195,7 +196,8 @@ void systemTask(void *arg)
   pass &= estimatorKalmanTaskTest();
   DEBUG_PRINTI("estimatorKalmanTaskTest = %d ", pass);
   //pass &= soundTest();
-  //pass &= memTest();
+  pass &= memTest();
+  DEBUG_PRINTI("estimatorKalmanTaskTest = %d ", pass);
   //pass &= watchdogNormalStartTest();
 
   //Start the firmware
