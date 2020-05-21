@@ -9,8 +9,9 @@
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "lwip/err.h"
+#include "lwip/sockets.h"
 #include "lwip/sys.h"
-#include "lwip/api.h"
+#include <lwip/netdb.h>
 
 #include  "queuemonitor.h"
 #include "wifi_esp32.h"
@@ -19,27 +20,29 @@
 #include "debug_cf.h"
 
 #define UDP_SERVER_PORT         2390
-#define UDP_SERVER_PORT2        2392
-#define UDP_REMOTE_PORT         2399
-#define UDP_REMOTE_ADDR         "192.168.43.43"
-#define UDP_SERVER_RX_BUFSIZE   128
+#define UDP_SERVER_BUFSIZE      128
 
-struct netconn *udp_server_netconn = NULL;
-struct netconn *udp_server_netconn2 = NULL;
-static ip_addr_t server_ipaddr;
+static struct sockaddr_in6 source_addr; // Large enough for both IPv4 or IPv6
 
 //#define WIFI_SSID      "Udp Server"
 static char WIFI_SSID[32] = "ESPLANE";
 static char WIFI_PWD[64] = "12345678" ;
 #define MAX_STA_CONN (1)
 
+static char rx_buffer[UDP_SERVER_BUFSIZE];
+static char tx_buffer[UDP_SERVER_BUFSIZE];
+const int addr_family = (int)AF_INET;
+const int ip_protocol = IPPROTO_IP;
+static struct sockaddr_in dest_addr;
+static int sock;
+
 static xQueueHandle udpDataRx;
 static xQueueHandle udpDataTx;
 static UDPPacket inPacket;
-static UDPPacket inPacket2;
 static UDPPacket outPacket;
 
 static bool isInit = false;
+static bool isUDPInit = false;
 
 static esp_err_t udp_server_create(void *arg);
 
@@ -64,18 +67,11 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         DEBUG_PRINT_LOCAL("station "MACSTR" join, AID=%d",
                           MAC2STR(event->mac), event->aid);
 
-        if (udp_server_create(NULL) == ESP_FAIL) {
-            DEBUG_PRINT_LOCAL("UDP server create socket failed!!!");
-        } else {
-            DEBUG_PRINT_LOCAL("UDP server create socket succeed!!!");
-        }  
-
     } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *) event_data;
         DEBUG_PRINT_LOCAL("station "MACSTR" leave, AID=%d",
                           MAC2STR(event->mac), event->aid);
-
-    }
+    } 
 }
 
 
@@ -105,174 +101,100 @@ bool wifiSendData(uint32_t size, uint8_t *data)
 };
 
 static esp_err_t udp_server_create(void *arg)
-{
-    err_t err = ERR_OK;
-    udp_server_netconn = netconn_new(NETCONN_UDP);  //创建socket
+{ 
+    if (isUDPInit){
+        return ESP_OK;
+    }
+    
+    struct sockaddr_in *pdest_addr = &dest_addr;
+    pdest_addr->sin_addr.s_addr = htonl(INADDR_ANY);
+    pdest_addr->sin_family = AF_INET;
+    pdest_addr->sin_port = htons(UDP_SERVER_PORT);
 
-    if (udp_server_netconn == NULL) {
+    sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
+    if (sock < 0) {
+        DEBUG_PRINT_LOCAL("Unable to create socket: errno %d", errno);
         return ESP_FAIL;
     }
+    DEBUG_PRINT_LOCAL("Socket created");
 
-    udp_server_netconn->recv_timeout = 10;
-    err = netconn_bind(udp_server_netconn, &server_ipaddr, UDP_SERVER_PORT);//绑定IP地址和端口号
-
-    if (err != ERR_OK) {
-        netconn_close(udp_server_netconn);
-        netconn_delete(udp_server_netconn);
-        return ESP_FAIL;
-
+    int err = bind(sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+    if (err < 0) {
+        DEBUG_PRINT_LOCAL("Socket unable to bind: errno %d", errno);
     }
+    DEBUG_PRINT_LOCAL("Socket bound, port %d", UDP_SERVER_PORT);
 
-#ifdef CONFIG_ENABLE_LEGACY_APP
-    udp_server_netconn2 = netconn_new(NETCONN_UDP);  //创建socket
-    udp_server_netconn2->recv_timeout = 10;
-
-    if (udp_server_netconn2 == NULL) {
-        return ESP_FAIL;
-    }
-
-    err = netconn_bind(udp_server_netconn2, &server_ipaddr, UDP_SERVER_PORT2);//绑定IP地址和端口号
-
-    if (err != ERR_OK) {
-        netconn_close(udp_server_netconn2);
-        netconn_delete(udp_server_netconn2);
-        return ESP_FAIL;
-    }
-
-#endif
-
+    isUDPInit = true;
     return ESP_OK;
 }
 
 static void udp_server_rx_task(void *pvParameters)
 {
-    struct pbuf *q = NULL;
-
     uint8_t cksum = 0;
-    struct netbuf *recvbuf = NULL;
-
+    socklen_t socklen = sizeof(source_addr);
+    
     while (true) {
-        if (udp_server_netconn == NULL) {
+        if(isUDPInit == false) {
             vTaskDelay(20);
             continue;
         }
-
+        int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
         /* command step - receive  01 from Wi-Fi UDP */
-        if (netconn_recv(udp_server_netconn, &recvbuf) == ERR_OK) {
-            for (q = recvbuf->p; q != NULL; q = q->next) {
-                if (q->len > WIFI_RX_TX_PACKET_SIZE - 4) {
-                    //TODO:
-                    DEBUG_PRINTW("Received data length = %d > 64", q->len);
-                } else {
-                    //copy part of the UDP packet
-                    memcpy(inPacket.data, q->payload, q->len);
-                    cksum = inPacket.data[q->len - 1];
-                    //remove cksum, do not belong to CRTP
-                    inPacket.size = q->len - 1;
-
-                    //check packet
-                    if (cksum == calculate_cksum(inPacket.data, q->len - 1)) {
-                        xQueueSend(udpDataRx, &inPacket, M2T(2));
-                    } else {
-                        DEBUG_PRINTW("udp packet cksum unmatched");
-                    }
+        if (len < 0) {
+            DEBUG_PRINT_LOCAL("recvfrom failed: errno %d", errno);
+            break;
+        } else if(len > WIFI_RX_TX_PACKET_SIZE - 4) {
+            DEBUG_PRINT_LOCAL("Received data length = %d > 64", len);
+        } else {
+            //copy part of the UDP packet
+            rx_buffer[len] = 0;// Null-terminate whatever we received and treat like a string...
+            memcpy(inPacket.data, rx_buffer, len);
+            cksum = inPacket.data[len - 1];
+            //remove cksum, do not belong to CRTP
+            inPacket.size = len - 1;
+            //check packet
+            if (cksum == calculate_cksum(inPacket.data, len - 1)){
+                xQueueSend(udpDataRx, &inPacket, M2T(2));
+            }else{
+                DEBUG_PRINT_LOCAL("udp packet cksum unmatched");
+            }
 
 #ifdef DEBUG_UDP
-                    DEBUG_PRINT_LOCAL("1.Received data size = %d  %02X \n cksum = %02X", q->len, inPacket.data[0], cksum);
-
-                    for (size_t i = 0; i < q->len; i++) {
-                        DEBUG_PRINT_LOCAL(" data[%d] = %02X ", i, inPacket.data[i]);
-                    }
-
-#endif
-
-                }
+            DEBUG_PRINT_LOCAL("1.Received data size = %d  %02X \n cksum = %02X", len, inPacket.data[0], cksum);
+            for (size_t i = 0; i < len; i++) {
+                DEBUG_PRINT_LOCAL(" data[%d] = %02X ", i, inPacket.data[i]);
             }
-        }
-
-        if (recvbuf != NULL) {
-            netbuf_delete(recvbuf);
+#endif
         }
     }
-
-    vTaskDelete(NULL);
-}
-
-static void udp_server_rx2_task(void *pvParameters)
-{
-    struct pbuf *q = NULL;
-
-    uint8_t cksum = 0;
-    struct netbuf *recvbuf = NULL;
-
-    while (true) {
-        if (udp_server_netconn2 == NULL) {
-            vTaskDelay(20);
-            continue;
-        }
-        if (netconn_recv(udp_server_netconn2, &recvbuf) == ERR_OK) {
-            for (q = recvbuf->p; q != NULL; q = q->next) {
-                if (q->len > (sizeof(UDPPacket) + 1)) {
-                    //TODO:
-                } else {
-                    memcpy(inPacket2.data, q->payload, q->len);
-                    cksum = inPacket2.data[q->len - 1];
-                    inPacket2.size = q->len - 1;
-                    xQueueSend(udpDataRx, &inPacket2, 0);
-#ifdef DEBUG_UDP
-                    DEBUG_PRINT_LOCAL("1.Received data LENGTH = %d  %02X \n cksum = %02X", q->len, inPacket2.data[0], cksum);
-
-                    for (size_t i = 0; i < q->len; i++) {
-                        DEBUG_PRINT_LOCAL(" data[%d] = %02X ", i, inPacket2.data[i]);
-                    }
-
-#endif
-                }
-            }
-        }
-
-        netbuf_delete(recvbuf);
-    }
-
-    vTaskDelete(NULL);
 }
 
 static void udp_server_tx_task(void *pvParameters)
 {
-    struct netbuf *sendbuf = NULL;
-    uint8_t sendbuffTemp[64] = {0};
-    
+ 
     while (TRUE) {
+        if(isUDPInit == false) {
+            vTaskDelay(20);
+            continue;
+        }
         if (xQueueReceive(udpDataTx, &outPacket, 5) == pdTRUE) {
-            memcpy(sendbuffTemp, outPacket.data, outPacket.size);
-            sendbuffTemp[outPacket.size + 1] = '\0';
-#ifdef DEBUG_UDP
-            DEBUG_PRINTD("udpDataTx get QUEUE size = %d data = %02x", outPacket.size, outPacket.data[0]);
-#endif
-            sendbuffTemp[outPacket.size] =  calculate_cksum(sendbuffTemp, outPacket.size);
-            sendbuf = netbuf_new();
-            ip4addr_aton(UDP_REMOTE_ADDR, &(sendbuf->addr.u_addr.ip4));
-            sendbuf->port = UDP_REMOTE_PORT;
-            netbuf_alloc(sendbuf, outPacket.size + 1);
-            sendbuf->p->payload = sendbuffTemp;
+            memcpy(tx_buffer, outPacket.data, outPacket.size);       
+            tx_buffer[outPacket.size] =  calculate_cksum(tx_buffer, outPacket.size);
+            tx_buffer[outPacket.size + 1] = 0;
 
-            if (udp_server_netconn != NULL) {
-                netconn_sendto(udp_server_netconn, sendbuf, &sendbuf->addr, UDP_REMOTE_PORT) ;
-
-#ifdef DEBUG_UDP
-                DEBUG_PRINT_LOCAL("Send data to");
-
-                for (size_t i = 0; i < outPacket.size + 1; i++) {
-                    DEBUG_PRINT_LOCAL(" data_send[%d] = %02X ", i, sendbuffTemp[i]);
-                }
-
-#endif
+            int err = sendto(sock, tx_buffer, outPacket.size + 1, 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
+            if (err < 0) {
+                DEBUG_PRINT_LOCAL("Error occurred during sending: errno %d", errno);
+                continue;
             }
-        netbuf_delete(sendbuf);
+#ifdef DEBUG_UDP
+            DEBUG_PRINT_LOCAL("Send data to");
+            for (size_t i = 0; i < outPacket.size + 1; i++) {
+                DEBUG_PRINT_LOCAL(" data_send[%d] = %02X ", i, tx_buffer[i]);
+            }
+#endif
         }    
     }
-
-    vTaskDelete(NULL);
 }
 
 
@@ -287,7 +209,6 @@ void wifiInit(void)
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ap_netif = esp_netif_create_default_wifi_ap();
     uint8_t mac[6];
-// static wifi_country_t wifi_country = {.cc = "JP", .schan = 1, .nchan = 14, .policy = WIFI_COUNTRY_POLICY_MANUAL};
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -298,7 +219,6 @@ void wifiInit(void)
                     NULL,
                     NULL));
 
-// ESP_ERROR_CHECK(esp_wifi_set_country(&wifi_country)); // set locales for RF and channels
     ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, mac));
     sprintf(WIFI_SSID, "ESPLANE_%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
@@ -334,11 +254,12 @@ void wifiInit(void)
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataRx);
     udpDataTx = xQueueCreate(1, sizeof(UDPPacket)); /* Buffer packets (max 64 bytes) */
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataTx);
-
+    if (udp_server_create(NULL) == ESP_FAIL) {
+        DEBUG_PRINT_LOCAL("UDP server create socket failed!!!");
+    } else {
+        DEBUG_PRINT_LOCAL("UDP server create socket succeed!!!");
+    } 
     xTaskCreate(udp_server_tx_task, UDP_TX_TASK_NAME, UDP_TX_TASK_STACKSIZE, NULL, UDP_TX_TASK_PRI, NULL);
     xTaskCreate(udp_server_rx_task, UDP_RX_TASK_NAME, UDP_RX_TASK_STACKSIZE, NULL, UDP_RX_TASK_PRI, NULL);
-#ifdef CONFIG_ENABLE_LEGACY_APP
-     xTaskCreate(udp_server_rx2_task, UDP_RX2_TASK_NAME, UDP_RX2_TASK_STACKSIZE, NULL, UDP_RX2_TASK_PRI, NULL);
-#endif
     isInit = true;
 }
