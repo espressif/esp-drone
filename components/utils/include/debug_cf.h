@@ -70,7 +70,7 @@ void debugInit(void);
   #define DEBUG_PRINTV(fmt, ...) consolePrintf(DEBUG_FMT(fmt), ##__VA_ARGS__)
   #define DEBUG_PRINT_OS(fmt, ...) consolePrintf(DEBUG_FMT(fmt), ##__VA_ARGS__)
 #else
-  #define DEBUG_PRINT(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_INFO,DEBUG_MODULE,fmt, ##__VA_ARGS__) 
+  #define DEBUG_PRINT(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG,DEBUG_MODULE,fmt, ##__VA_ARGS__) 
   #define DEBUG_PRINTE(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_ERROR,DEBUG_MODULE,fmt, ##__VA_ARGS__)
   #define DEBUG_PRINTW(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_WARN,DEBUG_MODULE,fmt, ##__VA_ARGS__)
   #define DEBUG_PRINTI(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_INFO,DEBUG_MODULE,fmt, ##__VA_ARGS__)
