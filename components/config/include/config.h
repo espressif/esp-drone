@@ -50,6 +50,8 @@
   #define TARGET_MCU_ESP32S2
 #elif defined CONFIG_TARGET_ESPLANE_V1
   #define TARGET_MCU_ESP32
+#else defined CONFIG_TARGET_ESP32_S2_DRONE_V1_2
+  #define TARGET_MCU_ESP32S2
 #endif
 
 #ifdef STM32F4XX 
