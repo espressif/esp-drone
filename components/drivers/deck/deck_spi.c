@@ -30,7 +30,6 @@
 #define DEBUG_MODULE "DECK_SPI"
 #include "debug_cf.h"
 
-#define SPI SPI1
 
 #define SPI_SCK_PIN CONFIG_SPI_PIN_CLK
 #define SPI_MISO_PIN CONFIG_SPI_PIN_MISO
@@ -71,10 +70,10 @@ void spiBegin(void)
         /*.pre_cb = lcd_spi_pre_transfer_callback, //Specify pre-transfer callback to handle D/C line*/
     };
     //Initialize the SPI bus
-#ifdef TARGET_MCU_ESP32S2
-    ret = spi_bus_initialize(HSPI_HOST, &buscfg, 0);
-#elif defined TARGET_MCU_ESP32S2
+#ifdef TARGET_MCU_ESP32
     ret = spi_bus_initialize(HSPI_HOST, &buscfg, 1);
+#elif defined TARGET_MCU_ESP32S2
+    ret = spi_bus_initialize(HSPI_HOST, &buscfg, 2);
 #endif
     ESP_ERROR_CHECK(ret);
     //Attach the pmw3901 to the SPI bus
