@@ -88,9 +88,9 @@
 #define EXTRX_TASK_PRI          2
 #define ZRANGER_TASK_PRI        2
 #define ZRANGER2_TASK_PRI       2
-#define LOG_TASK_PRI            1
-#define MEM_TASK_PRI            1
-#define PARAM_TASK_PRI          1
+#define LOG_TASK_PRI            2
+#define MEM_TASK_PRI            2
+#define PARAM_TASK_PRI          2
 #define PROXIMITY_TASK_PRI      0
 #define PM_TASK_PRI             0
 #define USDLOG_TASK_PRI         1
@@ -104,7 +104,7 @@
 #define OA_DECK_TASK_PRI        3
 #define UART1_TEST_TASK_PRI     1
 #define UART2_TEST_TASK_PRI     1
-#define KALMAN_TASK_PRI         2
+#define KALMAN_TASK_PRI         1
 
 #define SYSLINK_TASK_PRI        3
 #define USBLINK_TASK_PRI        3
@@ -193,8 +193,8 @@
 #define EXTRX_TASK_STACKSIZE          configBASE_STACK_SIZE
 #define UART_RX_TASK_STACKSIZE        configBASE_STACK_SIZE
 #define ZRANGER_TASK_STACKSIZE        (1* configBASE_STACK_SIZE)
-#define ZRANGER2_TASK_STACKSIZE       (1* configBASE_STACK_SIZE)
-#define FLOW_TASK_STACKSIZE           (1* configBASE_STACK_SIZE)
+#define ZRANGER2_TASK_STACKSIZE       (2* configBASE_STACK_SIZE)
+#define FLOW_TASK_STACKSIZE           (2* configBASE_STACK_SIZE)
 #define USDLOG_TASK_STACKSIZE         (1* configBASE_STACK_SIZE)
 #define USDWRITE_TASK_STACKSIZE       (1* configBASE_STACK_SIZE)
 #define PCA9685_TASK_STACKSIZE        (1* configBASE_STACK_SIZE)

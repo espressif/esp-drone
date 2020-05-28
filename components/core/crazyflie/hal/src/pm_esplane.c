@@ -279,7 +279,7 @@ void pmTask(void *param)
     systemWaitStart();
 
     while (1) {
-        vTaskDelay(M2T(100));
+        vTaskDelay(M2T(250));
         tickCount = xTaskGetTickCount();
 
         extBatteryVoltage = pmMeasureExtBatteryVoltage();

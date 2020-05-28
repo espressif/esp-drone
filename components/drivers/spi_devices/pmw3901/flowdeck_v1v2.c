@@ -70,7 +70,12 @@ static void flowdeckTask(void *param)
     systemWaitStart();
 
     while (1) {
+
+#ifdef TARGET_MCU_ESP32S2
+        vTaskDelay(15);
+#elif defined TARGET_MCU_ESP32
         vTaskDelay(10);
+#endif
 
         pmw3901ReadMotion(NCS_PIN, &currentMotion);
 
@@ -86,7 +91,12 @@ static void flowdeckTask(void *param)
             flowMeasurement_t flowData;
             flowData.stdDevX = 0.25;    // [pixels] should perhaps be made larger?
             flowData.stdDevY = 0.25;    // [pixels] should perhaps be made larger?
+
+#ifdef TARGET_MCU_ESP32S2
+            flowData.dt = 0.015;
+#elif defined TARGET_MCU_ESP32
             flowData.dt = 0.01;
+#endif
 
 #if defined(USE_MA_SMOOTHING)
             // Use MA Smoothing
