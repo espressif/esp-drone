@@ -99,7 +99,7 @@ void stateEstimatorSwitchTo(StateEstimatorType estimator) {
 
   StateEstimatorType forcedEstimator = ESTIMATOR_NAME;
   if (forcedEstimator != anyEstimator) {
-    DEBUG_PRINT("Estimator type forced\n");
+    DEBUG_PRINTI("Estimator type forced\n");
     newEstimator = forcedEstimator;
   }
 
@@ -108,7 +108,7 @@ void stateEstimatorSwitchTo(StateEstimatorType estimator) {
   currentEstimator = newEstimator;
   deinitEstimator(previousEstimator);
 
-  DEBUG_PRINT("Using %s (%d) estimator\n", stateEstimatorGetName(), currentEstimator);
+  DEBUG_PRINTI("Using %s (%d) estimator\n", stateEstimatorGetName(), currentEstimator);
 }
 
 StateEstimatorType getStateEstimator(void) {

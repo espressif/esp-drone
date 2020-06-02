@@ -43,6 +43,7 @@ static UDPPacket outPacket;
 
 static bool isInit = false;
 static bool isUDPInit = false;
+static bool isUDPConnected = false;
 
 static esp_err_t udp_server_create(void *arg);
 
@@ -155,6 +156,7 @@ static void udp_server_rx_task(void *pvParameters)
             //check packet
             if (cksum == calculate_cksum(inPacket.data, len - 1)){
                 xQueueSend(udpDataRx, &inPacket, M2T(2));
+                if(!isUDPConnected) isUDPConnected = true;
             }else{
                 DEBUG_PRINT_LOCAL("udp packet cksum unmatched");
             }
@@ -177,7 +179,7 @@ static void udp_server_tx_task(void *pvParameters)
             vTaskDelay(20);
             continue;
         }
-        if (xQueueReceive(udpDataTx, &outPacket, 5) == pdTRUE) {
+        if ((xQueueReceive(udpDataTx, &outPacket, 5) == pdTRUE) && isUDPConnected) {           
             memcpy(tx_buffer, outPacket.data, outPacket.size);       
             tx_buffer[outPacket.size] =  calculate_cksum(tx_buffer, outPacket.size);
             tx_buffer[outPacket.size + 1] = 0;

@@ -283,7 +283,7 @@ static void sensorsTask(void *param)
             /* sensors step 4- Unlock stabilizer task */
             xSemaphoreGive(dataReady);
 #ifdef DEBUG_EP2
-            DEBUG_PRINTI("ax = %f,  ay = %f,  az = %f,  gx = %f,  gy = %f,  gz = %f , hx = %f , hy = %f, hz =%f \n", sensorData.acc.x, sensorData.acc.y, sensorData.acc.z, sensorData.gyro.x, sensorData.gyro.y, sensorData.gyro.z, sensorData.mag.x, sensorData.mag.y, sensorData.mag.z);
+            DEBUG_PRINT_LOCAL("ax = %f,  ay = %f,  az = %f,  gx = %f,  gy = %f,  gz = %f , hx = %f , hy = %f, hz =%f \n", sensorData.acc.x, sensorData.acc.y, sensorData.acc.z, sensorData.gyro.x, sensorData.gyro.y, sensorData.gyro.z, sensorData.mag.x, sensorData.mag.y, sensorData.mag.z);
 #endif
         }
     }
@@ -297,7 +297,7 @@ void sensorsMpu6050Hmc5883lMs5611WaitDataReady(void)
 void processBarometerMeasurements(const uint8_t *buffer)
 {
     //TODO: replace it to MS5611
-    DEBUG_PRINTI("processBarometerMeasurements NEED TODO");
+    DEBUG_PRINTW("processBarometerMeasurements NEED TODO");
 //   static uint32_t rawPressure = 0;
 //   static int16_t rawTemp = 0;
 

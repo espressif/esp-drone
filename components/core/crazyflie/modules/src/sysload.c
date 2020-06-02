@@ -102,15 +102,15 @@ static void timerHandler(xTimerHandle timer) {
     // CPU usage is since last dump in % compared to total time spent in tasks. Note that time spent in interrupts will be included in measured time.
     // Stack usage is displayed as nr of unused bytes at peak stack usage.
 
-    DEBUG_PRINT_LOCAL("Task dump\n");
-    DEBUG_PRINT_LOCAL("Load\tStack left\tName\tPRI\n");
+    DEBUG_PRINTI("Task dump\n");
+    DEBUG_PRINTI("Load\tStack left\tName\tPRI\n");
     for (uint32_t i = 0; i < taskCount; i++) {
       TaskStatus_t* stats = &taskStats[i];
       taskData_t* previousTaskData = getPreviousTaskData(stats->xTaskNumber);
 
       uint32_t taskRunTime = stats->ulRunTimeCounter;
       float load = f * (taskRunTime - previousTaskData->ulRunTimeCounter);
-      DEBUG_PRINT_LOCAL("%.2f \t%u \t%s \t%u\n", (double)load, stats->usStackHighWaterMark, stats->pcTaskName,stats->uxBasePriority);
+      DEBUG_PRINTI("%.2f \t%u \t%s \t%u\n", (double)load, stats->usStackHighWaterMark, stats->pcTaskName,stats->uxBasePriority);
 
       previousTaskData->ulRunTimeCounter = taskRunTime;
     }

@@ -133,22 +133,17 @@ void zRangerInit(void)
   dev.measurement_timing_budget_ms = 0;
 
   vTaskDelay(M2T(20));
-  DEBUG_PRINTI("VL53L0X begin init");
 
   uint16_t wordData;
-
   wordData = vl53l0xGetModelID(&dev);
-
   DEBUG_PRINTI( "VL53L0X: %02X\n\r", wordData);
 
   if(wordData == VL53L0X_ID)
 	{
-    DEBUG_PRINTI( "HELLO VL53L0X");
+    DEBUG_PRINT( "VL53L0X I2C commection [OK].\n");
   }
 
   vl53l0xInit(&dev, I2C1_DEV, true);
-
-  DEBUG_PRINTI("VL53L0X init done");
 
   xTaskCreate(zRangerTask, ZRANGER_TASK_NAME, ZRANGER_TASK_STACKSIZE, NULL, ZRANGER_TASK_PRI, NULL);
 

@@ -131,9 +131,9 @@ bool systemTest()
 
   pass &= ledseqTest();
   pass &= pmTest();
-  DEBUG_PRINTD("pmTest = %d", pass);
+  DEBUG_PRINTI("pmTest = %d", pass);
   pass &= workerTest();
-  DEBUG_PRINTD("workerTest = %d", pass);
+  DEBUG_PRINTI("workerTest = %d", pass);
   //pass &= buzzerTest();
   return pass;
 }
@@ -197,7 +197,7 @@ void systemTask(void *arg)
   DEBUG_PRINTI("estimatorKalmanTaskTest = %d ", pass);
   //pass &= soundTest();
   pass &= memTest();
-  DEBUG_PRINTI("estimatorKalmanTaskTest = %d ", pass);
+  DEBUG_PRINTI("memTest = %d ", pass);
   //pass &= watchdogNormalStartTest();
 
   //Start the firmware
