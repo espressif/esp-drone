@@ -1,18 +1,18 @@
 # Introduction
 
-## ESPlane2.0
+## ESP-Drone
 
 **Drones powered by ESP32&ESP-IDF&Crazyflie**
 
 ### Introduction
 
-**ESPlane2-S2** is an open source **drone solution** based on espressif **ESP32-S2** Wi-Fi chip, which can be controlled through **Wi-Fi** network using mobile APP or gamepad. ESPlane2-S2 supports multiple fly modes, `stabilize`, `height-hold`, `position-hold` and more. ESPlane2-S2 solution has **simple hardware structure**,**clear and extendible code architecture**, can be used in **STEAM education** and other fields. The main code ported from **Crazyflie** open source project, using the **GPL3.0** open source protocol.
+**ESP-Drone** is an open source **drone solution** based on espressif **ESP32-S2 / ESP32** Wi-Fi chip, which can be controlled through **Wi-Fi** network using mobile APP or gamepad. ESP-Drone supports multiple fly modes, `stabilize`, `height-hold`, `position-hold` and more. ESP-Drone solution has **simple hardware structure**,**clear and extendible code architecture**, can be used in **STEAM education** and other fields. The main code ported from **Crazyflie** open source project, using the **GPL3.0** open source protocol.
 
-**For User**: [01-ESPlane2.0 Operate Guide](https://qljz1993.gitbook.io/esplane/v/english/operater-guide/00esplane-shang-wei-ji-an-zhuang-zhi-yin)
+**For User**: [01-ESP-Drone Operate Guide](https://qljz1993.gitbook.io/esplane/v/english/operater-guide/00esplane-shang-wei-ji-an-zhuang-zhi-yin)
 
-**For Developer**: [01-ESPlane2.0 Develop Guide](https://qljz1993.gitbook.io/esplane/v/english/developer-guide/00esplane-kai-fa-zhi-yin)
+**For Developer**: [01-ESP-Drone Develop Guide](https://qljz1993.gitbook.io/esplane/v/english/developer-guide/00esplane-kai-fa-zhi-yin)
 
-![ESPlane](https://img-blog.csdnimg.cn/20191030202043361.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
+![ESP-Drone](https://img-blog.csdnimg.cn/20191030202043361.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
 
 ![A swarm of drones exploring the environment, avoiding obstacles and each other. \(Guus Schoonewille, TU Delft\)](https://img-blog.csdnimg.cn/20191030202634944.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
 
@@ -63,10 +63,10 @@
 | GPIO8 | LED\_RED | LED\_1 |
 | GPIO9 | LED\_GREEN | LED\_2 |
 | GPIO7 | LED\_BLUE | LED\_3 |
-| GPIO3 | MOT\_1 |5  |
-| GPIO4 | MOT\_2 |6  |
-| GPIO5 | MOT\_3 |3  |
-| GPIO6 | MOT\_4 |4  |
+| GPIO5 | MOT\_1 | |
+| GPIO6 | MOT\_2 | |
+| GPIO3 | MOT\_3 | |
+| GPIO4 | MOT\_4 | |
 | GPIO2 | ADC\_7\_BAT | VBAT/2 |
 | GPIO1 |EXT_IO1  |  |
 
@@ -119,6 +119,15 @@ Open the linker script template of ESP32(S2) `${IDF_PATH}/components/esp32/ld/es
 ```
 
 The code above can place variables with '.param.* ' or '.log.* ' section attribute in a continuous storage area, to speed up the traversal of variables.
+
+### Third Party Copyrighted Code
+
+Additional third party copyrighted code is included under the following licenses.
+
+| Component | License | Origin |commit id |
+| :---:  | :---: | :---: |:---: |
+| core/crazyflie | GPL-3.0 |[Crazyflie](https://github.com/bitcraze/crazyflie-firmware) |a2a26abd53a5f328374877bfbcb7b25ed38d8111|
+| lib/dsp_lib |  | [esp32-lin](https://github.com/whyengineer/esp32-lin/tree/master/components/dsp_lib) |6fa39f4cd5f7782b3a2a052767f0fb06be2378ff|
 
 ### THANKS
 
