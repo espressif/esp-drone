@@ -254,7 +254,7 @@ void wifiInit(void)
     // This should probably be reduced to a CRTP packet size
     udpDataRx = xQueueCreate(5, sizeof(UDPPacket)); /* Buffer packets (max 64 bytes) */
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataRx);
-    udpDataTx = xQueueCreate(1, sizeof(UDPPacket)); /* Buffer packets (max 64 bytes) */
+    udpDataTx = xQueueCreate(5, sizeof(UDPPacket)); /* Buffer packets (max 64 bytes) */
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataTx);
     if (udp_server_create(NULL) == ESP_FAIL) {
         DEBUG_PRINT_LOCAL("UDP server create socket failed!!!");
