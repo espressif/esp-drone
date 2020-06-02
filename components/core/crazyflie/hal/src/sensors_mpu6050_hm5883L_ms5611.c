@@ -395,7 +395,9 @@ static void sensorsDeviceInit(void)
     isBarometerPresent = false;
 
     // Wait for sensors to startup
-    while (xTaskGetTickCount() < 1000);
+    while (xTaskGetTickCount() < 2000){
+        vTaskDelay(M2T(50));
+    };
 
     i2cdevInit(I2C0_DEV);
     mpu6050Init(I2C0_DEV);
@@ -441,7 +443,12 @@ static void sensorsDeviceInit(void)
     // Set output rate (1): 1000 / (1 + 0) = 1000Hz
     mpu6050SetRate(0);
     // Set digital low-pass bandwidth for gyro
+    // board ESP32_S2_DRONE_V1_2 has more vibrations bandwidth should be lower
+#ifdef CONFIG_TARGET_ESP32_S2_DRONE_V1_2
+    mpu6050SetDLPFMode(MPU6050_DLPF_BW_42);
+#else
     mpu6050SetDLPFMode(MPU6050_DLPF_BW_98);
+#endif
 
     // Init second order filer for accelerometer
     for (uint8_t i = 0; i < 3; i++) {
@@ -554,6 +561,7 @@ static void sensorsDeviceInit(void)
     sinPitch = sinf(PITCH_CALIB * (float)M_PI / 180);
     cosRoll = cosf(ROLL_CALIB * (float)M_PI / 180);
     sinRoll = sinf(ROLL_CALIB * (float)M_PI / 180);
+    DEBUG_PRINTI("pitch_calib = %f,roll_calib = %f",PITCH_CALIB,ROLL_CALIB);
 }
 
 static void sensorsSetupSlaveRead(void)
@@ -1037,7 +1045,6 @@ bool sensorsMpu6050Hmc5883lMs5611ManufacturingTest(void)
  */
 static void sensorsAccAlignToGravity(Axis3f *in, Axis3f *out)
 {
-    //TODO: need cosPitch calculate firstly
     Axis3f rx;
     Axis3f ry;
 
