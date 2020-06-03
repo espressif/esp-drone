@@ -58,6 +58,7 @@
 #define DEBUG_MODULE "SENSORS"
 #include "debug_cf.h"
 #include "static_mem.h"
+#include "crtp_commander.h"
 
 /**
  * Enable 250Hz digital LPF mode. However does not work with
@@ -542,6 +543,7 @@ static void sensorsDeviceInit(void)
 
     if (flowdeck2Test() == true) {
         isPmw3901Present = true;
+        setCommandermode(POSHOLD_MODE);
         DEBUG_PRINTI("PMW3901 SPI connection [OK].\n");
     } else {
         //TODO: Should sensor test fail hard if no connection

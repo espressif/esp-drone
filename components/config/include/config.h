@@ -104,6 +104,7 @@
 #define OA_DECK_TASK_PRI        3
 #define UART1_TEST_TASK_PRI     1
 #define UART2_TEST_TASK_PRI     1
+//if task watchdog triggered,KALMAN_TASK_PRI should set lower or set lower flow frequency
 #define KALMAN_TASK_PRI         1
 
 #define SYSLINK_TASK_PRI        3

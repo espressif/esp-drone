@@ -137,8 +137,15 @@ static struct this_s this = {
     .pid.dt = DT,
   },
 
+//thrustBase should just lift the drone
+#ifdef CONFIG_MOTOR_BRUSHED_715
   .thrustBase = 36000,
   .thrustMin  = 20000,
+#else
+  .thrustBase = 24000,
+  .thrustMin  = 5000,
+#endif
+
 };
 #endif
 

@@ -219,6 +219,18 @@ menu "ESPlane2.0 config"
     endmenu
 
     menu "motors config"
+        choice
+            prompt "Motor type"
+            default MOTOR_BRUSHED_715 if TARGET_ESPLANE_V1 || TARGET_ESPLANE_V2_S2
+            default MOTOR_BRUSHED_720 if TARGET_ESP32_S2_DRONE_V1_2
+            
+            config MOTOR_BRUSHED_715
+                bool "brushed 715 motor"
+    
+            config MOTOR_BRUSHED_720
+                bool "brushed 720 motor"
+        endchoice
+
         config MOTOR01_PIN
             int "MOTOR01_PIN GPIO number"
             range 0 34 if TARGET_ESPLANE_V1
