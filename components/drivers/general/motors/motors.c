@@ -219,35 +219,48 @@ int motorsGetRatio(uint32_t id)
 
 void motorsBeep(int id, bool enable, uint16_t frequency, uint16_t ratio)
 {
+    uint32_t freq_hz = 15000;
+    ASSERT(id < NBR_OF_MOTORS);
+    if (ratio != 0) {
+        ratio = (uint16_t)(0.05*(1<<16));
+    }
+    
+    if (enable) {
+        freq_hz = frequency;
+    }
+    
+    ledc_set_freq(LEDC_LOW_SPEED_MODE,LEDC_TIMER_0,freq_hz);
+    ledc_set_duty(motors_channel[id].speed_mode, motors_channel[id].channel, (uint32_t)motorsConv16ToBits(ratio));
+    ledc_update_duty(motors_channel[id].speed_mode, motors_channel[id].channel);
 }
 
 // Play a tone with a given frequency and a specific duration in milliseconds (ms)
 void motorsPlayTone(uint16_t frequency, uint16_t duration_msec)
 {
-    // motorsBeep(MOTOR_M1, true, frequency, (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / frequency) / 20);
-    // motorsBeep(MOTOR_M2, true, frequency, (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / frequency) / 20);
-    // motorsBeep(MOTOR_M3, true, frequency, (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / frequency) / 20);
-    // motorsBeep(MOTOR_M4, true, frequency, (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / frequency) / 20);
-    // vTaskDelay(M2T(duration_msec));
-    // motorsBeep(MOTOR_M1, false, frequency, 0);
-    // motorsBeep(MOTOR_M2, false, frequency, 0);
-    // motorsBeep(MOTOR_M3, false, frequency, 0);
-    // motorsBeep(MOTOR_M4, false, frequency, 0);
+    motorsBeep(MOTOR_M1, true, frequency, (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / frequency) / 20);
+    motorsBeep(MOTOR_M2, true, frequency, (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / frequency) / 20);
+    motorsBeep(MOTOR_M3, true, frequency, (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / frequency) / 20);
+    motorsBeep(MOTOR_M4, true, frequency, (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / frequency) / 20);
+    vTaskDelay(M2T(duration_msec));
+    motorsBeep(MOTOR_M1, false, frequency, 0);
+    motorsBeep(MOTOR_M2, false, frequency, 0);
+    motorsBeep(MOTOR_M3, false, frequency, 0);
+    motorsBeep(MOTOR_M4, false, frequency, 0);
 }
 
 // Plays a melody from a note array
 void motorsPlayMelody(uint16_t *notes)
 {
-    // int i = 0;
-    // uint16_t note;     // Note in hz
-    // uint16_t duration; // Duration in ms
+    int i = 0;
+    uint16_t note;     // Note in hz
+    uint16_t duration; // Duration in ms
 
-    // do
-    // {
-    //   note = notes[i++];
-    //   duration = notes[i++];
-    //   motorsPlayTone(note, duration);
-    // } while (duration != 0);
+    do
+    {
+      note = notes[i++];
+      duration = notes[i++];
+      motorsPlayTone(note, duration);
+    } while (duration != 0);
 }
 LOG_GROUP_START(pwm)
 LOG_ADD(LOG_UINT32, m1_pwm, &motor_ratios[0])

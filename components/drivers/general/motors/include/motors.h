@@ -38,6 +38,7 @@
 
 #define MOTORS_PWM_BITS           LEDC_TIMER_8_BIT
 #define MOTORS_PWM_PERIOD         ((1<<MOTORS_PWM_BITS) - 1)
+#define MOTORS_TIM_BEEP_CLK_FREQ  4000000
 
 // Compensate thrust depending on battery voltage so it will produce about the same
 // amount of thrust independent of the battery voltage. Based on thrust measurement.
@@ -70,9 +71,9 @@
 #define MOT_PWM_CH4  7      // Motor M4 pwmchannel     
 
 // Test defines
-#define MOTORS_TEST_RATIO         (uint16_t)(0.08*(1<<16))
-#define MOTORS_TEST_ON_TIME_MS    100
-#define MOTORS_TEST_DELAY_TIME_MS 200
+#define MOTORS_TEST_RATIO         (uint16_t)(0.2*(1<<16))
+#define MOTORS_TEST_ON_TIME_MS    50
+#define MOTORS_TEST_DELAY_TIME_MS 150
 
 // Sound defines
 #define C4    262

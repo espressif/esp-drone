@@ -348,7 +348,7 @@ static bool evaluateTest(float low, float high, float value, uint8_t motor)
 {
   if (value < low || value > high)
   {
-    DEBUG_PRINTD("Propeller test on M%d [FAIL]. low: %0.2f, high: %0.2f, measured: %0.2f\n",
+    DEBUG_PRINTI("Propeller test on M%d [FAIL]. low: %0.2f, high: %0.2f, measured: %0.2f\n",
                 motor + 1, (double)low, (double)high, (double)value);
     return false;
   }
@@ -397,7 +397,7 @@ static void testProps(sensorData_t *sensors)
       accVarXnf = variance(accX, PROPTEST_NBR_OF_VARIANCE_VALUES);
       accVarYnf = variance(accY, PROPTEST_NBR_OF_VARIANCE_VALUES);
       accVarZnf = variance(accZ, PROPTEST_NBR_OF_VARIANCE_VALUES);
-      DEBUG_PRINTD("Acc noise floor variance X+Y:%f, (Z:%f)\n",
+      DEBUG_PRINTI("Acc noise floor variance X+Y:%f, (Z:%f)\n",
                   (double)accVarXnf + (double)accVarYnf, (double)accVarZnf);
       testState = measureProp;
     }
@@ -430,7 +430,7 @@ static void testProps(sensorData_t *sensors)
       accVarX[motorToTest] = variance(accX, PROPTEST_NBR_OF_VARIANCE_VALUES);
       accVarY[motorToTest] = variance(accY, PROPTEST_NBR_OF_VARIANCE_VALUES);
       accVarZ[motorToTest] = variance(accZ, PROPTEST_NBR_OF_VARIANCE_VALUES);
-      DEBUG_PRINT("Motor M%d variance X+Y:%f (Z:%f)\n",
+      DEBUG_PRINTI("Motor M%d variance X+Y:%f (Z:%f)\n",
                    motorToTest+1, (double)accVarX[motorToTest] + (double)accVarY[motorToTest],
                    (double)accVarZ[motorToTest]);
     }
@@ -477,7 +477,7 @@ static void testProps(sensorData_t *sensors)
 //                  (double)minSingleLoadedVoltage[MOTOR_M2],
 //                  (double)minSingleLoadedVoltage[MOTOR_M3],
 //                  (double)minSingleLoadedVoltage[MOTOR_M4]);
-      DEBUG_PRINT("%f %f %f %f %f %f\n", (double)idleVoltage,
+      DEBUG_PRINTI("%f %f %f %f %f %f\n", (double)idleVoltage,
                   (double)(idleVoltage - minLoadedVoltage),
                   (double)(idleVoltage - minSingleLoadedVoltage[MOTOR_M1]),
                   (double)(idleVoltage - minSingleLoadedVoltage[MOTOR_M2]),
@@ -504,10 +504,9 @@ static void testProps(sensorData_t *sensors)
       {
         nrFailedTests++;
         for (int j = 0; j < 3; j++){
-          //TODO:motorsBeep
-          //motorsBeep(m, true, testsound[m], (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / A4)/ 20);
+          motorsBeep(m, true, testsound[m], (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / A4)/ 20);
           vTaskDelay(M2T(MOTORS_TEST_ON_TIME_MS));
-          //motorsBeep(m, false, 0, 0);
+          motorsBeep(m, false, 0, 0);
           vTaskDelay(M2T(100));
         }
       }
@@ -517,9 +516,9 @@ static void testProps(sensorData_t *sensors)
     {
       for (int m = 0; m < NBR_OF_MOTORS; m++)
       {
-        //motorsBeep(m, true, testsound[m], (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / A4)/ 20);
+        motorsBeep(m, true, testsound[m], (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / A4)/ 20);
         vTaskDelay(M2T(MOTORS_TEST_ON_TIME_MS));
-        //motorsBeep(m, false, 0, 0);
+        motorsBeep(m, false, 0, 0);
         vTaskDelay(M2T(MOTORS_TEST_DELAY_TIME_MS));
       }
     }
