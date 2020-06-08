@@ -66,12 +66,13 @@
  */
 //#define SENSORS_mpu6050_DLPF_256HZ
 
-//#define SENSORS_ENABLE_PRESSURE_LPS25H
 //#define GYRO_ADD_RAW_AND_VARIANCE_LOG_VALUES
 
-//#define SENSORS_ENABLE_MAG_AK8963
 #define MAG_GAUSS_PER_LSB 666.7f
 
+/**
+ * Enable sensors on board 
+ */
 // #define SENSORS_ENABLE_MAG_HM5883L
 // #define SENSORS_ENABLE_PRESSURE_MS5611
 //#define SENSORS_ENABLE_RANGE_VL53L0X
@@ -170,10 +171,6 @@ static bool isHmc5883lTestPassed = false;
 static bool isMs5611TestPassed = false;
 static bool isVl53l1xTestPassed = false;
 static bool isPmw3901TestPassed = false;
-
-// static bool ismpu6050TestPassed = false;
-// static bool isAK8963TestPassed = false;
-// static bool isLPS25HTestPassed = false;
 
 // Pre-calculated values for accelerometer alignment
 float cosPitch;
@@ -429,34 +426,34 @@ static void sensorsDeviceInit(void)
     mpu6050SetFullScaleGyroRange(SENSORS_GYRO_FS_CFG);
     // Set accelerometer full scale range
     mpu6050SetFullScaleAccelRange(SENSORS_ACCEL_FS_CFG);
-    // Set accelerometer digital low-pass bandwidth
-    //mpu6050SetAccelDLPF(MPU6050_ACCEL_DLPF_BW_41); //6050丝支挝
 
-#if SENSORS_MPU6050_DLPF_256HZ
+    // Set digital low-pass bandwidth for gyro and acc
+    // board ESP32_S2_DRONE_V1_2 has more vibrations, bandwidth should be lower
+#ifdef SENSORS_MPU6050_DLPF_256HZ
     // 256Hz digital low-pass filter only works with little vibrations
     // Set output rate (15): 8000 / (1 + 7) = 1000Hz
     mpu6050SetRate(7);
     // Set digital low-pass bandwidth
-    mpu6050SetDLPFMode(mpu6050_DLPF_BW_256);
-#else
+    mpu6050SetDLPFMode(MPU6050_DLPF_BW_256);
+#elif defined CONFIG_TARGET_ESP32_S2_DRONE_V1_2
     // To low DLPF bandwidth might cause instability and decrease agility
     // but it works well for handling vibrations and unbalanced propellers
     // Set output rate (1): 1000 / (1 + 0) = 1000Hz
     mpu6050SetRate(0);
-    // Set digital low-pass bandwidth for gyro
-    // board ESP32_S2_DRONE_V1_2 has more vibrations bandwidth should be lower
-#ifdef CONFIG_TARGET_ESP32_S2_DRONE_V1_2
     mpu6050SetDLPFMode(MPU6050_DLPF_BW_42);
-#else
-    mpu6050SetDLPFMode(MPU6050_DLPF_BW_98);
-#endif
-
     // Init second order filer for accelerometer
     for (uint8_t i = 0; i < 3; i++) {
         lpf2pInit(&gyroLpf[i], 1000, GYRO_LPF_CUTOFF_FREQ);
         lpf2pInit(&accLpf[i], 1000, ACCEL_LPF_CUTOFF_FREQ);
     }
-
+#else
+    mpu6050SetRate(0);
+    mpu6050SetDLPFMode(MPU6050_DLPF_BW_98);
+    // Init second order filer for accelerometer
+    for (uint8_t i = 0; i < 3; i++) {
+        lpf2pInit(&gyroLpf[i], 1000, GYRO_LPF_CUTOFF_FREQ);
+        lpf2pInit(&accLpf[i], 1000, ACCEL_LPF_CUTOFF_FREQ);
+    }
 #endif
 
 #ifdef SENSORS_ENABLE_MAG_HM5883L
@@ -480,33 +477,6 @@ static void sensorsDeviceInit(void)
     } else {
         //TODO: Should sensor test fail hard if no connection
         DEBUG_PRINTW("MS5611 I2C connection [FAIL].\n");
-    }
-
-#endif
-
-#ifdef SENSORS_ENABLE_MAG_AK8963
-    ak8963Init(I2C0_DEV);
-
-    if (ak8963TestConnection() == true) {
-        isMagnetometerPresent = true;
-        ak8963SetMode(AK8963_MODE_16BIT | AK8963_MODE_CONT2); // 16bit 100Hz
-        DEBUG_PRINTI("AK8963 I2C connection [OK].\n");
-    } else {
-        DEBUG_PRINTW("AK8963 I2C connection [FAIL].\n");
-    }
-
-#endif
-
-#ifdef SENSORS_ENABLE_PRESSURE_LPS25H
-    lps25hInit(I2C0_DEV);
-
-    if (lps25hTestConnection() == true) {
-        lps25hSetEnabled(true);
-        isBarometerPresent = true;
-        DEBUG_PRINTI("LPS25H I2C connection [OK].\n");
-    } else {
-        //TODO: Should sensor test fail hard if no connection
-        DEBUG_PRINTW("LPS25H I2C connection [FAIL].\n");
     }
 
 #endif
@@ -555,6 +525,9 @@ static void sensorsDeviceInit(void)
 #endif
 
     DEBUG_PRINTI("sensors init done");
+    /*
+    *get calib angle from NVS
+    */
     // cosPitch = cosf(configblockGetCalibPitch() * (float)M_PI / 180);
     // sinPitch = sinf(configblockGetCalibPitch() * (float)M_PI / 180);
     // cosRoll = cosf(configblockGetCalibRoll() * (float)M_PI / 180);
@@ -622,40 +595,6 @@ static void sensorsSetupSlaveRead(void)
 
 #endif
 
-#ifdef SENSORS_ENABLE_MAG_AK8963
-
-    if (isMagnetometerPresent) {
-        // Set registers for mpu6050 master to read from
-        mpu6050SetSlaveAddress(0, 0x80 | AK8963_ADDRESS_00); // set the magnetometer to Slave 0, enable read
-        mpu6050SetSlaveRegister(0, AK8963_RA_ST1);           // read the magnetometer heading register
-        mpu6050SetSlaveDataLength(0, SENSORS_MAG_BUFF_LEN);  // read 8 bytes (ST1, x, y, z heading, ST2 (overflow check))
-        mpu6050SetSlaveDelayEnabled(0, true);
-        mpu6050SetSlaveEnabled(0, true);
-    }
-
-#endif
-
-#ifdef SENSORS_ENABLE_PRESSURE_LPS25H
-
-    if (isBarometerPresent) {
-        // Configure the LPS25H as a slave and enable read
-        // Setting up two reads works for LPS25H fifo avg filter as well as the
-        // auto inc wraps back to LPS25H_PRESS_OUT_L after LPS25H_PRESS_OUT_H is read.
-        mpu6050SetSlaveAddress(1, 0x80 | LPS25H_I2C_ADDR);
-        mpu6050SetSlaveRegister(1, LPS25H_STATUS_REG | LPS25H_ADDR_AUTO_INC);
-        mpu6050SetSlaveDataLength(1, SENSORS_BARO_BUFF_S_P_LEN);
-        mpu6050SetSlaveDelayEnabled(1, true);
-        mpu6050SetSlaveEnabled(1, true);
-
-        mpu6050SetSlaveAddress(2, 0x80 | LPS25H_I2C_ADDR);
-        mpu6050SetSlaveRegister(2, LPS25H_TEMP_OUT_L | LPS25H_ADDR_AUTO_INC);
-        mpu6050SetSlaveDataLength(2, SENSORS_BARO_BUFF_T_LEN);
-        mpu6050SetSlaveDelayEnabled(2, true);
-        mpu6050SetSlaveEnabled(2, true);
-    }
-
-#endif
-
     // Enable sensors after configuration
     mpu6050SetI2CMasterModeEnabled(true);
 
@@ -688,9 +627,7 @@ static void IRAM_ATTR sensors_inta_isr_handler(void *arg)
 
 static void sensorsInterruptInit(void)
 {
-    //TODO:
-    //   GPIO_InitTypeDef GPIO_InitStructure;
-    //   EXTI_InitTypeDef EXTI_InitStructure;
+
     DEBUG_PRINTD("sensorsInterruptInit \n");
     gpio_config_t io_conf;
     //interrupt of rising edge
@@ -700,9 +637,9 @@ static void sensorsInterruptInit(void)
     //set as input mode
     io_conf.mode = GPIO_MODE_INPUT;
     //disable pull-down mode
-    io_conf.pull_down_en = 1;
+    io_conf.pull_down_en = 0;
     //enable pull-up mode
-    io_conf.pull_up_en = 0;
+    io_conf.pull_up_en = 1;
     sensorsDataReady = xSemaphoreCreateBinary();
     dataReady = xSemaphoreCreateBinary();
     gpio_config(&io_conf);
@@ -716,8 +653,6 @@ static void sensorsInterruptInit(void)
     DEBUG_PRINTD("sensorsInterruptInit done \n");
 
     //   FSYNC "shall not be floating, must be set high or low by the MCU"
-
-    //   // Enable the mpu6050 interrupt
 
 }
 
@@ -773,26 +708,6 @@ bool sensorsMpu6050Hmc5883lMs5611Test(void)
         isMs5611TestPassed = ms5611SelfTest();
 
         testStatus &= isMs5611TestPassed;
-    }
-
-#endif
-
-#ifdef SENSORS_ENABLE_MAG_AK8963
-    testStatus &= isMagnetometerPresent;
-
-    if (testStatus) {
-        isAK8963TestPassed = ak8963SelfTest();
-        testStatus = isAK8963TestPassed;
-    }
-
-#endif
-
-#ifdef SENSORS_ENABLE_PRESSURE_LPS25H
-    testStatus &= isBarometerPresent;
-
-    if (testStatus) {
-        isLPS25HTestPassed = lps25hSelfTest();
-        testStatus = isLPS25HTestPassed;
     }
 
 #endif
@@ -1071,26 +986,32 @@ static void sensorsAccAlignToGravity(Axis3f *in, Axis3f *out)
  */
 void sensorsMpu6050Hmc5883lMs5611SetAccMode(accModes accMode)
 {
-    //TODO: MPU6050 DONNOT SUPPORT
-    DEBUG_PRINTD("SetAccMode MPU6050 DO NOT SUPPORT!");
-    // switch (accMode)
-    // {
-    // case ACC_MODE_PROPTEST:
-    //     mpu6050SetAccelDLPF(mpu6050_ACCEL_DLPF_BW_460);
-    //     for (uint8_t i = 0; i < 3; i++)
-    //     {
-    //         lpf2pInit(&accLpf[i], 1000, 500);
-    //     }
-    //     break;
-    // case ACC_MODE_FLIGHT:
-    // default:
-    //     mpu6050SetAccelDLPF(mpu6050_ACCEL_DLPF_BW_41);
-    //     for (uint8_t i = 0; i < 3; i++)
-    //     {
-    //         lpf2pInit(&accLpf[i], 1000, ACCEL_LPF_CUTOFF_FREQ);
-    //     }
-    //     break;
-    // }
+    switch (accMode)
+    {
+    case ACC_MODE_PROPTEST:
+        mpu6050SetRate(7);
+        mpu6050SetDLPFMode(MPU6050_DLPF_BW_256);
+        for (uint8_t i = 0; i < 3; i++)
+        {
+            lpf2pInit(&accLpf[i], 1000, 250);
+        }
+        break;
+    case ACC_MODE_FLIGHT:
+    default:
+        mpu6050SetRate(0);
+#ifdef CONFIG_TARGET_ESP32_S2_DRONE_V1_2
+        mpu6050SetDLPFMode(MPU6050_DLPF_BW_42);
+        for (uint8_t i = 0; i < 3; i++) {
+        lpf2pInit(&accLpf[i], 1000, ACCEL_LPF_CUTOFF_FREQ);
+        }
+#else
+        mpu6050SetDLPFMode(MPU6050_DLPF_BW_98);
+        for (uint8_t i = 0; i < 3; i++) {
+        lpf2pInit(&accLpf[i], 1000, ACCEL_LPF_CUTOFF_FREQ);
+        }
+#endif
+        break;
+    }
 }
 
 static void applyAxis3fLpf(lpf2pData *data, Axis3f *in)

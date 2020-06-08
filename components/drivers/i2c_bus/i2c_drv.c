@@ -45,10 +45,10 @@
 #include "debug_cf.h"
 
 // Definitions of sensors I2C bus
-#define I2C_DEFAULT_SENSORS_CLOCK_SPEED             100000
+#define I2C_DEFAULT_SENSORS_CLOCK_SPEED             400000
 
 // Definition of eeprom and deck I2C buss
-#define I2C_DEFAULT_DECK_CLOCK_SPEED                100000
+#define I2C_DEFAULT_DECK_CLOCK_SPEED                400000
 
 static bool isinit_i2cPort[2] = {0, 0};
 
