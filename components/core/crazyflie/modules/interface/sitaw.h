@@ -52,7 +52,7 @@ void sitAwUpdateSetpoint(setpoint_t *setpoint, const sensorData_t *sensorData,
 
 /* Configuration options for the 'Tumbled' detection. */
 #define SITAW_TU_ACC_THRESHOLD (-0.5f)     /* The maximum acc.z value indicating a Tumbled situation. */
-#define SITAW_TU_ACC_TRIGGER_COUNT 15      /* The number of consecutive tests for Tumbled to be detected. Configured for 250Hz testing. */
+#define SITAW_TU_ACC_TRIGGER_COUNT 30      /* The number of consecutive tests for Tumbled to be detected. Configured for 250Hz testing. */
 #define SITAW_TU_IN_FLIGHT_THRESHOLD 1000  /* Minimum summed motor PWM that means we are flying */
 
 /* LOG configurations. Enable these to be able to log detection in the cfclient. */
