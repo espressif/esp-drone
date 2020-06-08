@@ -14,4 +14,4 @@ set(PLANE_COMPONENT_DIRS  ${PLANE_COMPONENT_DIRS}
 set(EXTRA_COMPONENT_DIRS "${EXTRA_COMPONENT_DIRS} ${PLANE_COMPONENT_DIRS}")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(ESPlane2S2)
+project(ESPDrone)

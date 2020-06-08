@@ -1,6 +1,6 @@
 /**
  *
- * ESPlane Firmware
+ * ESP-Drone Firmware
  *
  * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * @file eeprom.h
- * Driver for the 24AA64F eeprom. esplane use nvs
+ * Driver for the 24AA64F eeprom. esp-drone use nvs
  *
  */
 #ifndef EERROM_H

@@ -1,7 +1,7 @@
-menu "ESPlane2.0 config"
+menu "ESP_Drone Config"
 
     choice
-        prompt "ESPlane hardware version"
+        prompt "ESP_Drone hardware version"
         default TARGET_ESP32_S2_DRONE_V1_2 if IDF_TARGET_ESP32S2
         default TARGET_ESPLANE_V1 if IDF_TARGET_ESP32
 

@@ -1,9 +1,9 @@
 
 ## 项目预览
 
-esp-plane 是基于乐鑫 ESP32/ESP32-S2 开发的小型无人机解决方案，可使用手机 APP 或游戏手柄通过 Wi-Fi 网络进行连接和控制，目前已支持自稳定飞行、定高飞行、定点飞行等多种模式。该方案硬件结构简单，代码架构清晰，支持功能扩展，可用于 STEAM 教育等领域。项目部分代码来自 Crazyflie 开源工程，继承 GPL3.0 开源协议。
+ESP-Drone 是基于乐鑫 ESP32/ESP32-S2 开发的小型无人机解决方案，可使用手机 APP 或游戏手柄通过 Wi-Fi 网络进行连接和控制，目前已支持自稳定飞行、定高飞行、定点飞行等多种模式。该方案硬件结构简单，代码架构清晰，支持功能扩展，可用于 STEAM 教育等领域。项目部分代码来自 Crazyflie 开源工程，继承 GPL3.0 开源协议。
 
-![ESPlane](https://img-blog.csdnimg.cn/20191030202043361.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
+![ESP-Drone](https://img-blog.csdnimg.cn/20191030202043361.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
 
 ### 功能介绍
 
@@ -24,7 +24,7 @@ esp-plane 是基于乐鑫 ESP32/ESP32-S2 开发的小型无人机解决方案，
 
 ### 硬件组成结构
 
-**ESPLane 2.0 使用模块化的设计思路，由主控板和扩展板组成：**
+**ESP-Drone 2.0 使用模块化的设计思路，由主控板和扩展板组成：**
 
 1. **主控制板**：搭载支持基础飞行的必要元器件，提供硬件扩展接口
 2. **扩展板**：基于硬件扩展接口，用于支持高级飞行功能或其他 DIY 功能
@@ -211,7 +211,7 @@ git clone -b feature/develop https://gitlab.espressif.cn:6688/esp-college/esp-pl
 
 3.1 ESP32 链接脚本修改
 
-如果删除项目目录下的`esp32-s2`组件，需要对 ESP-IDF 目录下的`esp32-s2`组件链接脚本进行配置，目的是将 esplane 固件中的 带有`param`或`log`标签的变量，放置在连续的地址区域
+如果删除项目目录下的`esp32-s2`组件，需要对 ESP-IDF 目录下的`esp32-s2`组件链接脚本进行配置，目的是将 ESP=Drone 固件中的 带有`param`或`log`标签的变量，放置在连续的地址区域
 
 在`{IDF_PATH}/components/esp32s2/ld/esp32s2.project.ld.in`文件中找到`drom0_0_seg`段，该段段尾添加以下内容：
 

@@ -25,7 +25,7 @@
 static struct sockaddr_in6 source_addr; // Large enough for both IPv4 or IPv6
 
 //#define WIFI_SSID      "Udp Server"
-static char WIFI_SSID[32] = "ESPLANE";
+static char WIFI_SSID[32] = "ESP-DRONE";
 static char WIFI_PWD[64] = "12345678" ;
 #define MAX_STA_CONN (1)
 
@@ -222,7 +222,7 @@ void wifiInit(void)
                     NULL));
 
     ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, mac));
-    sprintf(WIFI_SSID, "ESPLANE_%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    sprintf(WIFI_SSID, "ESP-DRONE_%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
     wifi_config_t wifi_config;
     memcpy(wifi_config.ap.ssid, WIFI_SSID, strlen(WIFI_SSID) + 1) ;

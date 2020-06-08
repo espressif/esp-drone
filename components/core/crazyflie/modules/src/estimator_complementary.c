@@ -5,7 +5,7 @@
  * | / ,--´  |    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *    +------`   /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * ESPlane Firmware
+ * ESP-Drone Firmware
  *
  * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2019 Bitcraze AB
@@ -108,7 +108,6 @@ static bool latestTofMeasurement(tofMeasurement_t* tofMeasurement) {
 static bool overwriteMeasurement(xQueueHandle queue, void *measurement)
 {
   portBASE_TYPE result;
-  //TODO:
   bool isInInterrupt = false;//(SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
 
   if (isInInterrupt) {

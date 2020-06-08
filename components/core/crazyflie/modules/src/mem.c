@@ -5,7 +5,7 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * ESPlane firmware
+ * ESP-Drone Firmware
  *
  * Copyright (C) 2012-2019 BitCraze AB
  *

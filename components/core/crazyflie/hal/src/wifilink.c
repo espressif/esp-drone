@@ -1,6 +1,6 @@
 /*
 *
- * ESPlane Firmware
+ * ESP-Drone Firmware
  *
  * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2012 BitCraze AB
@@ -166,8 +166,6 @@ void wifilinkInit()
         return;
     }
 
-    //TODO: Initialize the wifi peripheral
-    //wifiInit();
 
     crtpPacketDelivery = STATIC_MEM_QUEUE_CREATE(crtpPacketDelivery);
     DEBUG_QUEUE_MONITOR_REGISTER(crtpPacketDelivery);

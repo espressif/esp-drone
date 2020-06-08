@@ -1,5 +1,5 @@
 /**
- * ESPlane Firmware
+ * ESP-Drone Firmware
  *
  * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (c) 2014, Bitcraze AB, All rights reserved.
