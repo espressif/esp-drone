@@ -88,9 +88,6 @@
 #define EXTRX_TASK_PRI          2
 #define ZRANGER_TASK_PRI        2
 #define ZRANGER2_TASK_PRI       2
-#define LOG_TASK_PRI            2
-#define MEM_TASK_PRI            2
-#define PARAM_TASK_PRI          2
 #define PROXIMITY_TASK_PRI      0
 #define PM_TASK_PRI             0
 #define USDLOG_TASK_PRI         1
@@ -105,7 +102,17 @@
 #define UART1_TEST_TASK_PRI     1
 #define UART2_TEST_TASK_PRI     1
 //if task watchdog triggered,KALMAN_TASK_PRI should set lower or set lower flow frequency
-#define KALMAN_TASK_PRI         1
+#ifdef TARGET_MCU_ESP32
+  #define KALMAN_TASK_PRI         2
+  #define LOG_TASK_PRI            1
+  #define MEM_TASK_PRI            1
+  #define PARAM_TASK_PRI          1
+#else
+  #define KALMAN_TASK_PRI         1
+  #define LOG_TASK_PRI            2
+  #define MEM_TASK_PRI            2
+  #define PARAM_TASK_PRI          2
+#endif
 
 #define SYSLINK_TASK_PRI        3
 #define USBLINK_TASK_PRI        3
