@@ -34,6 +34,8 @@
 #include "pid.h"
 #include "num.h"
 #include "position_controller.h"
+#define DEBUG_MODULE "POSITION_CONTROLLER"
+#include "debug_cf.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -139,8 +141,13 @@ static struct this_s this = {
 
 //thrustBase should just lift the drone
 #ifdef CONFIG_MOTOR_BRUSHED_715
+  #ifdef CONFIG_TARGET_ESP32_S2_DRONE_V1_2
+  .thrustBase = 42000,
+  .thrustMin  = 8000,
+  #else
   .thrustBase = 36000,
   .thrustMin  = 20000,
+  #endif
 #else
   .thrustBase = 24000,
   .thrustMin  = 5000,
@@ -164,6 +171,7 @@ void positionControllerInit()
       this.pidVY.pid.dt, POSITION_RATE, POSITION_LPF_CUTOFF_FREQ, POSITION_LPF_ENABLE);
   pidInit(&this.pidVZ.pid, this.pidVZ.setpoint, this.pidVZ.init.kp, this.pidVZ.init.ki, this.pidVZ.init.kd,
       this.pidVZ.pid.dt, POSITION_RATE, POSITION_LPF_CUTOFF_FREQ, POSITION_LPF_ENABLE);
+  DEBUG_PRINTI("thrustBase = %d,thrustMin  = %d",this.thrustBase,this.thrustMin);
 }
 
 static float runPid(float input, struct pidAxis_s *axis, float setpoint, float dt) {

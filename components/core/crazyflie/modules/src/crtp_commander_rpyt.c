@@ -89,6 +89,7 @@ static bool posSetMode = false;
  * @param mode flight mode num
  */
 void setCommandermode(FlightMode mode){
+#ifdef CONFIG_ENABLE_COMMAND_MODE_SET
   switch (mode) {
   case ALTHOLD_MODE:
     altHoldMode = true;
@@ -112,6 +113,9 @@ void setCommandermode(FlightMode mode){
     break;
   }
   DEBUG_PRINTI("FlightMode = %u",mode);
+#else
+  DEBUG_PRINTI("set FlightMode disable");
+#endif
 }
 
 /**

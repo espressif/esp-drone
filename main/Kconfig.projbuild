@@ -1,4 +1,4 @@
-menu "ESP_Drone Config"
+menu "ESPDrone Config"
 
     choice
         prompt "ESP_Drone hardware version"
@@ -16,11 +16,19 @@ menu "ESP_Drone Config"
 
     endchoice
 
-    config ENABLE_LEGACY_APP
-        bool "Enable legacy ESPlane1.0 APP"
-        default 0
-        help
-            This enables the udp_server_rx2_task of wifi.
+    menu "app set"
+        config ENABLE_LEGACY_APP
+            bool "Enable legacy ESPlane1.0 APP"
+            default 0
+            help
+                This enables the udp_server_rx2_task of wifi.
+        config ENABLE_COMMAND_MODE_SET
+            bool "Enable \'setCommandermode\' to transform command"
+            default 0
+            help
+                This enables assit mode when use old version app.
+    endmenu
+        
     menu "calibration angle"
         config PITCH_CALIB
             int "PITCH_CALIB deg*100"
