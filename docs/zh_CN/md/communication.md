@@ -47,3 +47,7 @@
 
 ![Sample Wi-Fi Event Scenarios in AP Mode](https://img-blog.csdnimg.cn/2020042622523887.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70#pic_center)
 
+**提高 PHY 增益**
+
+依次进入：`Component config>>PHY>>Max WiFi TX power (dBm)`
+将 `Max WiFi TX power` 改为 `20`，提高 Wi-Fi 通信距离。
