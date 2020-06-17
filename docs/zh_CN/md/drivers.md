@@ -9,7 +9,7 @@
 
 * motors
 
-* wifi
+* [wifi](./communication.md#wi-fi-通信)
 
 ## i2c_devices
 

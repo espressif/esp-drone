@@ -13,20 +13,33 @@
 
 * `esp_drone` 仓库代码已支持多种硬件，可通过 `menuconfig` 进行切换。
 
-    ![ESP-Drone](../../_static/board_choose.png)
+    ![ESP-Drone config](../../_static/board_choose.png)
 
 * 默认情况下 `set-target` 为 `esp32s2`后，硬件自动切换为 `ESP32_S2_Drone_V1_2`
 * 默认情况下 `set-target` 为 `esp32`后，硬件自动切换为 `ESPlane_FC_V1`
 
+**注意事项**
+
+1. ESPlane FC V1 为老版本硬件
+2. ESPlane FC V1 使用 ESP-Drone 新版本代码，需要对硬件进行改动
+    `使用跳线，将模组 GPIO14 连接到 mpu6050 int 引脚 `
+3. ESPlane FC V1 防止上电时 IO12 触发 flash 电压切换 ，使用`espefuse.py`将flash电压固定到 3.3v
+
+    `espefuse.py --port /dev/ttyUSB0 set_flash_voltage 3.3V`
+
+    ```note * Only the first device attaching to the bus can use CS0 pin.```
+
 ## ESP32_S2_Drone_V1_2
 
-TODO:说明书
+![ESP-Drone](../../_static/espdrone_s2_v1_2_up2.jpg)
 
 主板原理图 ： [SCH_Mainboard_ESP32_S2_Drone_V1_2](../../../hardware/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf)
 
 主板 PCB ： [PCB_Mainboard_ESP32_S2_Drone_V1_2](../../../hardware/ESP32_S2_Drone_V1_2/PCB_Mainboard_ESP32_S2_Drone_V1_2.pdf)
 
 ### 基础配置
+
+![ESP-Drone](../../_static/espdrone_s2_v1_2_hardware_package.png)
 
 | 基础配置清单  | 数量 | 备注 |
 |:--:|:--:|:--:|
@@ -146,11 +159,9 @@ TODO:说明书
 主板 PCB ： [PCB_ESPlane_V2_S2](../../../hardware/ESPlane_V2_S2/PCB_ESPlane_V2_S2.pdf)
 
 
-## ESPlane FC V1  (legacy)
+## ESPlane FC V1
 
 ![esplane_fc_v1](../../_static/esplane_1_0.jpg)
-
-![ESP-Drone](../../_static/esplane_v1_specification.jpg)
 
 主板原理图 ： [Schematic_ESPlane_FC_V1](../../../hardware/ESPlane_FC_V1/Schematic_ESPlane_FC_V1.pdf)
 
@@ -241,16 +252,3 @@ TODO:说明书
 | TXD0 |  |  |
 | RXD0 |  |  |
 | GPIO35 | ADC\_7\_BAT | VBAT/2 |
-
-### 注意事项
-
-1. ESPlane FC V1 为老版本硬件
-2. ESPlane FC V1 使用 ESP-Drone 新版本代码，需要对硬件进行改动
-    `使用跳线，将模组 GPIO14 连接到 mpu6050 int 引脚 `
-3. ESPlane FC V1 防止上电时 IO12 触发 flash 电压切换 ，使用`espefuse.py`将flash电压固定到 3.3v
-
-    `espefuse.py --port /dev/ttyUSB0 set_flash_voltage 3.3V`
-
-    ```note * Only the first device attaching to the bus can use CS0 pin.```
-
-## 未来支持更多硬件版本
