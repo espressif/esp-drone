@@ -10,7 +10,7 @@ variables:
 
 build_docs:
     stage: build
-    image: $CI_DOCKER_REGISTRY/esp32-ci-env$BOT_DOCKER_IMAGE_TAG
+    image: $CI_SPHINX_DOCKER:latest
     tags:
         - build_docs
     artifacts:
