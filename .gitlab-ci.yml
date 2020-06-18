@@ -1,0 +1,39 @@
+stages:
+  - build
+
+variables:
+  BATCH_BUILD: "1"
+  V: "0"
+  MAKEFLAGS: "-j5 --no-keep-going"
+  IDF_PATH: "$CI_PROJECT_DIR/esp-idf"
+  IDF_CI_BUILD: "1"
+
+build_docs:
+    stage: build
+    image: $CI_DOCKER_REGISTRY/esp32-ci-env$BOT_DOCKER_IMAGE_TAG
+    tags:
+        - build_docs
+    artifacts:
+        when: always
+        paths:
+            # English version of documentation
+            # - docs/en/md/sphinx-warning-log.txt
+            # - docs/en/md/_build/html
+            # Chinese version of documentation
+            - docs/zh_CN/md/sphinx-warning-log.txt
+            - docs/zh_CN/md/_build/html
+        expire_in: 1 week
+    before_script:
+      - echo "skip default before_script"
+    script:
+      - cd docs
+      # make English version of documentation
+      # - cd en/
+      # - cd md/
+      # - make clean && make html
+      # - cd ../
+      # make Chinese version of documentation
+      - cd zh_CN/
+      - cd md/
+      - make clean && make html
+      - cd ../

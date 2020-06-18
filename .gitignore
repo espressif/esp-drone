@@ -3,4 +3,8 @@ sdkconfig
 sdkconfig.old
 esp_idf
 .vscode/
-
+docs/zh_CN/md/_build
+docs/en/md/_build
+docs/zh_CN/md/sphinx-warning-log.txt
+docs/__pycache__
+docs/en/md/sphinx-warning-log.txt

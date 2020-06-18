@@ -1,4 +1,6 @@
 
+# 通信协议
+
 ## 通信层级结构
 
 ||||
@@ -69,13 +71,13 @@ TODO: ESP32-S2 Wi-Fi 参数需要验证和补充
 
 ## UDP 通信
 
-**UDP 端口号：**
+### UDP 端口号
 
 | App |Direction | ESP-Drone |
 |--|--|--|--|
 | 192.168.43.42::2399 | TX / RX | 192.168.43.42::2390 | 
 
-**UDP 包结构：**
+### UDP 包结构
 
 ```text
 /* Frame format:
@@ -106,7 +108,7 @@ ESP-Drone 项目继承 Crazyflie 项目使用的 CRTP \(Crazy RealTime Protocol\
 
 > CRTP is designed to be state-less, so there's no handshaking procedure that is needed. Any command can be sent at any time, but for some logging/param/mem commands the TOC \(table of contents\) needs to be downloaded in order for the host to be able to send the correct information. The implementation of the Pyton API will download the param/log/mem TOC at connect in order to be able to use all the functionality.
 
-**CRTP 包结构:**
+### CRTP 包结构
 
 > Each CRTP packet is 32 bytes, of which 1 byte is taken by the header. This gives a total payload of 31 bytes per packet. The header holds the port \(8 bits\), channel \(2 bits\) and reserved \(2 bits\).
 
@@ -130,7 +132,7 @@ ESP-Drone 项目继承 Crazyflie 项目使用的 CRTP \(Crazy RealTime Protocol\
 |  | 0 | 4-7 | The destination port |
 | Data | 1-31 | The data in the packet |  |
 
-**端口分配:**
+### 端口分配
 
 | Port | Target | Used for |
 | :---: | :---: | :---: |
@@ -149,7 +151,7 @@ ESP-Drone 项目继承 Crazyflie 项目使用的 CRTP \(Crazy RealTime Protocol\
 
 * [各个端口使用详情可参考：crtp](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/functional-areas/crtp/)
 
-**CRTP 协议支持包**
+### CRTP 协议支持包
 
 * **cflib 是 CRTP 协议的 python 支持包，提供了通信协议的应用层接口，可以用于构建上位机。** 
 * 对于固件中每一个使用 CRTP 协议的组件，在 cflib 中都有一个脚本与其对应。
@@ -162,7 +164,7 @@ ESP-Drone 项目继承 Crazyflie 项目使用的 CRTP \(Crazy RealTime Protocol\
 
 ## 基于 CRTP 协议的应用开发
 
-**各个平台工程模板**
+### 各个平台工程模板
 
 1. [crazyflie2-ios-client](https://github.com/bitcraze/crazyflie2-ios-client)
 
@@ -174,10 +176,10 @@ ESP-Drone 项目继承 Crazyflie 项目使用的 CRTP \(Crazy RealTime Protocol\
 
 	[安卓版本开发指南](https://wiki.bitcraze.io/doc:crazyflie:dev:env:android)
 
-**CFclient**
+### CFclient
 
 CFclient 是 `crazeflie` 源工程的上位机，完全实现了 `CRTP` 协议中定义的功能，可以加快飞机的调试过程，ESP-Drone 项目对该上位机进行裁剪和调整，满足功能设计需求。
 
 ![cfclient控制台界面](../../_static/cfclient.png)
 
-CFclient 具体使用说明可查阅：[CFclient](./cfclient.md)
+CFclient 具体使用说明可查阅：[CFclient](gettingstarted.html#pc-cfclient)

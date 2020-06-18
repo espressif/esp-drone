@@ -1,7 +1,9 @@
 
+# 硬件介绍
+
 ## 已支持硬件
 
-**已支持硬件清单**
+### 已支持硬件清单
 
 | 开发板名  | 主要配置 | 备注 |
 |:--:|:--:|:--:|
@@ -9,7 +11,7 @@
 |ESPlane_V2_S2|ESP32-S2-WROVER + MPU6050|需安装脚架|
 |ESPlane_FC_V1|ESP32-S2-WROOM-32D + MPU6050|需安装机架|
 
-**硬件切换方法**
+### 硬件切换方法
 
 * `esp_drone` 仓库代码已支持多种硬件，可通过 `menuconfig` 进行切换。
 
@@ -33,12 +35,13 @@
 
 ![ESP-Drone](../../_static/espdrone_s2_v1_2_up2.jpg)
 
-主板原理图 ： [SCH_Mainboard_ESP32_S2_Drone_V1_2](../../../hardware/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf)
+主板原理图 ： [SCH_Mainboard_ESP32_S2_Drone_V1_2](./_static/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf)
 
-主板 PCB ： [PCB_Mainboard_ESP32_S2_Drone_V1_2](../../../hardware/ESP32_S2_Drone_V1_2/PCB_Mainboard_ESP32_S2_Drone_V1_2.pdf)
+主板 PCB ： [PCB_Mainboard_ESP32_S2_Drone_V1_2](./_static/ESP32_S2_Drone_V1_2/PCB_Mainboard_ESP32_S2_Drone_V1_2.pdf)
 
 ### 基础配置
 
+#### 基础配置清单
 ![ESP-Drone](../../_static/espdrone_s2_v1_2_hardware_package.png)
 
 | 基础配置清单  | 数量 | 备注 |
@@ -54,19 +57,19 @@
 
 >注意：更换 720 电机之后，需要在 `menuconfig->ESPDrone Config->motors config` 将 `motor type` 修改为 `brushed 720 motor` 
 
-**主控制器**
+#### 主控制器
 
 | 芯片型号  | 模组型号 | 备注 |
 |--|--|--|
 | ESP32-S2 | ESP32-S2-WROVER | 模组内置 4MB flash，2MB PSRAM |
 
-**传感器**
+#### 传感器
 
 | 传感器  | 接口 | 备注 |
 |--|--|--|
 | MPU6050 | I2C0 | 主板传感器 |
 
-**指示灯**
+#### 指示灯
 
 | State | LED | Action |
 |--|--|--|
@@ -76,7 +79,7 @@
 |UDP_RX|GREEN|BLINK|
 |LOW_POWER|RED|SOLID|
 
-**按键**
+#### 按键
 
 | Button | IO | Function |
 |--|--|--|
@@ -84,7 +87,7 @@
 |SW2|EN|Reset|
 
 
-**主板 IO 定义**
+#### 主板 IO 定义
 
 | 引脚 | 功能 | 备注 |
 | :---: | :---: | :---: |
@@ -109,7 +112,7 @@
 | GPIO2 | ADC\_7\_BAT | VBAT/2 |
 | GPIO1 |EXT_IO1  |  |
 
-**摄像头接口**
+#### 摄像头接口
 
 | 引脚 | 功能 | 备注 |
 | :---: | :---: | :---: |
@@ -137,7 +140,7 @@
 扩展板原理图 ：待发布
 扩展板 PCB ：待发布
 
-**扩展板 IO 定义**
+#### 扩展板 IO 定义
 
 | 左引脚 | IO |功能 | 右引脚 | IO |功能|
 | :---: | :---: | :---: | :---: | :---: | :---:|
@@ -154,21 +157,23 @@
 
 ![esplane_fc_v1](../../_static/esplane_2_0.jpg)
 
-主板原理图 ： [SCH_ESPlane_V2_S2](../../../hardware/ESPlane_V2_S2/SCH_ESPlane_V2_S2.pdf)
+主板原理图 ： [SCH_ESPlane_V2_S2](./_static/ESPlane_V2_S2/SCH_ESPlane_V2_S2.pdf)
 
-主板 PCB ： [PCB_ESPlane_V2_S2](../../../hardware/ESPlane_V2_S2/PCB_ESPlane_V2_S2.pdf)
+主板 PCB ： [PCB_ESPlane_V2_S2](./_static/ESPlane_V2_S2/PCB_ESPlane_V2_S2.pdf)
 
 
 ## ESPlane FC V1
 
 ![esplane_fc_v1](../../_static/esplane_1_0.jpg)
 
-主板原理图 ： [Schematic_ESPlane_FC_V1](../../../hardware/ESPlane_FC_V1/Schematic_ESPlane_FC_V1.pdf)
+主板原理图 ： [Schematic_ESPlane_FC_V1](./_static/ESPlane_FC_V1/Schematic_ESPlane_FC_V1.pdf)
 
-主板 PCB ： [PCB_ESPlane_FC_V1](../../../hardware/ESPlane_FC_V1/PCB_ESPlane_FC_V1.pdf)
+主板 PCB ： [PCB_ESPlane_FC_V1](./_static/ESPlane_FC_V1/PCB_ESPlane_FC_V1.pdf)
 
 
 ### 基础配置
+
+#### 基础配置清单
 
 | 配置清单  | 数量 | 备注 |
 |:--:|:--:|:--:|
@@ -179,13 +184,13 @@
 |300 mAh 1s 锂电池|1||
 |1s 锂电池充电板|1|||
 
-**传感器**
+#### 传感器
 
 | Sensor  | Interface | Comment |
 |--|--|--|
 | MPU6050 | I2C0 | must |
 
-**指示灯**
+#### 指示灯
 
 ```
 #define LINK_LED         LED_BLUE
@@ -203,7 +208,7 @@
 |SYSTEM READY|BLUE|SOLID|
 |UDP_RX|GREEN|BLINK|
 
-**主板 IO 定义**
+#### 主板 IO 定义
 
 | 引脚 | 功能 | 备注 |
 | :---: | :---: | :---: |
@@ -227,7 +232,7 @@
 
 ### 扩展配置
 
-**ESPlane + pmw3901 引脚配置**
+#### ESPlane + pmw3901 引脚配置
 
 | 引脚 | 功能 | 备注 |
 | :---: | :---: | :---: |
