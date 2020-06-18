@@ -16,8 +16,8 @@ ESP-Drone 是基于乐鑫 ESP32/ESP32-S2 开发的小型无人机解决方案，
 
 **ESP-Drone 2.0 使用模块化的设计思路，由主控板和扩展板组成：**
 
-* **主控制板**：搭载支持基础飞行的必要元器件，提供硬件扩展接口
-* **扩展板**：基于硬件扩展接口，用于支持高级飞行功能或其他 DIY 功能
+* **主控制板**：搭载 ESP32-S2 模组和支持基础飞行的必要传感器，并提供硬件扩展接口
+* **扩展板**：搭载扩展传感器，可对接主控制板硬件扩展接口，支持高级飞行功能
 
 |序号| 模块名 | 主要元器件 | 功能 | 接口 |安装位置 |
 |--|--|--|--|--|--|
@@ -49,7 +49,7 @@ Crazyflie 是来自 bitcraze 开源工程的四旋翼飞行器。
 
 >图片来源：A swarm of drones exploring the environment, avoiding obstacles and each other. \(Guus Schoonewille, TU Delft\)
 
-详情可查阅 crazyflie 官网：https://www.bitcraze.io/
+详情可查阅 crazyflie 官网：[https://www.bitcraze.io/](https://www.bitcraze.io/)
 
 ## 准备工作
 
@@ -69,7 +69,9 @@ ESP-Drone_S2_V1.2：
 
 **IOS APP 扫码下载：**
 
-![ios_app](../../_static/ios_app_download.png)
+<div align="center">
+   <img src="../../_static/ios_app_download.png" width = "250" alt="ios_app_download" align=center />
+</div>
 
 ### 安装 CFClient
 
@@ -165,17 +167,22 @@ python3 ./bin/cfclient
 	```
 
 ３. 控制飞行
+
   1. 打开通信连接，小飞机绿灯将闪烁
   2. 轻推油门，起飞
 
-	![espdrone_app_android](../../_static/espdrone_app_android.png)
+<div align="center">
+   <img src="../../_static/espdrone_app_android.png" width = "425" alt="espdrone_app_android" align=center />
+</div>
 
 
 ## PC CFClient 使用指引
 
 CFclient 是 `crazeflie` 源工程的上位机，完全实现了 `CRTP` 协议中定义的功能，可以加快飞机的调试过程，ESP-Drone 项目对该上位机进行裁剪和调整，满足功能设计需求。
 
-![Architecture](https://img-blog.csdnimg.cn/20191022115149326.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
+<div align="center">
+   <img src="../../_static/cfclient_architecture.png" width = "550" alt="cfclient_architecture" align=center />
+</div>
 
 ![cfclient控制台界面](../../_static/cfclient.png)
 
@@ -212,7 +219,7 @@ CFclient 是 `crazeflie` 源工程的上位机，完全实现了 `CRTP` 协议�
 
 按照提示绑定遥控器摇杆与各个控制通道：
 
-![按照提示绑定遥控器摇杆与各个控制通道](https://img-blog.csdnimg.cn/2019123116533679.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
+![按照提示绑定遥控器摇杆与各个控制通道](../../_static/gamepad_set.png)
 
 **飞行数据 Fligt Data**
 
@@ -232,22 +239,21 @@ CFclient 是 `crazeflie` 源工程的上位机，完全实现了 `CRTP` 协议�
 
 **在线调整 PID 参数**
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/2019123116253174.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
+![cfclient_pid_tune](../../_static/cfclient_pid_tune.png)
 
 ### 飞行数据监控
 
 **配置要监控的参数**
 
-![logging](https://img-blog.csdnimg.cn/20191231162435849.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
+![logging set](../../_static/log_set.png)
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/201912311624470.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
+![logging set2](../../_static/log_set2.png)
 
 **实时波形绘制**
 
 陀螺仪加速度计实时数据监测：
 
-![陀螺仪加速度计实时数据](https://img-blog.csdnimg.cn/20191231160734754.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
-
+![logging acc](../../_static/log_acc.png)
 
 ## 螺旋桨方向
 
