@@ -70,7 +70,7 @@ ESP-Drone_S2_V1.2：
 **IOS APP 扫码下载：**
 
 <div align="center">
-   <img src="../../_static/ios_app_download.png" width = "250" alt="ios_app_download" align=center />
+   <img src="_static/ios_app_download.png" width = "250" alt="ios_app_download" align=center />
 </div>
 
 ### 安装 CFClient
@@ -172,7 +172,7 @@ python3 ./bin/cfclient
   2. 轻推油门，起飞
 
 <div align="center">
-   <img src="../../_static/espdrone_app_android.png" width = "425" alt="espdrone_app_android" align=center />
+   <img src="_static/espdrone_app_android.png" width = "425" alt="espdrone_app_android" align=center />
 </div>
 
 
@@ -181,7 +181,7 @@ python3 ./bin/cfclient
 CFclient 是 `crazeflie` 源工程的上位机，完全实现了 `CRTP` 协议中定义的功能，可以加快飞机的调试过程，ESP-Drone 项目对该上位机进行裁剪和调整，满足功能设计需求。
 
 <div align="center">
-   <img src="../../_static/cfclient_architecture.png" width = "550" alt="cfclient_architecture" align=center />
+   <img src="_static/cfclient_architecture.png" width = "550" alt="cfclient_architecture" align=center />
 </div>
 
 ![cfclient控制台界面](../../_static/cfclient.png)

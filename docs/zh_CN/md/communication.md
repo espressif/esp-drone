@@ -147,7 +147,9 @@ ESP-Drone 项目继承 Crazyflie 项目使用的 CRTP \(Crazy RealTime Protocol\
 | 14 | Client-side debugging | Debugging the UI and exists only in the Crazyflie Python API and not in the Crazyflie itself. |
 | 15 | Link layer | Used to control and query the communication link |
 
-> `In the firmware most modules (that are connected to ports) are implemented as tasks. Each task is blocking on a message delivery queue where incoming CRTP packets are delivered. At start up each of these tasks (and other modules) register a callback with the communication layer for their pre-defined ports.`
+> `In the firmware most modules (that are connected to ports) are implemented as tasks. 
+>  Each task is blocking on a message delivery queue where incoming CRTP packets are delivered. 
+>  At start up each of these tasks (and other modules) register a callback with the communication layer for their pre-defined ports.`
 
 * [各个端口使用详情可参考：crtp](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/functional-areas/crtp/)
 
