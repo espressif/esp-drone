@@ -35,7 +35,7 @@
 #include "semphr.h"
 
 #include "config.h"
-#include "debug.h"
+#include "debug_cf.h"
 #include "syslink.h"
 #include "radiolink.h"
 #include "uart_syslink.h"

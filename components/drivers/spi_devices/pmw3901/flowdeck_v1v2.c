@@ -55,6 +55,7 @@ float dpixely_previous = 0;
 
 static uint8_t outlierCount = 0;
 
+static bool isInit1 = false;
 static bool isInit2 = false;
 
 motionBurst_t currentMotion;
@@ -62,14 +63,19 @@ motionBurst_t currentMotion;
 // Disables pushing the flow measurement in the EKF
 static bool useFlowDisabled = false;
 
-#define NCS_PIN 15
+#define NCS_PIN CONFIG_SPI_PIN_CS0
 
 static void flowdeckTask(void *param)
 {
     systemWaitStart();
 
     while (1) {
+// if task watchdog triggered,flow frequency should set lower
+#ifdef TARGET_MCU_ESP32S2
         vTaskDelay(10);
+#elif defined TARGET_MCU_ESP32
+        vTaskDelay(10);
+#endif
 
         pmw3901ReadMotion(NCS_PIN, &currentMotion);
 
@@ -85,7 +91,13 @@ static void flowdeckTask(void *param)
             flowMeasurement_t flowData;
             flowData.stdDevX = 0.25;    // [pixels] should perhaps be made larger?
             flowData.stdDevY = 0.25;    // [pixels] should perhaps be made larger?
+
+// if task watchdog triggered,flow frequency should set lower
+#ifdef TARGET_MCU_ESP32S2
             flowData.dt = 0.01;
+#elif defined TARGET_MCU_ESP32
+            flowData.dt = 0.01;
+#endif
 
 #if defined(USE_MA_SMOOTHING)
             // Use MA Smoothing
@@ -124,9 +136,40 @@ static void flowdeckTask(void *param)
     }
 }
 
+// static void flowdeck1Init()
+// {
+//   if (isInit1 || isInit2) {
+//     return;
+//   }
+
+//   // Initialize the VL53L0 sensor using the zRanger deck driver
+//   const DeckDriver *zRanger = deckFindDriverByName("bcZRanger");
+//   zRanger->init(NULL);
+
+//   if (pmw3901Init(NCS_PIN))
+//   {
+//     xTaskCreate(flowdeckTask, FLOW_TASK_NAME, FLOW_TASK_STACKSIZE, NULL,
+//                 FLOW_TASK_PRI, NULL);
+
+//     isInit1 = true;
+//   }
+// }
+
+// static bool flowdeck1Test()
+// {
+//   if (!isInit1) {
+//     DEBUG_PRINTD("Error while initializing the PMW3901 sensor\n");
+//   }
+
+//   // Test the VL53L0 driver
+//   const DeckDriver *zRanger = deckFindDriverByName("bcZRanger");
+
+//   return zRanger->test();
+// }
+
 void flowdeck2Init()
 {
-    if ( isInit2) {
+	if (isInit1 || isInit2) {
         return;
     }
 
@@ -169,5 +212,6 @@ PARAM_ADD(PARAM_UINT8, disable, &useFlowDisabled)
 PARAM_GROUP_STOP(motion)
 
 PARAM_GROUP_START(deck)
+PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, bcFlow, &isInit1)
 PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, bcFlow2, &isInit2)
 PARAM_GROUP_STOP(deck)

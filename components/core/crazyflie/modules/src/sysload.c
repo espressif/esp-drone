@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
+ * ESP-Drone Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2016 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,23 +25,27 @@
  * sysload.c - System load monitor
  */
 
-#define DEBUG_MODULE "SYSLOAD"
+
 
 #include <stdbool.h>
-#include "FreeRTOS.h"
-#include "timers.h"
-#include "debug.h"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/timers.h"
+
 #include "cfassert.h"
 #include "param.h"
 
 #include "sysload.h"
+#include "stm32_legacy.h"
+#define DEBUG_MODULE "SYSLOAD"
+#include "debug_cf.h"
 
-#define TIMER_PERIOD M2T(1000)
+#define TIMER_PERIOD M2T(5000)
 
 static void timerHandler(xTimerHandle timer);
 
 static bool initialized = false;
-static uint8_t triggerDump = 0;
+static uint8_t triggerDump = 1;
 
 typedef struct {
   uint32_t ulRunTimeCounter;
@@ -97,15 +102,15 @@ static void timerHandler(xTimerHandle timer) {
     // CPU usage is since last dump in % compared to total time spent in tasks. Note that time spent in interrupts will be included in measured time.
     // Stack usage is displayed as nr of unused bytes at peak stack usage.
 
-    DEBUG_PRINT("Task dump\n");
-    DEBUG_PRINT("Load\tStack left\tName\n");
+    DEBUG_PRINTI("Task dump\n");
+    DEBUG_PRINTI("Load\tStack left\tName\tPRI\n");
     for (uint32_t i = 0; i < taskCount; i++) {
       TaskStatus_t* stats = &taskStats[i];
       taskData_t* previousTaskData = getPreviousTaskData(stats->xTaskNumber);
 
       uint32_t taskRunTime = stats->ulRunTimeCounter;
       float load = f * (taskRunTime - previousTaskData->ulRunTimeCounter);
-      DEBUG_PRINT("%.2f \t%u \t%s\n", (double)load, stats->usStackHighWaterMark, stats->pcTaskName);
+      DEBUG_PRINTI("%.2f \t%u \t%s \t%u\n", (double)load, stats->usStackHighWaterMark, stats->pcTaskName,stats->uxBasePriority);
 
       previousTaskData->ulRunTimeCounter = taskRunTime;
     }

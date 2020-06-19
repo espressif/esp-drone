@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
+ * ESP-Drone Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2013 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,11 +27,12 @@
  */
 
 /* FreeRtos includes */
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
 
-#include "stm32fxxx.h"
+
+#include "stm32_legacy.h"
 #include "config.h"
 #include "system.h"
 #include "nvicconf.h"
@@ -39,11 +41,11 @@
 #include "cppm.h"
 
 #define DEBUG_MODULE  "EXTRX"
-#include "debug.h"
+#include "debug_cf.h"
 #include "log.h"
 #include "static_mem.h"
 
-#define ENABLE_CPPM
+//#define ENABLE_CPPM
 #define ENABLE_EXTRX_LOG
 
 

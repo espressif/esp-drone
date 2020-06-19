@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
+ * ESP-Drone Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,14 +28,13 @@
 #include <stdbool.h>
 
 /* FreeRtos includes */
-#include "FreeRTOS.h"
+#include "freertos/FreeRTOS.h"
 #include <stdint.h>
 #include <string.h>
 
 #include "config.h"
 #include "crtp.h"
 #include "platformservice.h"
-#include "syslink.h"
 #include "version.h"
 #include "platform.h"
 
@@ -92,18 +92,14 @@ void platformserviceHandler(CRTPPacket *p)
 
 static void platformCommandProcess(uint8_t command, uint8_t *data)
 {
-  SyslinkPacket slp;
+    switch (command) {
+        case setContinousWave:
+            //TODO:
+            break;
 
-  switch (command) {
-    case setContinousWave:
-      slp.type = SYSLINK_RADIO_CONTWAVE;
-      slp.length = 1;
-      slp.data[0] = data[0];
-      syslinkSendPacket(&slp);
-      break;
-    default:
-      break;
-  }
+        default:
+            break;
+    }
 }
 
 static void versionCommandProcess(CRTPPacket *p)

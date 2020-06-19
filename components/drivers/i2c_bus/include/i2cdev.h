@@ -1,6 +1,6 @@
 /**
  *
- * ESPlane Firmware
+ * ESP-Drone Firmware
  *
  * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
@@ -28,7 +28,6 @@
 #include <stdbool.h>
 
 #include "i2c_drv.h"
-#include "driver/i2c.h"
 
 #define I2CDEV_NO_MEM_ADDR  0xFF
 

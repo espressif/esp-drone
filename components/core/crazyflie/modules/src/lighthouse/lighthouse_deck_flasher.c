@@ -30,7 +30,7 @@
 #include <stdlib.h>
 
 #define DEBUG_MODULE "LHFL"
-#include "debug.h"
+#include "debug_cf.h"
 #include "lh_bootloader.h"
 #include "lighthouse_deck_flasher.h"
 

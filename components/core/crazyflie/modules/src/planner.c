@@ -36,7 +36,9 @@ SOFTWARE.
 implementation of planning state machine
 */
 #include <stddef.h>
+#define DEBUG_MODULE "PLANNER"
 #include "planner.h"
+#include "debug_cf.h"
 
 static struct traj_eval plan_eval(struct planner *p, float t);
 

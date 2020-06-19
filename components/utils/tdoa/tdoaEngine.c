@@ -46,7 +46,7 @@ The implementation must handle
 #include <string.h>
 
 #define DEBUG_MODULE "TDOA_ENGINE"
-#include "debug.h"
+#include "debug_cf.h"
 
 #include "tdoaEngine.h"
 #include "tdoaStats.h"

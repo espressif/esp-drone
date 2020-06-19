@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie Firmware
+ * ESP-Drone Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2017 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,8 +32,11 @@
 #include "commander.h"
 #include "crtp.h"
 #include "param.h"
-#include "FreeRTOS.h"
+#include "freertos/FreeRTOS.h"
 #include "num.h"
+#include "stm32_legacy.h"
+#define DEBUG_MODULE "MODE"
+#include "debug_cf.h"
 
 #define MIN_THRUST  1000
 #define MAX_THRUST  60000
@@ -78,6 +82,41 @@ static bool thrustLocked = true;
 static bool altHoldMode = false;
 static bool posHoldMode = false;
 static bool posSetMode = false;
+
+/**
+ * Set flight mode deponds on the present sensors
+ *
+ * @param mode flight mode num
+ */
+void setCommandermode(FlightMode mode){
+#ifdef CONFIG_ENABLE_COMMAND_MODE_SET
+  switch (mode) {
+  case ALTHOLD_MODE:
+    altHoldMode = true;
+    posHoldMode = false;
+    posSetMode = false;
+    break;
+  case POSHOLD_MODE:
+    altHoldMode = true;
+    posHoldMode = true;
+    posSetMode = false; 
+    break;
+  case POSSET_MODE:
+    altHoldMode = false;
+    posHoldMode = false;
+    posSetMode = true;  
+    break;
+  default:
+    altHoldMode = false;
+    posHoldMode = false;
+    posSetMode = false;  
+    break;
+  }
+  DEBUG_PRINTI("FlightMode = %u",mode);
+#else
+  DEBUG_PRINTI("set FlightMode disable");
+#endif
+}
 
 /**
  * Rotate Yaw so that the Crazyflie will change what is considered front.
@@ -152,8 +191,8 @@ void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk)
     setpoint->mode.roll = modeDisable;
     setpoint->mode.pitch = modeDisable;
 
-    setpoint->velocity.x = values->pitch/30.0f;
-    setpoint->velocity.y = values->roll/30.0f;
+    setpoint->velocity.x = -values->roll/30.0f;
+    setpoint->velocity.y = values->pitch/30.0f;
     setpoint->attitude.roll  = 0;
     setpoint->attitude.pitch = 0;
   } else if (posSetMode && values->thrust != 0) {

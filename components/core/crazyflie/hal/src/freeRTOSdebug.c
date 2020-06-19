@@ -5,7 +5,7 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * ESPlane Firmware
+ * ESP-Drone Firmware
  *
  * Copyright 2019-2020  Espressif Systems (Shanghai) 
  * Copyright (C) 2011-2012 Bitcraze AB
@@ -38,29 +38,30 @@
 
 uint32_t traceTickCount;
 
-void vApplicationMallocFailedHook( void )
-{
-  portDISABLE_INTERRUPTS();
-  DEBUG_PRINTE("Malloc failed!\n");
-  ledSet(ERR_LED1, 1);
-  ledSet(ERR_LED2, 1);
-  powerStop();
-  storeAssertTextData("Malloc failed");
-  while(1);
-}
+//TODO:disable system hook now
+// void vApplicationMallocFailedHook( void )
+// {
+//   portDISABLE_INTERRUPTS();
+//   DEBUG_PRINTE("Malloc failed!\n");
+//   ledSet(ERR_LED1, 1);
+//   ledSet(ERR_LED2, 1);
+//   powerStop();
+//   storeAssertTextData("Malloc failed");
+//   while(1);
+// }
 
-#if (configCHECK_FOR_STACK_OVERFLOW > 0)
-void vApplicationStackOverflowHook(xTaskHandle *pxTask, signed portCHAR *pcTaskName)
-{
-  portDISABLE_INTERRUPTS();
-  DEBUG_PRINT("\nStack overflow!\n");
-  ledSet(ERR_LED1, 1);
-  ledSet(ERR_LED2, 1);
-  powerStop();
-  storeAssertTextData("Stack overflow");
-  while(1);
-}
-#endif
+// #if (configCHECK_FOR_STACK_OVERFLOW > 0)
+// void vApplicationStackOverflowHook(xTaskHandle *pxTask, signed portCHAR *pcTaskName)
+// {
+//   portDISABLE_INTERRUPTS();
+//   DEBUG_PRINT("\nStack overflow!\n");
+//   ledSet(ERR_LED1, 1);
+//   ledSet(ERR_LED2, 1);
+//   powerStop();
+//   storeAssertTextData("Stack overflow");
+//   while(1);
+// }
+// #endif
 
 #ifdef UART_OUTPUT_TRACE_DATA
 void debugSendTraceInfo(unsigned int taskNbr)

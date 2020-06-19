@@ -33,10 +33,10 @@
 #include <stdbool.h>
 
 /* FreeRtos includes */
-#include "FreeRTOS.h"
-#include "task.h"
-#include "timers.h"
-#include "semphr.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/timers.h"
+#include "freertos/semphr.h"
 
 #include "config.h"
 #include "crtp.h"
@@ -47,12 +47,14 @@
 
 #include "console.h"
 #include "cfassert.h"
-#include "debug.h"
+#define DEBUG_MODULE "LOG"
+#include "debug_cf.h"
+#include "stm32_legacy.h"
 #include "static_mem.h"
 
 #if 0
-#define LOG_DEBUG(fmt, ...) DEBUG_PRINT("D/log " fmt, ## __VA_ARGS__)
-#define LOG_ERROR(fmt, ...) DEBUG_PRINT("E/log " fmt, ## __VA_ARGS__)
+#define LOG_DEBUG(fmt, ...) DEBUG_PRINTD("D/log " fmt, ## __VA_ARGS__)
+#define LOG_ERROR(fmt, ...) DEBUG_PRINTD("E/log " fmt, ## __VA_ARGS__)
 #else
 #define LOG_DEBUG(...)
 #define LOG_ERROR(...)

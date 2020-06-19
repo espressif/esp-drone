@@ -1,6 +1,6 @@
 /*
  *
- * ESPlane Firmware
+ * ESP-Drone Firmware
  * 
  * Copyright 2019-2020  Espressif Systems (Shanghai) 
  * Copyright (C) 2011-2012 Bitcraze AB
@@ -24,6 +24,7 @@
 
 #include "config.h"
 #include "console.h"
+//if enable, some message will print to remote client 
 //#define DEBUG_PRINT_ON_CONSOLE
 #ifdef DEBUG_PRINT_ON_UART
   #include "uart1.h"
@@ -62,15 +63,15 @@ void debugInit(void);
   #define DEBUG_PRINT_OS(fmt, ...) SEGGER_RTT_printf(0, fmt, ## __VA_ARGS__)
 #elif defined(DEBUG_PRINT_ON_CONSOLE)// Debug using radio or USB
   #include "esp_log.h"
-  #define DEBUG_PRINT(fmt, ...) consolePrintf(DEBUG_FMT(fmt), ##__VA_ARGS__)
+  #define DEBUG_PRINT(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG,DEBUG_MODULE,fmt, ##__VA_ARGS__) 
   #define DEBUG_PRINTE(fmt, ...) consolePrintf(DEBUG_FMT(fmt), ##__VA_ARGS__)
   #define DEBUG_PRINTW(fmt, ...) consolePrintf(DEBUG_FMT(fmt), ##__VA_ARGS__)
   #define DEBUG_PRINTI(fmt, ...) consolePrintf(DEBUG_FMT(fmt), ##__VA_ARGS__)
-  #define DEBUG_PRINTD(fmt, ...) consolePrintf(DEBUG_FMT(fmt), ##__VA_ARGS__)
-  #define DEBUG_PRINTV(fmt, ...) consolePrintf(DEBUG_FMT(fmt), ##__VA_ARGS__)
-  #define DEBUG_PRINT_OS(fmt, ...) consolePrintf(DEBUG_FMT(fmt), ##__VA_ARGS__)
+  #define DEBUG_PRINTD(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG,DEBUG_MODULE,fmt, ##__VA_ARGS__) 
+  #define DEBUG_PRINTV(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_VERBOSE,DEBUG_MODULE,fmt, ##__VA_ARGS__) 
+  #define DEBUG_PRINT_OS(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG,DEBUG_MODULE,fmt, ##__VA_ARGS__) 
 #else
-  #define DEBUG_PRINT(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_INFO,DEBUG_MODULE,fmt, ##__VA_ARGS__) 
+  #define DEBUG_PRINT(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG,DEBUG_MODULE,fmt, ##__VA_ARGS__) 
   #define DEBUG_PRINTE(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_ERROR,DEBUG_MODULE,fmt, ##__VA_ARGS__)
   #define DEBUG_PRINTW(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_WARN,DEBUG_MODULE,fmt, ##__VA_ARGS__)
   #define DEBUG_PRINTI(fmt, ...) ESP_LOG_LEVEL_LOCAL(ESP_LOG_INFO,DEBUG_MODULE,fmt, ##__VA_ARGS__)

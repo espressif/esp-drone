@@ -23,33 +23,32 @@
  *
  *
  */
-#define DEBUG_MODULE "STAB"
 
 #include <math.h>
 
-#include "FreeRTOS.h"
-#include "task.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
+#include "stm32_legacy.h"
 #include "system.h"
 #include "log.h"
 #include "param.h"
-#include "debug.h"
 #include "motors.h"
-#include "pm.h"
-
+#include "pm_esplane.h"
+#include "esp_timer.h"
 #include "stabilizer.h"
-
 #include "sensors.h"
 #include "commander.h"
 #include "crtp_localization_service.h"
 #include "sitaw.h"
 #include "controller.h"
 #include "power_distribution.h"
-
 #include "estimator.h"
-#include "usddeck.h"
+//#include "usddeck.h" //usddeckLoggingMode_e
 #include "quatcompress.h"
 #include "statsCnt.h"
+#define DEBUG_MODULE "STAB"
+#include "debug_cf.h"
 #include "static_mem.h"
 
 static bool isInit;
@@ -229,12 +228,17 @@ static void stabilizerTask(void* param)
 {
   uint32_t tick;
   uint32_t lastWakeTime;
+
+#ifdef configUSE_APPLICATION_TASK_TAG
+	#if configUSE_APPLICATION_TASK_TAG == 1
   vTaskSetApplicationTaskTag(0, (void*)TASK_STABILIZER_ID_NBR);
+  #endif
+#endif
 
   //Wait for the system to be fully started to start stabilization loop
   systemWaitStart();
 
-  DEBUG_PRINT("Wait for sensor calibration...\n");
+  DEBUG_PRINTI("Wait for sensor calibration...\n");
 
   // Wait for sensors to be calibrated
   lastWakeTime = xTaskGetTickCount ();
@@ -244,7 +248,7 @@ static void stabilizerTask(void* param)
   // Initialize tick to something else then 0
   tick = 1;
 
-  DEBUG_PRINT("Ready to fly.\n");
+  DEBUG_PRINTI("Ready to fly.\n");
 
   while(1) {
     // The sensor should unlock at 1kHz
@@ -289,12 +293,12 @@ static void stabilizerTask(void* param)
         powerDistribution(&control);
       }
 
-      // Log data to uSD card if configured
-      if (   usddeckLoggingEnabled()
+      //TODO: Log data to uSD card if configured
+      /*if (usddeckLoggingEnabled()
           && usddeckLoggingMode() == usddeckLoggingMode_SynchronousStabilizer
           && RATE_DO_EXECUTE(usddeckFrequency(), tick)) {
         usddeckTriggerLogging();
-      }
+      }*/
     }
     calcSensorToOutputLatency(&sensorData);
     tick++;
@@ -344,7 +348,7 @@ static bool evaluateTest(float low, float high, float value, uint8_t motor)
 {
   if (value < low || value > high)
   {
-    DEBUG_PRINT("Propeller test on M%d [FAIL]. low: %0.2f, high: %0.2f, measured: %0.2f\n",
+    DEBUG_PRINTI("Propeller test on M%d [FAIL]. low: %0.2f, high: %0.2f, measured: %0.2f\n",
                 motor + 1, (double)low, (double)high, (double)value);
     return false;
   }
@@ -393,7 +397,7 @@ static void testProps(sensorData_t *sensors)
       accVarXnf = variance(accX, PROPTEST_NBR_OF_VARIANCE_VALUES);
       accVarYnf = variance(accY, PROPTEST_NBR_OF_VARIANCE_VALUES);
       accVarZnf = variance(accZ, PROPTEST_NBR_OF_VARIANCE_VALUES);
-      DEBUG_PRINT("Acc noise floor variance X+Y:%f, (Z:%f)\n",
+      DEBUG_PRINTI("Acc noise floor variance X+Y:%f, (Z:%f)\n",
                   (double)accVarXnf + (double)accVarYnf, (double)accVarZnf);
       testState = measureProp;
     }
@@ -426,7 +430,7 @@ static void testProps(sensorData_t *sensors)
       accVarX[motorToTest] = variance(accX, PROPTEST_NBR_OF_VARIANCE_VALUES);
       accVarY[motorToTest] = variance(accY, PROPTEST_NBR_OF_VARIANCE_VALUES);
       accVarZ[motorToTest] = variance(accZ, PROPTEST_NBR_OF_VARIANCE_VALUES);
-      DEBUG_PRINT("Motor M%d variance X+Y:%f (Z:%f)\n",
+      DEBUG_PRINTI("Motor M%d variance X+Y:%f (Z:%f)\n",
                    motorToTest+1, (double)accVarX[motorToTest] + (double)accVarY[motorToTest],
                    (double)accVarZ[motorToTest]);
     }
@@ -473,7 +477,7 @@ static void testProps(sensorData_t *sensors)
 //                  (double)minSingleLoadedVoltage[MOTOR_M2],
 //                  (double)minSingleLoadedVoltage[MOTOR_M3],
 //                  (double)minSingleLoadedVoltage[MOTOR_M4]);
-      DEBUG_PRINT("%f %f %f %f %f %f\n", (double)idleVoltage,
+      DEBUG_PRINTI("%f %f %f %f %f %f\n", (double)idleVoltage,
                   (double)(idleVoltage - minLoadedVoltage),
                   (double)(idleVoltage - minSingleLoadedVoltage[MOTOR_M1]),
                   (double)(idleVoltage - minSingleLoadedVoltage[MOTOR_M2]),
@@ -499,8 +503,7 @@ static void testProps(sensorData_t *sensors)
       if (!evaluateTest(0, PROPELLER_BALANCE_TEST_THRESHOLD,  accVarX[m] + accVarY[m], m))
       {
         nrFailedTests++;
-        for (int j = 0; j < 3; j++)
-        {
+        for (int j = 0; j < 3; j++){
           motorsBeep(m, true, testsound[m], (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / A4)/ 20);
           vTaskDelay(M2T(MOTORS_TEST_ON_TIME_MS));
           motorsBeep(m, false, 0, 0);

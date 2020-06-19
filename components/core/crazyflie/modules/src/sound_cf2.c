@@ -31,14 +31,15 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "FreeRTOS.h"
-#include "timers.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/timers.h"
 
 #include "config.h"
 #include "param.h"
 #include "log.h"
 #include "sound.h"
 #include "buzzer.h"
+#include "stm32_legacy.h"
 
 /**
  * Credit to http://tny.cz/e525c1b2 for supplying the tones
@@ -338,6 +339,7 @@ static void soundTimer(xTimerHandle timer)
 
 void soundInit(void)
 {
+#ifdef BUZZER_ON
   if (isInit) {
     return;
   }
@@ -348,6 +350,7 @@ void soundInit(void)
   xTimerStart(timer, 100);
 
   isInit = true;
+#endif
 }
 
 bool soundTest(void)

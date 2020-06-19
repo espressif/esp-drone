@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie Firmware
+ * ESP-Drone Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,8 +27,8 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "FreeRTOS.h"
-#include "task.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include "crtp.h"
 #include "crtp_localization_service.h"
@@ -38,10 +39,11 @@
 #include "stabilizer.h"
 #include "configblock.h"
 
-#include "locodeck.h"
+//#include "locodeck.h"
 
 #include "estimator.h"
 #include "quatcompress.h"
+#include "stm32_legacy.h"
 
 #define NBR_OF_RANGES_IN_PACKET   5
 #define DEFAULT_EMERGENCY_STOP_TIMEOUT (1 * RATE_MAIN_LOOP)
@@ -94,11 +96,12 @@ static bool isInit = false;
 static uint8_t my_id;
 static uint16_t tickOfLastPacket; // tick when last packet was received
 
-static void locSrvCrtpCB(CRTPPacket* pk);
-static void extPositionHandler(CRTPPacket* pk);
-static void genericLocHandle(CRTPPacket* pk);
-static void extPositionPackedHandler(CRTPPacket* pk);
+static void locSrvCrtpCB(CRTPPacket *pk);
+static void extPositionHandler(CRTPPacket *pk);//package from an external positioning system to enhance kalman filtering
+static void genericLocHandle(CRTPPacket *pk);//LPP Short packet tunnel and emergency stop
+static void extPositionPackedHandler(CRTPPacket *pk);//undefined
 
+//Register the CRTP_PORT_LOCALIZATION port and set the callback function
 void locSrvInit()
 {
   if (isInit) {
@@ -148,7 +151,9 @@ static void genericLocHandle(CRTPPacket* pk)
   if (pk->size < 1) return;
 
   if (type == LPS_SHORT_LPP_PACKET && pk->size >= 2) {
-    bool success = lpsSendLppShort(pk->data[1], &pk->data[2], pk->size-2);
+    
+	//TODO:
+    bool success = false;//lpsSendLppShort(pk->data[1], &pk->data[2], pk->size-2);
 
     pk->port = CRTP_PORT_LOCALIZATION;
     pk->channel = GENERIC_TYPE;

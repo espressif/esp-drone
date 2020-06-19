@@ -25,8 +25,8 @@
  */
 
 #include <string.h>
-#include "FreeRTOS.h"
-#include "task.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include "config.h"
 #include "deck.h"
@@ -36,7 +36,7 @@
 #include "param.h"
 #include "log.h"
 
-#include "stm32fxxx.h"
+#include "stm32_legacy.h"
 #include "static_mem.h"
 
 /* Flag indicating if the proximityInit() function has been called or not. */
@@ -138,7 +138,11 @@ static void proximityTask(void* param)
 {
   uint32_t lastWakeTime;
 
+#ifdef configUSE_APPLICATION_TASK_TAG
+	#if configUSE_APPLICATION_TASK_TAG == 1
   vTaskSetApplicationTaskTag(0, (void*)TASK_PROXIMITY_ID_NBR);
+  #endif
+#endif
 
   //Wait for the system to be fully started to start stabilization loop
   systemWaitStart();

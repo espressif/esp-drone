@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
+ * ESP-Drone Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2018 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,7 +30,7 @@
 
 #include "sensors.h"
 #include "platform.h"
-#include "debug.h"
+#include "debug_cf.h"
 
 // https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
 #define xstr(s) str(s)
@@ -51,6 +52,9 @@
   #include "sensors_bosch.h"
 #endif
 
+#ifdef SENSOR_INCLUDED_MPU6050_HMC5883L_MS5611
+#include "sensors_mpu6050_hm5883L_ms5611.h"
+#endif
 
 typedef struct {
   SensorImplementation_t implements;
@@ -108,6 +112,23 @@ static const sensorsImplementation_t sensorImplementations[SensorImplementation_
     .dataAvailableCallback = sensorsBmi088SpiBmp388DataAvailableCallback,
   },
 #endif
+#ifdef SENSOR_INCLUDED_MPU6050_HMC5883L_MS5611
+  {
+    .implements = SensorImplementation_mpu6050_HMC5883L_MS5611,
+    .init = sensorsMpu6050Hmc5883lMs5611Init,
+    .test = sensorsMpu6050Hmc5883lMs5611Test,
+    .areCalibrated = sensorsMpu6050Hmc5883lMs5611AreCalibrated,
+    .manufacturingTest = sensorsMpu6050Hmc5883lMs5611ManufacturingTest,
+    .acquire = sensorsMpu6050Hmc5883lMs5611Acquire,
+    .waitDataReady = sensorsMpu6050Hmc5883lMs5611WaitDataReady,
+    .readGyro = sensorsMpu6050Hmc5883lMs5611ReadGyro,
+    .readAcc = sensorsMpu6050Hmc5883lMs5611ReadAcc,
+    .readMag = sensorsMpu6050Hmc5883lMs5611ReadMag,
+    .readBaro = sensorsMpu6050Hmc5883lMs5611ReadBaro,
+    .setAccMode = sensorsMpu6050Hmc5883lMs5611SetAccMode,
+    .dataAvailableCallback = nullFunction,
+  }
+#endif
 #ifdef SENSOR_INCLUDED_MPU9250_LPS25H
   {
     .implements = SensorImplementation_mpu9250_lps25h,
@@ -157,7 +178,7 @@ void sensorsInit(void) {
   SensorImplementation_t sensorImplementation = platformConfigGetSensorImplementation();
 #else
   SensorImplementation_t sensorImplementation = SENSORS_FORCE;
-  DEBUG_PRINT("Forcing sensors to " xstr(SENSORS_FORCE) "\n");
+  DEBUG_PRINTD("Forcing sensors to " xstr(SENSORS_FORCE) "\n");
 #endif
 
   activeImplementation = findImplementation(sensorImplementation);

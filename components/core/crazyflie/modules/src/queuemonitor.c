@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
+ * ESP-Drone Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -32,7 +33,7 @@
 
 #include <stdbool.h>
 #include "timers.h"
-#include "debug.h"
+#include "debug_cf.h"
 #include "cfassert.h"
 
 #define MAX_NR_OF_QUEUES 20

@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
+ * ESP-Drone Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,48 +24,49 @@
  *
  * system.c - Top level module implementation
  */
-#define DEBUG_MODULE "SYS"
 
 #include <stdbool.h>
 
-/* FreeRtos includes */
-#include "FreeRTOS.h"
-#include "task.h"
-#include "semphr.h"
+/* FreeRTOS includes */
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
 
-#include "debug.h"
 #include "version.h"
 #include "config.h"
 #include "param.h"
 #include "log.h"
 #include "ledseq.h"
-#include "pm.h"
-
+#include "adc_esp32.h"
+#include "pm_esplane.h"
 #include "config.h"
 #include "system.h"
 #include "platform.h"
 #include "configblock.h"
 #include "worker.h"
 #include "freeRTOSdebug.h"
-#include "uart_syslink.h"
-#include "uart1.h"
-#include "uart2.h"
+//#include "uart1.h"
+//#include "uart2.h"
+#include "wifi_esp32.h"
 #include "comm.h"
 #include "stabilizer.h"
 #include "commander.h"
 #include "console.h"
-#include "usblink.h"
+#include "wifilink.h"
 #include "mem.h"
-#include "proximity.h"
-#include "watchdog.h"
+//#include "proximity.h"
+//#include "watchdog.h"
 #include "queuemonitor.h"
 #include "buzzer.h"
 #include "sound.h"
 #include "sysload.h"
 #include "estimator_kalman.h"
-#include "deck.h"
-#include "extrx.h"
+//#include "deck.h"
+//#include "extrx.h"
 #include "app.h"
+#include "stm32_legacy.h"
+#define DEBUG_MODULE "SYS"
+#include "debug_cf.h"
 #include "static_mem.h"
 
 /* Private variable */
@@ -93,10 +95,13 @@ void systemInit(void)
   if(isInit)
     return;
 
+  DEBUG_PRINT_LOCAL("----------------------------\n");
+  DEBUG_PRINT_LOCAL("%s is up and running!\n", platformConfigGetDeviceTypeName());
+
   canStartMutex = xSemaphoreCreateMutexStatic(&canStartMutexBuffer);
   xSemaphoreTake(canStartMutex, portMAX_DELAY);
 
-  usblinkInit();
+  wifilinkInit();
   sysLoadInit();
 
   /* Initialized here so that DEBUG_PRINT (buffered) can be used early */
@@ -104,18 +109,6 @@ void systemInit(void)
   crtpInit();
   consoleInit();
 
-  DEBUG_PRINT("----------------------------\n");
-  DEBUG_PRINT("%s is up and running!\n", platformConfigGetDeviceTypeName());
-
-  if (V_PRODUCTION_RELEASE) {
-    DEBUG_PRINT("Production release %s\n", V_STAG);
-  } else {
-    DEBUG_PRINT("Build %s:%s (%s) %s\n", V_SLOCAL_REVISION,
-                V_SREVISION, V_STAG, (V_MODIFIED)?"MODIFIED":"CLEAN");
-  }
-  DEBUG_PRINT("I am 0x%08X%08X%08X and I have %dKB of flash!\n",
-              *((int*)(MCU_ID_ADDRESS+8)), *((int*)(MCU_ID_ADDRESS+4)),
-              *((int*)(MCU_ID_ADDRESS+0)), *((short*)(MCU_FLASH_SIZE_ADDRESS)));
 
   configblockInit();
   workerInit();
@@ -123,6 +116,7 @@ void systemInit(void)
   ledseqInit();
   pmInit();
   buzzerInit();
+  DEBUG_PRINT_LOCAL("----------------------------\n");
 
 #ifdef APP_ENABLED
   appInit();
@@ -137,8 +131,10 @@ bool systemTest()
 
   pass &= ledseqTest();
   pass &= pmTest();
+  DEBUG_PRINTI("pmTest = %d", pass);
   pass &= workerTest();
-  pass &= buzzerTest();
+  DEBUG_PRINTI("workerTest = %d", pass);
+  //pass &= buzzerTest();
   return pass;
 }
 
@@ -149,7 +145,8 @@ void systemTask(void *arg)
   bool pass = true;
 
   ledInit();
-  ledSet(CHG_LED, 1);
+  wifiInit();
+  vTaskDelay(M2T(500));
 
 #ifdef DEBUG_QUEUE_MONITOR
   queueMonitorInit();
@@ -167,15 +164,15 @@ void systemTask(void *arg)
   commInit();
   commanderInit();
 
-  StateEstimatorType estimator = anyEstimator;
+  StateEstimatorType estimator = kalmanEstimator;
   estimatorKalmanTaskInit();
-  deckInit();
-  estimator = deckGetRequiredEstimator();
+  //deckInit();
+  //estimator = deckGetRequiredEstimator();
   stabilizerInit(estimator);
-  if (deckGetRequiredLowInterferenceRadioMode() && platformConfigPhysicalLayoutAntennasAreClose())
-  {
-    platformSetLowInterferenceRadioMode();
-  }
+  //if (deckGetRequiredLowInterferenceRadioMode() && platformConfigPhysicalLayoutAntennasAreClose())
+  //{
+  //  platformSetLowInterferenceRadioMode();
+  //}
   soundInit();
   memInit();
 
@@ -183,23 +180,32 @@ void systemTask(void *arg)
   proximityInit();
 #endif
 
-  //Test the modules
+	/* Test each modules */
+  pass &= wifiTest();
+  DEBUG_PRINTI("wifilinkTest = %d ", pass);
   pass &= systemTest();
+  DEBUG_PRINTI("systemTest = %d ", pass);
   pass &= configblockTest();
+  DEBUG_PRINTI("configblockTest = %d ", pass);
   pass &= commTest();
+  DEBUG_PRINTI("commTest = %d ", pass);
   pass &= commanderTest();
+  DEBUG_PRINTI("commanderTest = %d ", pass);
   pass &= stabilizerTest();
+  DEBUG_PRINTI("stabilizerTest = %d ", pass);
   pass &= estimatorKalmanTaskTest();
-  pass &= deckTest();
-  pass &= soundTest();
+  DEBUG_PRINTI("estimatorKalmanTaskTest = %d ", pass);
+  //pass &= soundTest();
   pass &= memTest();
-  pass &= watchdogNormalStartTest();
+  DEBUG_PRINTI("memTest = %d ", pass);
+  //pass &= watchdogNormalStartTest();
 
   //Start the firmware
   if(pass)
   {
     selftestPassed = 1;
     systemStart();
+    DEBUG_PRINTI("systemStart ! selftestPassed = %d", selftestPassed);
     soundSetEffect(SND_STARTUP);
     ledseqRun(SYS_LED, seq_alive);
     ledseqRun(LINK_LED, seq_testPassed);
@@ -242,8 +248,8 @@ void systemTask(void *arg)
 void systemStart()
 {
   xSemaphoreGive(canStartMutex);
-#ifndef DEBUG
-  watchdogInit();
+#ifndef DEBUG_EP2
+  //watchdogInit();
 #endif
 }
 
@@ -268,32 +274,25 @@ bool systemCanFly(void)
   return canFly;
 }
 
-void vApplicationIdleHook( void )
-{
-  static uint32_t tickOfLatestWatchdogReset = M2T(0);
+//TODO:watchdog disable now
+// void vApplicationIdleHook( void )
+// {
+//   static uint32_t tickOfLatestWatchdogReset = M2T(0);
 
-  portTickType tickCount = xTaskGetTickCount();
+//   portTickType tickCount = xTaskGetTickCount();
 
-  if (tickCount - tickOfLatestWatchdogReset > M2T(WATCHDOG_RESET_PERIOD_MS))
-  {
-    tickOfLatestWatchdogReset = tickCount;
-    watchdogReset();
-  }
+//   if (tickCount - tickOfLatestWatchdogReset > M2T(WATCHDOG_RESET_PERIOD_MS))
+//   {
+//     tickOfLatestWatchdogReset = tickCount;
+//     watchdogReset();
+//   }
 
-  // Enter sleep mode. Does not work when debugging chip with SWD.
-  // Currently saves about 20mA STM32F405 current consumption (~30%).
-#ifndef DEBUG
-  { __asm volatile ("wfi"); }
-#endif
-}
-
-/*System parameters (mostly for test, should be removed from here) */
-PARAM_GROUP_START(cpu)
-PARAM_ADD(PARAM_UINT16 | PARAM_RONLY, flash, MCU_FLASH_SIZE_ADDRESS)
-PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id0, MCU_ID_ADDRESS+0)
-PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id1, MCU_ID_ADDRESS+4)
-PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id2, MCU_ID_ADDRESS+8)
-PARAM_GROUP_STOP(cpu)
+//   // Enter sleep mode. Does not work when debugging chip with SWD.
+//   // Currently saves about 20mA STM32F405 current consumption (~30%).
+// #ifndef DEBUG
+//   { __asm volatile ("wfi"); }
+// #endif
+// }
 
 PARAM_GROUP_START(system)
 PARAM_ADD(PARAM_INT8, selftestPassed, &selftestPassed)

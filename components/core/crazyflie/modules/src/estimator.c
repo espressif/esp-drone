@@ -1,11 +1,11 @@
 #define DEBUG_MODULE "ESTIMATOR"
-#include "debug.h"
-
+#include "debug_cf.h"
 #include "cfassert.h"
 #include "estimator.h"
 #include "estimator_complementary.h"
 #include "estimator_kalman.h"
-
+#include "debug_cf.h"
+#define ESTIMATOR_NAME anyEstimator
 #define DEFAULT_ESTIMATOR complementaryEstimator
 static StateEstimatorType currentEstimator = anyEstimator;
 
@@ -99,7 +99,7 @@ void stateEstimatorSwitchTo(StateEstimatorType estimator) {
 
   StateEstimatorType forcedEstimator = ESTIMATOR_NAME;
   if (forcedEstimator != anyEstimator) {
-    DEBUG_PRINT("Estimator type forced\n");
+    DEBUG_PRINTI("Estimator type forced\n");
     newEstimator = forcedEstimator;
   }
 
@@ -108,7 +108,7 @@ void stateEstimatorSwitchTo(StateEstimatorType estimator) {
   currentEstimator = newEstimator;
   deinitEstimator(previousEstimator);
 
-  DEBUG_PRINT("Using %s (%d) estimator\n", stateEstimatorGetName(), currentEstimator);
+  DEBUG_PRINTI("Using %s (%d) estimator\n", stateEstimatorGetName(), currentEstimator);
 }
 
 StateEstimatorType getStateEstimator(void) {

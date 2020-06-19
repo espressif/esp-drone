@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
+ * ESP-Drone Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,15 +29,15 @@
 #include <string.h>
 
 /*FreeRtos includes*/
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 #include "crtp.h"
 
 #ifdef STM32F40_41xxx
 #include "stm32f4xx.h"
 #else
-#include "stm32f10x.h"
+#include "stm32_legacy.h"
 #ifndef SCB_ICSR_VECTACTIVE_Msk
 #define SCB_ICSR_VECTACTIVE_Msk 0x1FFUL
 #endif
@@ -91,7 +92,9 @@ bool consoleTest(void)
 
 int consolePutchar(int ch)
 {
-  bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+  //TODO: test if have interrupt
+  bool isInInterrupt = false;
+  //bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
 
   if (!isInit) {
     return 0;

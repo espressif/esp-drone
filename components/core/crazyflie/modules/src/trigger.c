@@ -5,8 +5,9 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * Crazyflie control firmware
+ * ESP-Drone Firmware
  *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2015 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +27,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include "stm32fxxx.h"
+#include "stm32_legacy.h"
 #include "trigger.h"
 
 /**
