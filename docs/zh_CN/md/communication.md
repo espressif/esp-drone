@@ -30,8 +30,6 @@
 
  **ESP32-S2 Wi-Fi 性能**
 
-TODO: ESP32-S2 Wi-Fi 参数需要验证和补充
-
 | 项目 | 参数 |
 |--|--|
 | Mode | Station, AP, Coexistence |

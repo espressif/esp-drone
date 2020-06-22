@@ -17,8 +17,8 @@ build_docs:
         when: always
         paths:
             # English version of documentation
-            # - docs/en/md/sphinx-warning-log.txt
-            # - docs/en/md/_build/html
+            - docs/en/md/sphinx-warning-log.txt
+            - docs/en/md/_build/html
             # Chinese version of documentation
             - docs/zh_CN/md/sphinx-warning-log.txt
             - docs/zh_CN/md/_build/html
@@ -28,12 +28,12 @@ build_docs:
     script:
       - cd docs
       # make English version of documentation
-      # - cd en/
-      # - cd md/
-      # - make clean && make html
-      # - cd ../
+      - cd en/
+      - cd md/
+      - make clean && make html
+      - cd ../../
       # make Chinese version of documentation
       - cd zh_CN/
       - cd md/
       - make clean && make html
-      - cd ../
+      - cd ../../
