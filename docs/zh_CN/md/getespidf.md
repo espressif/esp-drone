@@ -26,6 +26,7 @@
     _log_stop = .;
     . = ALIGN(4);
 ```
+
 以上代码可以实现，将具有 `.param.*` 或 `.log.*` 段属性的变量，放置在连续的存储区域，从而加快变量遍历速度。
 
 ## 获取项目源代码
@@ -33,7 +34,7 @@
 **测试版本代码，目前放在 gitlab 仓库，使用 git 工具获取**
 
 ```
-git clone //TODO:补充github仓库
+git clone https://github.com/espressif/esp-drone.git
 ```
 
 **项目软件主要由飞控内核、硬件驱动和依赖库组成**

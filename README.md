@@ -1,8 +1,6 @@
 
 ## ESP-Drone
 
-**Drones powered by ESP32&ESP-IDF&Crazyflie**
-
 ### Introduction
 
 **ESP-Drone** is an open source **drone solution** based on espressif **ESP32-S2 / ESP32** Wi-Fi chip, which can be controlled through **Wi-Fi** network using mobile APP or gamepad. ESP-Drone supports multiple flight modes, `stabilize`, `height-hold`, `position-hold` and more. With **simple hardware**, **clear and extendible code architecture**, ESP-Drone can be used in **STEAM education** and other fields. The main code ported from **Crazyflie** open source project with **GPL3.0** protocol.

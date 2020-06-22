@@ -65,7 +65,7 @@ ESP-Drone_S2_V1.2：
 
 **Android APP 下载：**
 
-[ESP-Drone-android](./_static/ESP-Drone-android-debug.apk)
+[https://github.com/qljz1993/DailyMD_public/raw/master/esplanes2_test/ESP-Drone-android-debug.apk](https://github.com/qljz1993/DailyMD_public/raw/master/esplanes2_test/ESP-Drone-android-debug.apk)
 
 **IOS APP 扫码下载：**
 
