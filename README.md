@@ -9,17 +9,17 @@
 
 ![ESP-Drone](./docs/_static/espdrone_s2_v1_2_2.png)
 
-**Getting Started**: [Getting Started](https://docs.espressif.com/projects/espressif-esp-drone/zh_CN/latest/gettingstarted.html)
-**Hardware Schematic**：[Hardware](https://docs.espressif.com/projects/espressif-esp-drone/zh_CN/latest/_static/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf)
-**iOS APP Sourcecode**: [ESP-Drone-iOS](https://github.com/EspressifApps/ESP-Drone-iOS)
-**Android APP Sourcecode**: [ESP-Drone-Android](https://github.com/EspressifApps/ESP-Drone-Android)
+* **Getting Started**: [Getting Started](https://docs.espressif.com/projects/espressif-esp-drone/zh_CN/latest/gettingstarted.html)
+* **Hardware Schematic**：[Hardware](https://docs.espressif.com/projects/espressif-esp-drone/zh_CN/latest/_static/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf)
+* **iOS APP Sourcecode**: [ESP-Drone-iOS](https://github.com/EspressifApps/ESP-Drone-iOS)
+* **Android APP Sourcecode**: [ESP-Drone-Android](https://github.com/EspressifApps/ESP-Drone-Android)
 
 ### Features
 
 1. Stabilize Mode
 2. Height-hold Mode
 3. Position-hold Mode
-4. App Control
+4. APP Control
 5. CFclient Supported
 
 > 2/3:expansion module requried
