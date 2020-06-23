@@ -73,6 +73,9 @@ ESP-Drone_S2_V1.2：
    <img src="_static/ios_app_download.png" width = "250" alt="ios_app_download" align=center />
 </div>
 
+**iOS APP 源代码**: [ESP-Drone-iOS](https://github.com/EspressifApps/ESP-Drone-iOS)
+**Android APP 源代码**: [ESP-Drone-Android](https://github.com/EspressifApps/ESP-Drone-Android)
+
 ### 安装 CFClient
 
 > 安装 CFClient 为可选步骤，用于实现高级调试，非必须使用

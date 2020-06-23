@@ -1,23 +1,26 @@
 
 ## ESP-Drone
 
+* [中文版](./README_cn.md)
+
 ### Introduction
 
 **ESP-Drone** is an open source **drone solution** based on espressif **ESP32-S2 / ESP32** Wi-Fi chip, which can be controlled through **Wi-Fi** network using mobile APP or gamepad. ESP-Drone supports multiple flight modes, `stabilize`, `height-hold`, `position-hold` and more. With **simple hardware**, **clear and extendible code architecture**, ESP-Drone can be used in **STEAM education** and other fields. The main code ported from **Crazyflie** open source project with **GPL3.0** protocol.
 
-**Hardware**：[Hardware](./docs/zh_CN/md/hardware.md)
-
-**Getting Started**: [Getting Started](./docs/zh_CN/md/gettingstarted.md)
-
 ![ESP-Drone](./docs/_static/espdrone_s2_v1_2_2.png)
+
+**Getting Started**: [Getting Started](https://docs.espressif.com/projects/espressif-esp-drone/zh_CN/latest/gettingstarted.html)
+**Hardware Schematic**：[Hardware](https://docs.espressif.com/projects/espressif-esp-drone/zh_CN/latest/_static/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf)
+**iOS APP Sourcecode**: [ESP-Drone-iOS](https://github.com/EspressifApps/ESP-Drone-iOS)
+**Android APP Sourcecode**: [ESP-Drone-Android](https://github.com/EspressifApps/ESP-Drone-Android)
 
 ### Features
 
-1. Stabilize mode
-2. Height-hold mode
-3. position-hold mode
-4. APP control
-5. cfclient supported
+1. Stabilize Mode
+2. Height-hold Mode
+3. Position-hold Mode
+4. App Control
+5. CFclient Supported
 
 > 2/3:expansion module requried
 
