@@ -1,10 +1,10 @@
 
 # 开发指引
 
-* [搭建开发环境](./getespidf.md) 
-    * [ESP-IDF 开发环境搭建](getespidf.html#esp-idf) 
-    * [ESP32(S2) 链接脚本修改](getespidf.html#esp32-s2)
-    * [获取源代码](getespidf.html#id2)
+* [环境搭建](./getespidf.md) 
+    * [ESP-IDF 环境搭建](getespidf.html#esp-idf) 
+    * [ESP32/ESP32-S2 链接脚本修改](getespidf.html#esp32-s2)
+    * [获取项目源代码](getespidf.html#id2)
 * [驱动程序](./drivers.md)
     * [通用设备](drivers.html#generall)
     * [I2C 总线设备](drivers.html#i2c-devices)
