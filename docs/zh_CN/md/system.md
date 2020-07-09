@@ -5,42 +5,45 @@
 
 ![start_from_app_main](../../_static/start_from_app_main.png)
 
-查阅源文件：[start_from_app_main](./_static/start_from_app_main.pdf)
+查阅源文件：[start_from_app_main](./_static/start_from_app_main.pdf)。
 
 ## 系统任务管理
 
 ### 系统任务简介
 
-**系统正常运行时，将启动以下 TASK：**
+系统正常运行时，将启动以下 TASK。
 
 ![task_dump](../../_static/task_dump.png)
 
-> Load: CPU 占用率
-> Stack Left：剩余堆栈空间
-> Name：TASK 名称
-> PRI: TASK 优先级
+其中，
+* Load：CPU 占用率；
+* Stack Left：剩余堆栈空间；
+* Name：TASK 名称；
+* PRI：TASK 优先级。
 
-* PWRMGNT: 系统电压监测
-* CMDHL: 应用层-处理根据 CRTP 协议构成的高级命令
-* CRTP-RX: 协议层-CRTP 飞行协议解码
-* CRTP-TX: 协议层-CRTP 飞行协议解码
-* UDP-RX: 传输层-UDP 包接收
-* UDP-TX: 传输层-UDP 包发送
-* WIFILINK: 对接 CRTP 协议层和 UDP 传输层
-* SENSORS: 传感器数据读取和预处理
-* KALMAN: 使用传感器数据进行飞机状态估计，包括飞机角度、角速度、空间位置的估计。该 TASK 在 ESP 芯片上 CPU 资源消耗较大，应该注意优先级的分配。
-* PARAM: 使用 CRTP 协议远程修改变量
-* LOG: 使用 CRTP 协议实时监视变量
-* MEM: 使用 CRTP 协议远程修改存储器
-* STABILIZER: 自稳定线程，控制飞控程序运行流程
-* SYSTEM: 控制系统初始化和自检流程
+TASK 具体描述如下：
+
+* PWRMGNT：系统电压监测
+* CMDHL：应用层-处理根据 CRTP 协议构成的高级命令
+* CRTP-RX：协议层-CRTP 飞行协议解码
+* CRTP-TX：协议层-CRTP 飞行协议解码
+* UDP-RX：传输层-UDP 包接收
+* UDP-TX：传输层-UDP 包发送
+* WIFILINK：对接 CRTP 协议层和 UDP 传输层
+* SENSORS：传感器数据读取和预处理
+* KALMAN：使用传感器数据进行飞机状态估计，包括飞机角度、角速度、空间位置的估计。该 TASK 在 ESP 芯片上 CPU 资源消耗较大，应注意优先级的分配。
+* PARAM：使用 CRTP 协议远程修改变量
+* LOG：使用 CRTP 协议实时监控变量
+* MEM：使用 CRTP 协议远程修改存储器
+* STABILIZER：自稳定线程，控制飞控程序运行流程
+* SYSTEM：控制系统初始化和自检流程
 
 ### 任务堆栈空间配置
 
-可以在 `components/config/include/config.h` 中直接修改空间大小，也可以在 `menucfg` 中修改 `BASE_STACK_SIZE` 大小。使用 `ESP32` 时可将 `BASE_STACK_SIZE` 调整为 2048，减小踩空间的概率，使用 `ESP32S2` 时，建议将该值调整为 `1024`。
+用户可以在 `components/config/include/config.h` 中直接修改空间大小，也可以在 `menucfg` 中修改 `BASE_STACK_SIZE` 大小。使用 `ESP32` 时可将 `BASE_STACK_SIZE` 调整为 2048，减小踩内存的概率；使用 `ESP32-S2` 时，建议将该值调整为 `1024`。
 
 ```
-//Task stack sizes
+//任务堆栈空间大小
 #define SYSTEM_TASK_STACKSIZE         (4* configBASE_STACK_SIZE)
 #define ADC_TASK_STACKSIZE            configBASE_STACK_SIZE
 #define PM_TASK_STACKSIZE             (2*configBASE_STACK_SIZE)
@@ -79,10 +82,10 @@
 
 ### 任务优先级配置
 
-系统 TASK 优先级可以在 `components/config/include/config.h` 中进行配置，由于 `ESP32` 具有双核优势，相比 `ESP32S2` 计算资源更加富余，可将高耗时的 `KALMAN_TASK` 优先级调高。 在使用 `ESP32S2` 时，需要将高耗时的 `KALMAN_TASK` 优先级调低，否者难以释放足够的 CPU 资源，将触发 task watchdog。
+系统 TASK 优先级可以在 `components/config/include/config.h` 中进行配置。由于 `ESP32` 具有双核优势，相比 `ESP32-S2` 计算资源更加富余，可将高耗时的 `KALMAN_TASK` 优先级调高。在使用 `ESP32-S2` 时，需要将高耗时的 `KALMAN_TASK` 优先级调低，否则难以释放足够的 CPU 资源，将触发 task watchdog。
 
 ```
-// Task priorities. Higher number higher priority
+// 任务优先级，数字越大，优先级越高。
 #define STABILIZER_TASK_PRI     5
 #define SENSORS_TASK_PRI        4
 #define ADC_TASK_PRI            3
@@ -107,7 +110,7 @@
 #define OA_DECK_TASK_PRI        3
 #define UART1_TEST_TASK_PRI     1
 #define UART2_TEST_TASK_PRI     1
-//if task watchdog triggered,KALMAN_TASK_PRI should set lower or set lower flow frequency
+//if task watchdog triggered, KALMAN_TASK_PRI should set lower or set lower flow frequency
 #ifdef TARGET_MCU_ESP32
   #define KALMAN_TASK_PRI         2
   #define LOG_TASK_PRI            1
@@ -133,7 +136,7 @@
 
 ## 关键任务介绍
 
-除了系统默认开启的 task（如 wifi task），优先级最高的 task 是 `STABILIZER_TASK`，凸显了这个任务的重要性。`STABILIZER_TASK` 控制了从传感器数据读取，到姿态计算，到目标接收，到最终输出电机功率的整个过程，驱动各个阶段的算法运行。
+除了系统默认开启的 TASK（如 Wi-Fi TASK），优先级最高的 TASK 是 `STABILIZER_TASK`，凸显了这个任务的重要性。`STABILIZER_TASK` 控制了从传感器数据读取，到姿态计算，到目标接收，到最终输出电机功率的整个过程，驱动各个阶段的算法运行。
 
 ![stabilizerTask process](../../_static/General-framework-of-the-stabilization-structure-of-the-crazyflie-with-setpoint-handling.png)
 
@@ -141,7 +144,7 @@
 
 ## 传感器驱动
 
-传感器驱动代码，可以在 `components\drivers` 中查阅，`drivers` 使用了与 [esp-iot-solution](https://github.com/espressif/esp-iot-solution/)类似的文件结构，将驱动程序按照所属总线进行分类，包括 `i2c_devices` 、`spi_devices`、`general` 等。具体可参考：[drivers](./drivers)
+传感器驱动代码，可以在 `components\drivers` 中查阅。`drivers` 使用了与 [esp-iot-solution](https://github.com/espressif/esp-iot-solution/) 类似的文件结构，将驱动程序按照所属总线进行分类，包括 `i2c_devices`、`spi_devices`、`general` 等。具体可参考：[驱动程序](./drivers)。
 
 ![drivers_flie_struture](../../_static/drivers_flie_struture.png)
 
@@ -167,7 +170,7 @@ typedef struct {
 } sensorsImplementation_t;
 ```
 
-esp-drone 实现的传感器抽象接口在 `components/core/crazyflie/hal/src/sensors_mpu6050_hm5883L_ms5611.c` 中，通过以下赋值过程与上层应用对接：
+ESP-Drone 实现的传感器抽象接口在 `components/core/crazyflie/hal/src/sensors_mpu6050_hm5883L_ms5611.c` 中，通过以下赋值过程与上层应用对接：
 
 ```
 #ifdef SENSOR_INCLUDED_MPU6050_HMC5883L_MS5611
@@ -193,11 +196,13 @@ esp-drone 实现的传感器抽象接口在 `components/core/crazyflie/hal/src/s
 
 ### 陀螺仪校准过程
 
-由于陀螺仪存在较大的温漂，因此每次使用前需要对陀螺仪进行校准，计算当前环境下的陀螺仪基准值。ESP-Drone 延续 Crazyflie2 陀螺仪校准方案，在初次上电时，计算陀螺仪三个轴的方差与平均值。
+由于陀螺仪存在较大的温漂，因此每次使用前需要对陀螺仪进行校准，计算当前环境下的陀螺仪基准值。ESP-Drone 延续 Crazyflie 2.0 陀螺仪校准方案，在初次上电时，计算陀螺仪三个轴的方差与平均值。
 
-1. 使用一个最大长度为 1024 的环形缓冲区，存储最新的 1024 组陀螺仪测量值
-2. 通过计算陀螺仪输出值方差，确认飞机已经放置平稳并且陀螺仪工作正常。
-3. 确认第 2 步正常后，计算静止时 1024 组陀螺仪输出值的平均值，作为陀螺仪的校准值
+陀螺仪具体校准过程如下：
+
+1. 使用一个最大长度为 1024 的环形缓冲区，存储最新的 1024 组陀螺仪测量值。
+2. 通过计算陀螺仪输出值方差，确认飞行器已经放置平稳并且陀螺仪工作正常。
+3. 确认第 2 步正常后，计算静止时 1024 组陀螺仪输出值的平均值，作为陀螺仪的校准值。
 
 
 **陀螺仪基准值计算源代码：**
@@ -267,13 +272,13 @@ static bool sensorsFindBiasValue(BiasObj* bias)
 
 #### 重力加速度校准
 
-在地球不同的纬度和海拔下，重力加速度 g 值一般不同，因此需要使用加速度计对 g 进行实际测量。参考 Crazyflie2 加速度计校准方案，g 值的校准过程如下：
+在地球不同的纬度和海拔下，重力加速度 g 值一般不同，因此需要使用加速度计对 g 进行实际测量。可参考 Crazyflie 2.0 加速度计校准方案，g 值的校准过程如下：
 
 1. 陀螺仪校准完成后，立刻进行加速度计校准。
-2. 使用 buffer 保存 200 组加速度计测量值 
+2. 使用 Buffer 保存 200 组加速度计测量值。 
 3. 通过合成重力加速度在三个轴的分量，计算重力加速度在静止状态下的值。
 
-参考：[不同地球纬度和海拔下的不同重力加速度值 g](https://baike.baidu.com/item/%E9%87%8D%E5%8A%9B%E5%8A%A0%E9%80%9F%E5%BA%A6/23553) 
+参考：[不同地球纬度和海拔下的重力加速度值 g](https://baike.baidu.com/item/%E9%87%8D%E5%8A%9B%E5%8A%A0%E9%80%9F%E5%BA%A6/23553)。 
 
 **计算静止状态下重力加速度值：**
 
@@ -314,10 +319,10 @@ static bool processAccScale(int16_t ax, int16_t ay, int16_t az)
 
 #### 机身水平校准
 
-理想状态下，加速度传感器在飞机上完全水平的进行安装，进而可以使用 0 位置作为飞机的水平面，但是由于加速度计在安装时不可避免的存在一定的倾角，导致飞控错误的估计水平位置，导致飞机向某个方向偏飞。因此需要设置一定的校准策略来平衡这种误差。
+理想状态下，加速度传感器在飞机上完全水平地进行安装，进而可以使用 0 位置作为飞机的水平面。但由于加速度计在安装时不可避免的存在一定的倾角，导致飞控错误估计水平位置，导致飞机向某个方向偏飞。因此需要设置一定的校准策略来平衡这种误差。
 
-1. 将飞机放置在一个水平面上，计算飞机 `cosRoll` `sinRoll`  `cosPitch` `sinPitch` 。理想状态下 `cosRoll`  `cosPitch` 为 1 ，`sinPitch` `sinRoll` 为 0 。如果不是水平安装`sinPitch` `sinRoll` 不为 0，`cosRoll`  `cosPitch` 不为 1 。
-2. 将步骤 1 的 `cosRoll` `sinRoll`  `cosPitch` `sinPitch` 或对应的 `Roll` `Pitch` 角度值保存到飞机，用于校准。
+1. 将飞机放置在一个水平面上，计算飞机 `cosRoll`、`sinRoll`、`cosPitch`、`sinPitch`。理想状态下 `cosRoll`、`cosPitch` 为 1，`sinPitch`、`sinRoll` 为 0。如果不是水平安装 `sinPitch`、`sinRoll` 不为 0，`cosRoll` `cosPitch` 不为 1。
+2. 将步骤 1 的 `cosRoll`、`sinRoll`、`cosPitch`、`sinPitch` 或对应的 `Roll`、`Pitch` 角度值保存到飞机，用于校准。
 
 
 **利用校准值，对加速度计测量值进行修正：**
@@ -354,38 +359,38 @@ static void sensorsAccAlignToGravity(Axis3f *in, Axis3f *out)
 
 ## 姿态计算
 
-### 已经支持的姿态计算算法
+### 支持的姿态计算算法
 
 * 互补滤波
 * 卡尔曼滤波
 
-ESP-Drone 姿态计算代码来自 `crazyflie`，ESP-Drone 固件已经对互补滤波和卡尔曼滤波进行了实际测试，可以有效的计算飞行姿态，包括各个自由度的角度、角速度、和空间位置，为控制系统提供了可靠的状态输入。需要注意的是，在定点模式下，必须切换到卡尔曼滤波算法，才能保证工作正常。
+ESP-Drone 姿态计算代码来自 `Crazyflie`。ESP-Drone 固件已经对互补滤波和卡尔曼滤波进行了实际测试，可以有效地计算飞行姿态，包括各个自由度的角度、角速度、和空间位置，为控制系统提供了可靠的状态输入。需要注意的是，在定点模式下，必须切换到卡尔曼滤波算法，才能保证工作正常。
 
-crazyflie 状态估计：https://www.bitcraze.io/2020/01/state-estimation-to-be-or-not-to-be/
+Crazyflie 状态估计见 [State estimation: To be or not to be!](https://www.bitcraze.io/2020/01/state-estimation-to-be-or-not-to-be/)
 
 ### 互补滤波
 
 ![Extended-Kalman-Filter](../../_static/Schematic-overview-of-inputs-and-outputs-of-the-Complementary-filter.png)
 
-互补滤波中文说明可参考：https://zhuanlan.zhihu.com/p/34323865
+互补滤波中文说明可参考 [飞控与姿态互补滤波器](https://zhuanlan.zhihu.com/p/34323865)。
 
 ### 卡尔曼滤波
 
 ![Extended-Kalman-Filter](../../_static/Schematic-overview-of-inputs-and-outputs-of-the-Extended-Kalman-Filter.png)
 
-卡尔曼滤波中文说明可参考：https://zhuanlan.zhihu.com/p/39912633
+卡尔曼滤波中文说明可参考 [图说卡尔曼滤波，一份通俗易懂的教程](https://zhuanlan.zhihu.com/p/39912633)。
 
 ## 控制算法
 
 ### 已支持的控制器
 
-ESP-Drone 控制系统代码来自 `crazyflie`，也继承了该工程的所有控制算法，需要注意的是，ESP-Drone 仅对 PID 控制器进行了参数整定和测试，换用其它控制器时，请在确保安全的情况下，自行进行参数整定。
+ESP-Drone 控制系统代码来自 `Crazyflie`，也继承了该工程的所有控制算法。需要注意的是，ESP-Drone 仅对 PID 控制器进行了参数整定和测试。换用其它控制器时，请在确保安全的情况下，自行进行参数整定。
 
 ![possible_controller_pathways](../../_static/possible_controller_pathways.png)
 
-详情请参考：[https://www.bitcraze.io/2020/02/out-of-control/](https://www.bitcraze.io/2020/02/out-of-control/)
+详情请参考：[Out of Control](https://www.bitcraze.io/2020/02/out-of-control/)。
 
-可在代码中,通过修改 `controllerInit(ControllerType controller)` 的传入参数，对控制器进行切换。
+在代码中，可通过修改 `controllerInit(ControllerType controller)` 的传入参数，切换控制器。
 
 也可通过实现以下控制器接口，添加自定义的控制器：
 
@@ -398,22 +403,22 @@ static ControllerFcns controllerFunctions[] = {
 };
 ```
 
-### PID控制器
+### PID 控制器
 
 **控制原理**
 
-PID 控制器（比例-积分-微分控制器），由比例单元（Proportional）、积分单元（Integral）和微分单元（Derivative）组成，分别对应当前误差、过去累计误差及未来误差，最终基于误差和误差的变化率对系统进行控制。PID 控制器由于具有负反馈修正作用，一般被认为是最适用的控制器。通过调整 PID 控制器的三类参数，可以调整系统对误差的反应快慢、控制器过冲的程度及系统震荡的程度，使系统达到最优状态。
+PID 控制器（比例-积分-微分控制器），由比例单元 (Proportional)、积分单元 (Integral) 和微分单元 (Derivative) 组成，分别对应当前误差、过去累计误差及未来误差，最终基于误差和误差的变化率对系统进行控制。PID 控制器由于具有负反馈修正作用，一般被认为是最适用的控制器。通过调整 PID 控制器的三类参数，可以调整系统对误差的反应快慢、控制器过冲的程度及系统震荡的程度，使系统达到最优状态。
 
-在飞行器系统中，由于存在 `pitch` 、 `roll` 、 `yaw` 三个自由度，因此需要设计如下图所示的具有控制闭环的 PID 控制器。
+在飞行器系统中，由于存在 `pitch`、 `roll`、`yaw` 三个自由度，因此需要设计如下图所示的具有控制闭环的 PID 控制器。
 
 ![Crazyflie&#x63A7;&#x5236;&#x7CFB;&#x7EDF;](https://img-blog.csdnimg.cn/20190929142813169.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
 
 > 图片来自 Sun Feb 08, 2015
 
-* 其中每一个自由度都包括一个串级 PID 控制器，Rate 控制和 Attitude 控制，前者以角速度作为输入量，控制角度修正的速度，后者以拟合后的角度为输入量，控制飞机到达目标角度，两个控制器以不同的频率配合工作。当然，也可以选择只使用单级的 PID 控制，默认情况下 pitch 和 roll 自由度使用 Attitude 控制，yaw 使用 Rate 控制。
+其中每一个自由度都包括一个串级 PID 控制器：Rate 控制和 Attitude 控制，前者以角速度作为输入量，控制角度修正的速度；后者以拟合后的角度为输入量，控制飞机到达目标角度，两个控制器以不同的频率配合工作。当然，也可以选择只使用单级的 PID 控制，默认情况下 pitch 和 roll 自由度使用 Attitude 控制，yaw 使用 Rate 控制。
 
 ```
-可以在crtp_commander_rpyt.c中调整如下参数选择
+可以在 crtp_commander_rpyt.c 中调整如下参数选择
 static RPYType stabilizationModeRoll  = ANGLE; // Current stabilization type of roll (rate or angle)
 static RPYType stabilizationModePitch = ANGLE; // Current stabilization type of pitch (rate or angle)
 static RPYType stabilizationModeYaw   = RATE;  // Current stabilization type of yaw (rate or angle)
@@ -427,15 +432,15 @@ void controllerPid(control_t *control, setpoint_t *setpoint,
                                          const state_t *state,
                                          const uint32_t tick)
 {
-  if (RATE_DO_EXECUTE(ATTITUDE_RATE, tick)) { //该宏定义用于控制PID的计算频率，时间基准来自MPU6050触发的中断
+  if (RATE_DO_EXECUTE(ATTITUDE_RATE, tick)) { //该宏定义用于控制 PID 的计算频率，时间基准来自 MPU6050 触发的中断
     // Rate-controled YAW is moving YAW angle setpoint
-    if (setpoint->mode.yaw == modeVelocity) {                                                    //rata模式,对yaw做修正
+    if (setpoint->mode.yaw == modeVelocity) {                                                    //rate 模式,对 yaw 做修正
        attitudeDesired.yaw += setpoint->attitudeRate.yaw * ATTITUDE_UPDATE_DT;
       while (attitudeDesired.yaw > 180.0f)
         attitudeDesired.yaw -= 360.0f;
       while (attitudeDesired.yaw < -180.0f)
         attitudeDesired.yaw += 360.0f;
-    } else {                                                                                                               //attitude模式
+    } else {                                                                                                               //attitude 模式
       attitudeDesired.yaw = setpoint->attitude.yaw;
     }
   }
@@ -508,46 +513,46 @@ void controllerPid(control_t *control, setpoint_t *setpoint,
 
 ### Mellinger 控制器
 
-Mellinger 控制器是一种“多合一” 控制器，它基于目标位置和目标位置速度矢量，直接计算出需要分配给所有电动机的所需推力。
+Mellinger 控制器是一种 **多合一** 控制器，基于目标位置和目标位置速度矢量，直接计算出需要分配给所有电动机的所需推力。
 
-详情可参考论文：[Minimum snap trajectory generation and control for quadrotors](https://ieeexplore.ieee.org/abstract/document/5980409)
+详情可参考论文：[Minimum snap trajectory generation and control for quadrotors](https://ieeexplore.ieee.org/abstract/document/5980409)。
 
 ### INDI 控制器
 
 INDI 控制器是立即处理角速率以确定信任度的控制器，与传统的 PID 控制器相结合，对于角度处理相比串级 PID 控制器组合的速度要快。
 
-详情可参考论文：[Adaptive Incremental Nonlinear Dynamic Inversion for Attitude Control of Micro Air Vehicles](https://arc.aiaa.org/doi/pdf/10.2514/1.G001490)
+详情可参考论文：[Adaptive Incremental Nonlinear Dynamic Inversion for Attitude Control of Micro Air Vehicles](https://arc.aiaa.org/doi/pdf/10.2514/1.G001490)。
 
 
 ## PID 参数整定
 
-**crazyflie `Rate PID`调整过程**
+**Crazyflie `Rate PID` 调整过程如下：**
 
-1. 先调整`Rate `模式，将`rollType `,`pitchType` 和 `yawType`都调整为`RATE`
-2. 将 `ATTITUDE`模式对应的 `roll`, `pitch` 和 `yaw`的`KP`,`KI`和`KD`调整为`0.0`，仅保留`Rate `相关的参数
-3. 将`RATE`模式对应的 `roll`, `pitch` 和 `yaw` 的`KI`和`KD`调整为`0.0`，先调整比例控制`KP`
-4. 烧写代码，使用cfclient的param功能开始在线进行`KP`的调整
-5. 注意，使用cfclient修改后的参数，掉电是不保存的。
-6. 注意安全，因为在PID调整期间会出现超调的情况
-7. 先固定住飞行器，让其只能进行`pitch`轴的翻转。逐渐增加`pitch`对应的`KP`,直到飞机出现前后的震荡（超调） 
-8. 当出现严重的震荡时，可以稍微降低`KP`（ Once you reach the point of instability, tune it down 5-10 points），然后即可确定`KP`参数
-9. 同样的方法调整 `roll` 
-10. 最后同样的方法调整`yaw` 
-11. 下面调整 `KI`，该参数用于消除稳态误差，因为如果不引入该参数，只有比例调整的话，飞机受到重力等干扰会在0位置上线摆动。设置 `KI`的初始值为`KP`的50%。
-12.  当`KI`增大到一定程度，也会导致飞机不稳定的晃动，但是`KI`造成的晃动频率会相比`KP`带来的震动，频率更小。然后以造成这个状态的 `KI`为基础确定 `KI`的值（This is your critical KI, and so tune down 5-10 points.）
-13. 同样的方法调整 `roll` 和 `yaw`
-14.  yaw axis, except KI is usually around 80%+ of KP.
+1. 先调整 `Rate ` 模式，将 `rollType `、`pitchType` 和 `yawType` 都调整为 `RATE`；
+2. 将 `ATTITUDE` 模式对应的 `roll`、`pitch` 和 `yaw` 的 `KP`、`KI` 和 `KD` 调整为 `0.0`，仅保留 `Rate` 相关的参数；
+3. 将 `RATE` 模式对应的 `roll`、`pitch` 和 `yaw` 的 `KI` 和 `KD` 调整为 `0.0`，先调整比例控制 `KP`；
+4. 烧写代码，使用 cfclient 的 param 功能开始在线进行 `KP` 的调整；
+5. 注意，使用 cfclient 修改后的参数，掉电不保存；
+6. 在 PID 调整期间会出现震荡（超调）的情况，请注意安全；
+7. 先固定住飞行器，让其只能进行 `pitch` 轴的翻转。逐渐增加 `pitch` 对应的 `KP`，直到飞机出现前后的震荡； 
+8. 当出现严重的震荡时，可以稍微降低 `KP`，以恰好达到震荡的临界点为基础，降低 5-10 个百分点即可确定 `KP` 参数；
+9. 使用同样的方法调整 `roll` 和 `yaw`； 
+11. 调整 `KI`，该参数用于消除稳态误差。如果不引入该参数，只有比例调整的话，飞行器受到重力等干扰会在 0 位置上下摆动。设置 `KI` 的初始值为 `KP` 的 50%；
+12. 当 `KI` 增大到一定程度，也会导致飞机不稳定晃动。但 `KI` 造成的晃动频率相比 `KP` 带来的震动，频率更小。以恰好造成震动的临界 `KI` 为基础，减小 5-10 个百分点，确定最终的 `KI` 值；
+13. 使用同样的方法调整 `roll` 和 `yaw`；
+14. 一般情况下 `KI` 的取值为 `KP` 取值的 80% 以上。
 
-****
-以上完成了`Rate `模式参数的调整
-****
+
+以上完成了对 `Rate ` 模式参数的调整。
+
 
 **下面开始整定 `Attitude PID`**
  
-14. 确保`Rate PID`调整已经完成。
-15. 将`rollType `,`pitchType` 和 `yawType`都调整为`ANGLE`，意味着飞机已经进入attitude mode。
-16. 改变 `roll`和`pitch`的`KI`和`KD`为`0.0`，将`Yaw` 的 `KP``KI``KD`都设置为`0.0` 。
-17. 烧写代码，使用cfclient的param功能开始在线进行`KP`的调整。
-18. 将`roll`和`pitch`的`KP `设置为`3.5`，寻找任何不稳定性，例如振荡。持续增加KP，直到达到极限。
-19. 如果您发现`KP`导致不稳定，如果此时已经高于`4`，需要将`RATE`模式的 `KP`和`KI`稍微降低5-10点。这使您在调整姿势模式时更加“自由”
-20. 要调整KI，请再次缓慢增加KI。不稳定性的状态是产生低频振荡。
+14. 确保 `Rate PID` 调整已经完成；
+15. 将 `rollType `、`pitchType` 和 `yawType` 都调整为 `ANGLE`，即飞机已进入 attitude mode；
+16. 改变 `roll` 和 `pitch` 的 `KI` 和 `KD` 为 `0.0`，将 `Yaw` 的 `KP`、`KI`、`KD`都设置为 `0.0`；
+17. 烧写代码，使用 cfclient 的 param 功能开始在线进行 `KP` 的调整；
+18. 将 `roll` 和 `pitch` 的 `KP` 设置为 `3.5`，查找任何存在的不稳定性，例如振荡。持续增加 KP，直到达到极限；
+19. 如果发现 `KP` 导致不稳定，如果此时已经高于 `4`，需要将 `RATE` 模式的 `KP` 和 `KI` 稍微降低 5 ~ 10 点。实现调整姿势模式时更加自由；
+20. 要调整 KI，请再次缓慢增加 KI。不稳定性的状态是产生低频振荡。
+
