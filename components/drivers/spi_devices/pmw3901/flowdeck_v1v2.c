@@ -40,7 +40,7 @@
 #define OULIER_LIMIT 100
 #define LP_CONSTANT 0.8f
 //#define USE_LP_FILTER
-#define USE_MA_SMOOTHING
+//#define USE_MA_SMOOTHING
 
 #if defined(USE_MA_SMOOTHING)
 static struct {
@@ -81,8 +81,8 @@ static void flowdeckTask(void *param)
 
         // Flip motion information to comply with sensor mounting
         // (might need to be changed if mounted differently)
-        int16_t accpx = currentMotion.deltaY;
-        int16_t accpy = currentMotion.deltaX;
+        int16_t accpx = -currentMotion.deltaY;
+        int16_t accpy = -currentMotion.deltaX;
 
         // Outlier removal
         if (abs(accpx) < OULIER_LIMIT && abs(accpy) < OULIER_LIMIT) {
