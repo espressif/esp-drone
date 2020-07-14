@@ -63,15 +63,15 @@ ESP32-S2-Drone V1.2：
 
 ### 安装 ESP-Drone APP
 
-**Android APP 下载：**
-
-[ESP-Drone-Android](../../_static/ESP-Drone-android-debug.apk)
-
-**iOS APP 扫码下载：**
+**Android APP 扫码下载：**
 
 <div align="center">
-   <img src="_static/ios_app_download.png" width = "250" alt="ios_app_download" align=center />
+   <img src="_static/android_app_download.png" width = "250" alt="android_app_download" align=center />
 </div>
+
+**iOS APP 下载**
+
+苹果 App Store 搜索 `ESPDrone`，下载并安装。
 
 **iOS APP 源代码**: [ESP-Drone-iOS](https://github.com/EspressifApps/ESP-Drone-iOS)
 
