@@ -16,15 +16,35 @@ menu "ESPDrone Config"
 
     endchoice
 
+    choice
+        prompt "extend board version"
+        default EXT_AUTO_DETECT
+        config EXT_FLOW_TESTBOARD
+            bool "use testboard 200616"
+            help
+                This board use wrong pin definition,only for test.
+        config EXT_AUTO_DETECT
+            bool "auto detect"
+            help
+                enable this to use extend board.
+    endchoice
+
     menu "app set"
         config ENABLE_LEGACY_APP
             bool "Enable legacy ESPlane1.0 APP"
-            default 0
+            default n
             help
                 This enables the udp_server_rx2_task of wifi.
+        config ENABLE_POSITION_HOLD_MODE
+            bool "Enable position hold mode"
+            default y
+            help
+                This enables position hold mode when pmw3901 sensors available.
         config ENABLE_COMMAND_MODE_SET
             bool "Enable \'setCommandermode\' to transform command"
-            default 0
+            depends on ENABLE_POSITION_HOLD_MODE
+            default y if ENABLE_POSITION_HOLD_MODE
+            default n if !ENABLE_POSITION_HOLD_MODE
             help
                 This enables assit mode when use old version app.
     endmenu
@@ -48,7 +68,7 @@ menu "ESPDrone Config"
     menu "system"
 
         config BASE_STACK_SIZE
-            int "base stack size for plane ralated task"
+            int "base stack size for system task"
             range 1024 2048
             default 1024 if TARGET_ESPLANE_V2_S2
             default 1024 if TARGET_ESP32_S2_DRONE_V1_2

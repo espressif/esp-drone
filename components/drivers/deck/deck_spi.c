@@ -30,10 +30,14 @@
 #define DEBUG_MODULE "DECK_SPI"
 #include "debug_cf.h"
 
-
-#define SPI_SCK_PIN CONFIG_SPI_PIN_CLK
+#ifdef CONFIG_EXT_FLOW_TESTBOARD //This board use wrong pin definition,only for test.
+    #define SPI_SCK_PIN CONFIG_SPI_PIN_MOSI
+    #define SPI_MOSI_PIN CONFIG_SPI_PIN_CLK
+#else
+    #define SPI_SCK_PIN CONFIG_SPI_PIN_CLK
+    #define SPI_MOSI_PIN CONFIG_SPI_PIN_MOSI
+#endif
 #define SPI_MISO_PIN CONFIG_SPI_PIN_MISO
-#define SPI_MOSI_PIN CONFIG_SPI_PIN_MOSI
 
 #define DUMMY_BYTE 0xA5
 
