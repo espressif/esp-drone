@@ -77,7 +77,7 @@ void assertFail(char *exp, char *file, int line)
 {
   portDISABLE_INTERRUPTS();
   storeAssertFileData(file, line);
-  DEBUG_PRINTD("Assert failed %s:%d\n", file, line);
+  DEBUG_PRINTE("Assert failed %s:%d\n", file, line);
 
   ledClearAll();
   ledSet(ERR_LED1, 1);
