@@ -84,9 +84,12 @@ bool i2cdevReadReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
     }
 
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK_EN);
-    i2c_master_write_byte(cmd, memAddress, I2C_MASTER_ACK_EN);
+    if (memAddress != I2CDEV_NO_MEM_ADDR)
+    {
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK_EN);
+        i2c_master_write_byte(cmd, memAddress, I2C_MASTER_ACK_EN);
+    }
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_READ, I2C_MASTER_ACK_EN);
     i2c_master_read(cmd, data, len, I2C_MASTER_LAST_NACK);
@@ -141,9 +144,12 @@ bool i2cdevReadReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
     memAddress8[0] = (uint8_t)((memAddress >> 8) & 0x00FF);
     memAddress8[1] = (uint8_t)(memAddress & 0x00FF);
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK_EN);
-    i2c_master_write(cmd, memAddress8, 2, I2C_MASTER_ACK_EN);
+    if (memAddress != I2C_NO_INTERNAL_ADDRESS)
+    {
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK_EN);
+        i2c_master_write(cmd, memAddress8, 2, I2C_MASTER_ACK_EN);
+    }
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_READ, I2C_MASTER_ACK_EN);
     i2c_master_read(cmd, data, len, I2C_MASTER_LAST_NACK);
@@ -231,7 +237,10 @@ bool i2cdevWriteReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK_EN);
-    i2c_master_write_byte(cmd, memAddress, I2C_MASTER_ACK_EN);
+    if (memAddress != I2CDEV_NO_MEM_ADDR)
+    {
+        i2c_master_write_byte(cmd, memAddress, I2C_MASTER_ACK_EN);
+    }
     i2c_master_write(cmd, (uint8_t *)data, len, I2C_MASTER_ACK_EN);
     i2c_master_stop(cmd);
     esp_err_t err = i2c_master_cmd_begin(dev->def->i2cPort, cmd, (TickType_t)5);
@@ -285,7 +294,10 @@ bool i2cdevWriteReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
     memAddress8[1] = (uint8_t)(memAddress & 0x00FF);
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK_EN);
+    if (memAddress != I2C_NO_INTERNAL_ADDRESS)
+    {
+        i2c_master_write(cmd, memAddress8, 2, I2C_MASTER_ACK_EN);
+    }
     i2c_master_write(cmd, memAddress8, 2, I2C_MASTER_ACK_EN);
     i2c_master_write(cmd, (uint8_t *)data, len, I2C_MASTER_ACK_EN);
     i2c_master_stop(cmd);
@@ -327,3 +339,9 @@ bool i2cdevWriteReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
         return false;
     }
 }
+
+bool i2cdevRead(I2C_Dev *dev, uint8_t devAddress, uint16_t len, uint8_t *data)
+{
+  return i2cdevReadReg8(dev, devAddress, I2CDEV_NO_MEM_ADDR, len, data);
+}
+
