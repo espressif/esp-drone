@@ -95,7 +95,7 @@ void pmInit(void)
         return;
     }
 
-    pmEnableExtBatteryVoltMeasuring(35, 2);
+    pmEnableExtBatteryVoltMeasuring(CONFIG_ADC1_PIN, 2);
 
     //TODO:
     pmSyslinkInfo.vBat = 3.7f;
@@ -237,7 +237,6 @@ void pmEnableExtBatteryVoltMeasuring(uint8_t pin, float multiplier)
 {
     extBatVoltDeckPin = pin;
     extBatVoltMultiplier = multiplier;
-    //TODO:init ad
 }
 
 float pmMeasureExtBatteryVoltage(void)
@@ -245,7 +244,7 @@ float pmMeasureExtBatteryVoltage(void)
     float voltage;
 
     if (extBatVoltDeckPin) {
-        voltage = analogReadVoltage(extBatVoltDeckPin) * extBatVoltMultiplier; //esplane *2
+        voltage = analogReadVoltage(extBatVoltDeckPin) * extBatVoltMultiplier;
     } else {
         voltage = 0.0;
     }
@@ -279,7 +278,7 @@ void pmTask(void *param)
     systemWaitStart();
 
     while (1) {
-        vTaskDelay(M2T(250));
+        vTaskDelay(M2T(500));
         tickCount = xTaskGetTickCount();
 
         extBatteryVoltage = pmMeasureExtBatteryVoltage();

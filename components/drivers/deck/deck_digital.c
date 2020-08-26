@@ -28,7 +28,7 @@ void pinMode(uint32_t pin, uint32_t mode)
 {
 #ifdef TARGET_MCU_ESP32
     if (pin > 35) {
-#elif defined TARGET_MCU_ESP32S2
+#elif defined(TARGET_MCU_ESP32S2)
     if (pin > 43) {
 #endif
         return;
@@ -67,7 +67,7 @@ void digitalWrite(uint32_t pin, uint32_t val)
 {
 #ifdef TARGET_MCU_ESP32
     if (pin > 35) {
-#elif defined TARGET_MCU_ESP32S2
+#elif defined(TARGET_MCU_ESP32S2)
     if (pin > 43) {
 #endif
         return;
@@ -84,7 +84,7 @@ int digitalRead(uint32_t pin)
 {
 #ifdef TARGET_MCU_ESP32
     if (pin > 35) {
-#elif defined TARGET_MCU_ESP32S2
+#elif defined(TARGET_MCU_ESP32S2)
     if (pin > 43) {
 #endif
         return 0;
