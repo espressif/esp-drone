@@ -435,7 +435,7 @@ static void sensorsDeviceInit(void)
     mpu6050SetRate(7);
     // Set digital low-pass bandwidth
     mpu6050SetDLPFMode(MPU6050_DLPF_BW_256);
-#elif defined CONFIG_TARGET_ESP32_S2_DRONE_V1_2
+#elif defined(CONFIG_TARGET_ESP32_S2_DRONE_V1_2)
     // To low DLPF bandwidth might cause instability and decrease agility
     // but it works well for handling vibrations and unbalanced propellers
     // Set output rate (1): 1000 / (1 + 0) = 1000Hz

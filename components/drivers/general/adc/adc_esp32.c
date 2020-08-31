@@ -22,13 +22,10 @@
  */
 
 #include "driver/adc.h"
-
-#include "config.h"
-#ifdef TARGET_MCU_ESP32
 #include "esp_adc_cal.h"
-#endif
 
 #include "adc_esp32.h"
+#include "config.h"
 #include "pm_esplane.h"
 #include "stm32_legacy.h"
 #define DEBUG_MODULE "ADC"
@@ -36,11 +33,11 @@
 
 static bool isInit;
 
-#ifdef TARGET_MCU_ESP32
 static esp_adc_cal_characteristics_t *adc_chars;
+#ifdef TARGET_MCU_ESP32
 static const adc_channel_t channel = ADC_CHANNEL_7; //GPIO35 if ADC1
 static const adc_bits_width_t width = ADC_WIDTH_BIT_12;
-#elif defined TARGET_MCU_ESP32S2
+#elif defined(TARGET_MCU_ESP32S2)
 static const adc_channel_t channel = ADC_CHANNEL_1;     // GPIO2 if ADC1
 static const adc_bits_width_t width = ADC_WIDTH_BIT_13;
 #endif
@@ -48,60 +45,68 @@ static const adc_bits_width_t width = ADC_WIDTH_BIT_13;
 static const adc_atten_t atten = ADC_ATTEN_DB_11;   //11dB attenuation (ADC_ATTEN_DB_11) gives full-scale voltage 3.9V
 static const adc_unit_t unit = ADC_UNIT_1;
 #define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
+#define NO_OF_SAMPLES   32          //Multisampling
 
-#ifdef TARGET_MCU_ESP32
-static void checkEfuse()
+static void checkEfuse(void)
 {
-    //Check TP is burned into eFuse
+#ifdef TARGET_MCU_ESP32
+    //Check if TP is burned into eFuse
     if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
-        DEBUG_PRINT_LOCAL("eFuse Two Point: Supported\n");
+        printf("eFuse Two Point: Supported\n");
     } else {
-        DEBUG_PRINT_LOCAL("eFuse Two Point: NOT supported\n");
+        printf("eFuse Two Point: NOT supported\n");
     }
-
     //Check Vref is burned into eFuse
     if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_VREF) == ESP_OK) {
-        DEBUG_PRINT_LOCAL("eFuse Vref: Supported\n");
+        printf("eFuse Vref: Supported\n");
     } else {
-        DEBUG_PRINT_LOCAL("eFuse Vref: NOT supported\n");
+        printf("eFuse Vref: NOT supported\n");
     }
+#elif defined(TARGET_MCU_ESP32S2)
+    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
+        printf("eFuse Two Point: Supported\n");
+    } else {
+        printf("Cannot retrieve eFuse Two Point calibration values. Default calibration values will be used.\n");
+    }
+#endif
 }
 
 static void print_char_val_type(esp_adc_cal_value_t val_type)
 {
     if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP) {
-        DEBUG_PRINT_LOCAL("Characterized using Two Point Value\n");
+        printf("Characterized using Two Point Value\n");
     } else if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF) {
-        DEBUG_PRINT_LOCAL("Characterized using eFuse Vref\n");
+        printf("Characterized using eFuse Vref\n");
     } else {
-        DEBUG_PRINT_LOCAL("Characterized using Default Vref\n");
+        printf("Characterized using Default Vref\n");
     }
 }
 
-#endif
-
 float analogReadVoltage(uint32_t pin)
 {
-    float voltage;
-    int adc_reading = adc1_get_raw((adc1_channel_t)channel);
-#ifdef TARGET_MCU_ESP32
-    voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-#elif defined TARGET_MCU_ESP32S2
-    voltage = adc_reading * 1.0f;
-#endif
+    uint32_t adc_reading = 0;
+    for (int i = 0; i < NO_OF_SAMPLES; i++) {
+        if (unit == ADC_UNIT_1) {
+            adc_reading += adc1_get_raw((adc1_channel_t)channel);
+        } else {
+            int raw;
+            adc2_get_raw((adc2_channel_t)channel, width, &raw);
+            adc_reading += raw;
+        }
+    }
+    adc_reading /= NO_OF_SAMPLES;
+    //Convert adc_reading to voltage in mV
+    uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
     return voltage / 1000.0;
 }
 
 void adcInit(void)
 {
-
     if (isInit) {
         return;
     }
 
-#ifdef TARGET_MCU_ESP32
     checkEfuse();
-#endif
     //Configure ADC
     if (unit == ADC_UNIT_1) {
         adc1_config_width(width);
@@ -110,12 +115,10 @@ void adcInit(void)
         adc2_config_channel_atten((adc2_channel_t)channel, atten);
     }
 
-#ifdef TARGET_MCU_ESP32
     //Characterize ADC
     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, width, DEFAULT_VREF, adc_chars);
     print_char_val_type(val_type);
-#endif
 
     isInit = true;
 }
