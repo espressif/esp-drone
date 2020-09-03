@@ -26,13 +26,13 @@
  */
 #include <math.h>
 #include <stdbool.h>
+#include "freertos/FreeRTOS.h"
 
 #include "crtp_commander.h"
-
 #include "commander.h"
+#include "estimator.h"
 #include "crtp.h"
 #include "param.h"
-#include "freertos/FreeRTOS.h"
 #include "num.h"
 #include "stm32_legacy.h"
 #define DEBUG_MODULE "MODE"
@@ -95,21 +95,25 @@ void setCommandermode(FlightMode mode){
     altHoldMode = true;
     posHoldMode = false;
     posSetMode = false;
+    registerRequiredEstimator(complementaryEstimator);
     break;
   case POSHOLD_MODE:
     altHoldMode = true;
     posHoldMode = true;
-    posSetMode = false; 
+    posSetMode = false;
+    registerRequiredEstimator(kalmanEstimator); 
     break;
   case POSSET_MODE:
     altHoldMode = false;
     posHoldMode = false;
-    posSetMode = true;  
+    posSetMode = true;
+    registerRequiredEstimator(kalmanEstimator); 
     break;
   default:
     altHoldMode = false;
     posHoldMode = false;
-    posSetMode = false;  
+    posSetMode = false;
+    registerRequiredEstimator(complementaryEstimator);   
     break;
   }
   DEBUG_PRINTI("FlightMode = %u",mode);

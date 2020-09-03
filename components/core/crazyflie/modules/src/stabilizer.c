@@ -184,6 +184,9 @@ void stabilizerInit(StateEstimatorType estimator)
     return;
 
   sensorsInit();
+  if (estimator == anyEstimator) {
+    estimator = deckGetRequiredEstimator();
+  }
   stateEstimatorInit(estimator);
   controllerInit(ControllerTypeAny);
   powerDistributionInit();

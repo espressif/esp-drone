@@ -35,6 +35,8 @@ typedef enum {
   StateEstimatorTypeCount,
 } StateEstimatorType;
 
+bool registerRequiredEstimator(StateEstimatorType estimator);
+StateEstimatorType deckGetRequiredEstimator();
 void stateEstimatorInit(StateEstimatorType estimator);
 bool stateEstimatorTest(void);
 void stateEstimatorSwitchTo(StateEstimatorType estimator);

@@ -8,6 +8,7 @@
 #define ESTIMATOR_NAME anyEstimator
 #define DEFAULT_ESTIMATOR complementaryEstimator
 static StateEstimatorType currentEstimator = anyEstimator;
+static StateEstimatorType requiredEstimator = anyEstimator;
 
 static void initEstimator(const StateEstimatorType estimator);
 static void deinitEstimator(const StateEstimatorType estimator);
@@ -81,6 +82,30 @@ static EstimatorFcns estimatorFunctions[] = {
         .estimatorEnqueueSweepAngles = estimatorKalmanEnqueueSweepAngles,
     },
 };
+
+bool registerRequiredEstimator(StateEstimatorType estimator)
+{
+  bool isError = false;
+
+  if (anyEstimator != estimator) {
+    if (anyEstimator == requiredEstimator) {
+      requiredEstimator = estimator;
+    }
+    else {
+      if (requiredEstimator != estimator) {
+        isError = true;
+        DEBUG_PRINTW("WARNING: Two decks require different estimators\n");
+      }
+    }
+  }
+
+  return isError;
+}
+
+StateEstimatorType deckGetRequiredEstimator()
+{
+  return requiredEstimator;
+}
 
 void stateEstimatorInit(StateEstimatorType estimator) {
   stateEstimatorSwitchTo(estimator);

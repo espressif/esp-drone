@@ -134,7 +134,7 @@ bool systemTest()
   DEBUG_PRINTI("pmTest = %d", pass);
   pass &= workerTest();
   DEBUG_PRINTI("workerTest = %d", pass);
-  //pass &= buzzerTest();
+  pass &= buzzerTest();
   return pass;
 }
 
@@ -164,7 +164,7 @@ void systemTask(void *arg)
   commInit();
   commanderInit();
 
-  StateEstimatorType estimator = kalmanEstimator;
+  StateEstimatorType estimator = anyEstimator;
   estimatorKalmanTaskInit();
   //deckInit();
   //estimator = deckGetRequiredEstimator();
