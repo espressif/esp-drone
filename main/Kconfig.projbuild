@@ -76,6 +76,36 @@ menu "ESPDrone Config"
 
     endmenu
 
+    menu "buzzer"
+
+        config BUZZER_ON
+            bool "enable buzzer to play sound"
+            default y
+
+        config BUZ1_PIN_POS
+            int "BUZ1_PIN_POS GPIO number"
+            range 0 34 if TARGET_ESPLANE_V1
+            default 27 if TARGET_ESPLANE_V1
+            range 0 43 if TARGET_ESPLANE_V2_S2
+            default 39 if TARGET_ESPLANE_V2_S2
+            range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
+            default 39 if TARGET_ESP32_S2_DRONE_V1_2
+            help
+                GPIO number (IOxx) BUZ1_PIN_POS
+
+        config BUZ2_PIN_NEG
+            int "BUZ2_PIN_NEG GPIO number"
+            range 0 34 if TARGET_ESPLANE_V1
+            default 26 if TARGET_ESPLANE_V1
+            range 0 43 if TARGET_ESPLANE_V2_S2
+            default 38 if TARGET_ESPLANE_V2_S2
+            range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
+            default 38 if TARGET_ESP32_S2_DRONE_V1_2
+            help
+                GPIO number (IOxx) BUZ2_PIN_NEG
+
+    endmenu
+
     menu "sensors config"
         config I2C0_PIN_SDA
             int "I2C0_PIN_SDA GPIO number"
@@ -164,28 +194,6 @@ menu "ESPDrone Config"
             default 34 if TARGET_ESP32_S2_DRONE_V1_2
             help
                 GPIO number (IOxx) SPI_PIN_CS0
-
-        config BUZ1_PIN_POS
-            int "BUZ1_PIN_POS GPIO number"
-            range 0 34 if TARGET_ESPLANE_V1
-            default 27 if TARGET_ESPLANE_V1
-            range 0 43 if TARGET_ESPLANE_V2_S2
-            default 39 if TARGET_ESPLANE_V2_S2
-            range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
-            default 39 if TARGET_ESP32_S2_DRONE_V1_2
-            help
-                GPIO number (IOxx) BUZ1_PIN_POS
-
-        config BUZ2_PIN_NEG
-            int "BUZ2_PIN_NEG GPIO number"
-            range 0 34 if TARGET_ESPLANE_V1
-            default 26 if TARGET_ESPLANE_V1
-            range 0 43 if TARGET_ESPLANE_V2_S2
-            default 38 if TARGET_ESPLANE_V2_S2
-            range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
-            default 38 if TARGET_ESP32_S2_DRONE_V1_2
-            help
-                GPIO number (IOxx) BUZ2_PIN_NEG
 
         config MPU_PIN_INT
             int "MPU_PIN_INT GPIO number"

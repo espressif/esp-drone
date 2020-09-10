@@ -41,11 +41,10 @@
 #define BUZ_PWM_CH1  0
 #define BUZ_PWM_CH2  1
 
-#define PIEZO_GPIO_POS_PIN    CONFIG_BUZ1_PIN_POS
-#define PIEZO_GPIO_NEG_PIN    CONFIG_BUZ2_PIN_NEG
+#define PIEZO_GPIO_POS_PIN    CONFIG_BUZ1_PIN_POS // buzzer+ -> GPIO39 ; buzzer- -> GND:
+#define PIEZO_GPIO_NEG_PIN    CONFIG_BUZ2_PIN_NEG // GND
 
-
-#define PIEZO_PWM_BITS      (8)
+#define PIEZO_PWM_BITS      (13)
 #define PIEZO_PWM_PERIOD    ((1<<PIEZO_PWM_BITS) - 1)
 #define PIEZO_PWM_PRESCALE  (0)
 
@@ -54,19 +53,11 @@
 
 static bool isInit = false;
 
-ledc_channel_config_t buzz_channel[2] = {
+ledc_channel_config_t buzz_channel[1] = {
     {
         .channel = BUZ_PWM_CH1,
         .duty = 0,
         .gpio_num = PIEZO_GPIO_POS_PIN,
-        .speed_mode = LEDC_LOW_SPEED_MODE,
-        .timer_sel = LEDC_TIMER_1
-
-    },
-    {
-        .channel = BUZ_PWM_CH2,
-        .duty = 0,
-        .gpio_num = PIEZO_GPIO_NEG_PIN,
         .speed_mode = LEDC_LOW_SPEED_MODE,
         .timer_sel = LEDC_TIMER_1
 
@@ -87,7 +78,7 @@ void piezoInit()
         .freq_hz = 4000,                     // frequency of PWM signal
         .speed_mode = LEDC_LOW_SPEED_MODE,   // timer mode
         .timer_num = LEDC_TIMER_1,            // timer index
-        // .clk_cfg = LEDC_AUTO_CLK,              // Auto select the source clock
+        //.clk_cfg = LEDC_AUTO_CLK,              // Auto select the source clock
     };
 
     // Set configuration of timer0 for high speed channels
@@ -95,7 +86,7 @@ void piezoInit()
 
     }
 
-    for (uint8_t i = 0; i < 2; i++) {
+    for (uint8_t i = 0; i < 1; i++) {
         ledc_channel_config(&buzz_channel[i]);
     }
 
@@ -109,16 +100,20 @@ bool piezoTest(void)
 
 void piezoSetRatio(uint8_t ratio)
 {
-    ledc_set_duty(buzz_channel[0].speed_mode, buzz_channel[0].channel, ratio);
+    uint16_t ratio16 = 0;
+    if (ratio > 0) {
+        ratio16 = ratio << 5;
+    }
+    ledc_set_duty(buzz_channel[0].speed_mode, buzz_channel[0].channel, ratio16);
     ledc_update_duty(buzz_channel[0].speed_mode, buzz_channel[0].channel);
-
-    ledc_set_duty(buzz_channel[1].speed_mode, buzz_channel[1].channel, PIEZO_PWM_PERIOD - ratio);
-    ledc_update_duty(buzz_channel[1].speed_mode, buzz_channel[1].channel);
 
 }
 
 void piezoSetFreq(uint16_t freq)
 {
-    ledc_set_freq(buzz_channel[0].speed_mode, buzz_channel[0].timer_sel, freq);
-
+    if ( freq <= 0 ) {
+        piezoSetRatio(0);
+    } else {
+        ledc_set_freq(buzz_channel[0].speed_mode, buzz_channel[0].timer_sel, freq);
+    }
 }
