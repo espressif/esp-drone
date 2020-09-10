@@ -45,7 +45,7 @@ static const adc_bits_width_t width = ADC_WIDTH_BIT_13;
 static const adc_atten_t atten = ADC_ATTEN_DB_11;   //11dB attenuation (ADC_ATTEN_DB_11) gives full-scale voltage 3.9V
 static const adc_unit_t unit = ADC_UNIT_1;
 #define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
-#define NO_OF_SAMPLES   32          //Multisampling
+#define NO_OF_SAMPLES   30          //Multisampling
 
 static void checkEfuse(void)
 {
