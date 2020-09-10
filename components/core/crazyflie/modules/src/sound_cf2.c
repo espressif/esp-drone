@@ -339,7 +339,7 @@ static void soundTimer(xTimerHandle timer)
 
 void soundInit(void)
 {
-#ifdef BUZZER_ON
+#ifdef CONFIG_BUZZER_ON
   if (isInit) {
     return;
   }

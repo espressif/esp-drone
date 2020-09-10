@@ -28,13 +28,14 @@
 
 #include "buzzer.h"
 #include "config.h"
+#include "sdkconfig.h"
 
 static struct buzzerControl *ctrl;
 extern void buzzDeckInit();
 
 void buzzerInit()
 {
-#ifdef BUZZER_ON
+#ifdef CONFIG_BUZZER_ON
     buzzDeckInit();
 #endif
 }
