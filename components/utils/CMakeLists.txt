@@ -14,4 +14,4 @@ idf_component_register(SRCS "abort.c"
                 "statsCnt.c"
                 "version.c"
               INCLUDE_DIRS "." "include"
-              REQUIRES platform hal modules config)
+              REQUIRES platform crazyflie config)
