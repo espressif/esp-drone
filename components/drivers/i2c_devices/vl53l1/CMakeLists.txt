@@ -13,4 +13,4 @@ idf_component_register(SRCS "vl53l1x.c"
                     "core/src/vl53l1_silicon_core.c"
                     "core/src/vl53l1_wait.c"
                        INCLUDE_DIRS "." "include" "core/inc"
-                     REQUIRES i2c_bus hal modules utils platform config) 
+                     REQUIRES i2c_bus crazyflie utils platform config) 
