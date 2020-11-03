@@ -19,18 +19,6 @@ typedef struct {
 
 } GPIO_TypeDef;
 
-//freertosconfig
-typedef void DMA_Stream_TypeDef;
-typedef int DMA_InitTypeDef;
-typedef void *xSemaphoreHandle;
-typedef void *SemaphoreHandle_t;
-typedef void *xQueueHandle;
-typedef void *QueueHandle_t;
-typedef void *TaskHandle_t;
-typedef void TIM_TypeDef;
-typedef void TIM_OCInitTypeDef;
-typedef uint32_t TickType_t;
-typedef uint32_t portTickType;
 
 #define TASK_LED_ID_NBR         1
 #define TASK_RADIO_ID_NBR       2
