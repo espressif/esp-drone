@@ -1,5 +1,6 @@
 硬件参考
 ========
+:link_to_translation:`en:[English]`
 
 已支持硬件
 ----------
@@ -18,28 +19,26 @@ ESPlane-FC-V1       ESP32-WROOM-32D + MPU6050 需安装机架
 硬件切换方法
 ~~~~~~~~~~~~
 
--  ``esp_drone`` 仓库代码已支持多种硬件，可通过 ``menuconfig`` 进行切换。
+-  ``esp_drone`` 仓库代码已支持多种硬件，可通过 ``menuconfig`` 进行切换，见下图。
 
    .. figure:: ../../_static/board_choose.png
+      :align: center
       :alt: ESP-Drone config
+      :figclass: align-center
 
-      ESP-Drone config
+-  默认情况下，``set-target`` 设为 ``esp32s2`` 后，硬件自动切换为 ``ESP32_S2_Drone_V1_2``。
 
--  默认情况下，\ ``set-target`` 设为 ``esp32s2``\ 后，硬件自动切换为 ``ESP32_S2_Drone_V1_2``\ 。
-
--  默认情况下，\ ``set-target`` 设为 ``esp32`` 后，硬件自动切换为 ``ESPlane_FC_V1``\ 。
+-  默认情况下，``set-target`` 设为 ``esp32`` 后，硬件自动切换为 ``ESPlane_FC_V1``。
 
 **注意事项**
 
 1. ESPlane-FC-V1 为老版本硬件。
 
-2. ESPlane-FC-V1 使用 ESP-Drone 新版本代码，需要对硬件进行改动，即使用跳线，将模组 GPIO14 连接到 mpu6050 int 管脚。
+2. ESPlane-FC-V1 使用 ESP-Drone 新版本代码，需要对硬件进行改动，即使用跳线，将模组 GPIO14 连接到 MPU6050 INT 管脚。
 
 3. ESPlane-FC-V1 防止上电时 IO12 触发 flash 电压切换，使用 ``espefuse.py`` 将 flash 电压固定到 3.3 V：
 
    ``espefuse.py --port /dev/ttyUSB0 set_flash_voltage 3.3V``
-
-   ``note * Only the first device attaching to the bus can use CS0 pin.``
 
    注意，仅有第一个连接到总线的设备可以使用 CS0 管脚。
 
@@ -47,13 +46,14 @@ ESP32-S2-Drone V1.2
 -------------------
 
 .. figure:: ../../_static/espdrone_s2_v1_2_up2.jpg
+   :align: center
    :alt: ESP-Drone
+   :figclass: align-center
 
-   ESP-Drone
+   ESP32-S2-Drone V1.2 外观图
 
-主板原理图：\ `SCH_Mainboard_ESP32_S2_Drone_V1_2 <./_static/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
-
-主板 PCB：\ `PCB_Mainboard_ESP32_S2_Drone_V1_2 <./_static/ESP32_S2_Drone_V1_2/PCB_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
+- 主板原理图：`SCH_Mainboard_ESP32_S2_Drone_V1_2 <./_static/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
+- 主板 PCB：`PCB_Mainboard_ESP32_S2_Drone_V1_2 <./_static/ESP32_S2_Drone_V1_2/PCB_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
 
 基础配置
 ~~~~~~~~
@@ -62,9 +62,11 @@ ESP32-S2-Drone V1.2
 ^^^^^^^^^^^^
 
 .. figure:: ../../_static/espdrone_s2_v1_2_hardware_package.png
+   :align: center
    :alt: ESP-Drone
+   :figclass: align-center
 
-   ESP-Drone
+   ESP32-S2-Drone V1.2 基础配置清单
 
 ================ ======== ==============================
 基础配置清单         数量           备注
@@ -79,7 +81,9 @@ ESP32-S2-Drone V1.2
 8-pin 25 mm 排针     2    
 ================ ======== ==============================
 
-注意：更换 720 电机之后，需要在 ``menuconfig->ESPDrone Config->motors config`` 将 ``motor type`` 修改为 ``brushed 720 motor``
+.. note::
+
+    更换 720 电机之后，需要在 ``menuconfig->ESPDrone Config->motors config`` 将 ``motor type`` 修改为 ``brushed 720 motor``。
 
 主控制器
 ^^^^^^^^
@@ -186,9 +190,9 @@ GPIO46 CAM_Y3
 | -指南针模块 | 罗盘        | 等高级模式  | MPU6050从机 |             |
 +-------------+-------------+-------------+-------------+-------------+
 
-扩展板原理图：待发布
+.. 扩展板原理图：待发布
 
-扩展板 PCB：待发布
+.. 扩展板 PCB：待发布
 
 扩展板 IO 定义
 ^^^^^^^^^^^^^^
@@ -210,25 +214,28 @@ ESPlane-V2-S2
 -------------
 
 .. figure:: ../../_static/esplane_2_0.jpg
+   :align: center
    :alt: esplane_fc_v1
+   :figclass: align-center
 
-   esplane_fc_v1
+   ESPlane-V2-S2 外观图
 
-主板原理图：\ `SCH_ESPlane_V2_S2 <./_static/ESPlane_V2_S2/SCH_ESPlane_V2_S2.pdf>`__
-
-主板 PCB：\ `PCB_ESPlane_V2_S2 <./_static/ESPlane_V2_S2/PCB_ESPlane_V2_S2.pdf>`__
+- 主板原理图：`SCH_ESPlane_V2_S2 <./_static/ESPlane_V2_S2/SCH_ESPlane_V2_S2.pdf>`__
+- 主板 PCB：`PCB_ESPlane_V2_S2 <./_static/ESPlane_V2_S2/PCB_ESPlane_V2_S2.pdf>`__
 
 ESPlane-FC-V1
 -------------
 
 .. figure:: ../../_static/esplane_1_0.jpg
+   :align: center
    :alt: esplane_fc_v1
+   :figclass: align-center
 
-   esplane_fc_v1
+   ESPlane-FC-V1 外观图
 
-主板原理图：\ `Schematic_ESPlane_FC_V1 <./_static/ESPlane_FC_V1/Schematic_ESPlane_FC_V1.pdf>`__
 
-主板 PCB：\ `PCB_ESPlane_FC_V1 <./_static/ESPlane_FC_V1/PCB_ESPlane_FC_V1.pdf>`__
+- 主板原理图：`Schematic_ESPlane_FC_V1 <./_static/ESPlane_FC_V1/Schematic_ESPlane_FC_V1.pdf>`__
+- 主板 PCB：`PCB_ESPlane_FC_V1 <./_static/ESPlane_FC_V1/PCB_ESPlane_FC_V1.pdf>`__
 
 .. _Basic_Component-1:
 

@@ -1,5 +1,6 @@
 Hardware Reference
 =======================
+:link_to_translation:`zh_CN:[中文]`
 
 Supported Hardware 
 ----------------------
@@ -21,13 +22,13 @@ Configure Target Hardware
 -  Code in ``esp_drone`` repository supports a wide variety of hardware, which can be changed through ``menuconfig``.
 
    .. figure:: ../../_static/board_choose.png
+      :align: center
       :alt: ESP-Drone config
+      :figclass: align-center
 
-      ESP-Drone config
+-  By default, when set ``set-target`` as ``esp32s2``, target hardware will be changed to ``ESP32_S2_Drone_V1_2`` automatically.
 
--  By default, when set \ ``set-target`` as ``esp32s2``\, target hardware will be changed to ``ESP32_S2_Drone_V1_2``\  automatically.
-
--  By default, when set \ ``set-target`` as ``esp32``, target hardware will be changed to ``ESPlane_FC_V1``\  automatically.
+-  By default, when set ``set-target`` as ``esp32``, target hardware will be changed to ``ESPlane_FC_V1`` automatically.
 
 **Notes**
 
@@ -47,13 +48,14 @@ ESP32-S2-Drone V1.2
 -----------------------
 
 .. figure:: ../../_static/espdrone_s2_v1_2_up2.jpg
+   :align: center
    :alt: ESP-Drone
+   :figclass: align-center
 
-   ESP-Drone
+   ESP32-S2-Drone V1.2 Overview
 
-Main Board Schematic：\ `SCH_Mainboard_ESP32_S2_Drone_V1_2 <./_static/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
-
-Main Board PCB：\ `PCB_Mainboard_ESP32_S2_Drone_V1_2 <./_static/ESP32_S2_Drone_V1_2/PCB_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
+- Main Board Schematic：`SCH_Mainboard_ESP32_S2_Drone_V1_2 <./_static/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
+- Main Board PCB：`PCB_Mainboard_ESP32_S2_Drone_V1_2 <./_static/ESP32_S2_Drone_V1_2/PCB_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
 
 Basic Component
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,9 +64,11 @@ Basic Component List
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: ../../_static/espdrone_s2_v1_2_hardware_package.png
+   :align: center
    :alt: ESP-Drone
+   :figclass: align-center
 
-   ESP-Drone
+   Component List for ESP32-S2-Drone V1.2
 
 ================================== ======== =====================================
 Basic Component List                Number      Notes
@@ -79,7 +83,9 @@ Main board                          1        ESP32-S2-WROVER + MPU6050
 8-pin 25 mm male pins               2    
 ================================== ======== =====================================
 
-Notice: Set ``motor type`` as ``brushed 720 motor`` through ``menuconfig->ESPDrone Config->motors config`` if you use 720 motor.
+.. note::
+
+   Set ``motor type`` as ``brushed 720 motor`` through ``menuconfig->ESPDrone Config->motors config`` if you use 720 motor.
 
 Main Controller
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -199,9 +205,9 @@ Extension Components
      - Mount at the top or at the bottom
 
 
-Extension board schematics：to be released
+.. Extension board schematics：to be released
 
-Extension board  PCB：to be released
+.. Extension board  PCB：to be released
 
 Definition of Extension Board IO 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -223,25 +229,27 @@ ESPlane-V2-S2
 -------------
 
 .. figure:: ../../_static/esplane_2_0.jpg
+   :align: center
    :alt: esplane_fc_v1
+   :figclass: align-center
 
-   esplane_fc_v1
+   ESPlane-V2-S2 Overview
 
-Main Board Schematic：\ `SCH_ESPlane_V2_S2 <./_static/ESPlane_V2_S2/SCH_ESPlane_V2_S2.pdf>`__
-
-Main Board PCB：\ `PCB_ESPlane_V2_S2 <./_static/ESPlane_V2_S2/PCB_ESPlane_V2_S2.pdf>`__
+- Main Board Schematic：`SCH_ESPlane_V2_S2 <./_static/ESPlane_V2_S2/SCH_ESPlane_V2_S2.pdf>`__
+- Main Board PCB：`PCB_ESPlane_V2_S2 <./_static/ESPlane_V2_S2/PCB_ESPlane_V2_S2.pdf>`__
 
 ESPlane-FC-V1
 ------------------
 
 .. figure:: ../../_static/esplane_1_0.jpg
+   :align: center
    :alt: esplane_fc_v1
+   :figclass: align-center
 
    esplane_fc_v1
 
-Main Board Schematic：\ `Schematic_ESPlane_FC_V1 <./_static/ESPlane_FC_V1/Schematic_ESPlane_FC_V1.pdf>`__
-
-Main Board PCB：\ `PCB_ESPlane_FC_V1 <./_static/ESPlane_FC_V1/PCB_ESPlane_FC_V1.pdf>`__
+- Main Board Schematic：`Schematic_ESPlane_FC_V1 <./_static/ESPlane_FC_V1/Schematic_ESPlane_FC_V1.pdf>`__
+- Main Board PCB：`PCB_ESPlane_FC_V1 <./_static/ESPlane_FC_V1/PCB_ESPlane_FC_V1.pdf>`__
 
 .. _Basic_Component-1:
 
@@ -327,7 +335,7 @@ GPIO35   ADC_7_BAT      VBAT/2
 
 .. _Components_of_extension_board-1:
 
-Componets of Extension Board
+Components of Extension Board
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ESPlane + PMW3901 Pins Allocation
