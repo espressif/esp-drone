@@ -1,6 +1,7 @@
 
 ESP-Drone
 ===========
+:link_to_translation:`zh_CN:[中文]`
 
 **ESP-Drone** is an open source **drone solution** based on Espressif **ESP32/ESP32-S2** Wi-Fi chip, which can be controlled over a **Wi-Fi** network using a mobile APP or gamepad. ESP-Drone supports multiple flight modes, including `Stabilize mode`, `Height-hold mode`, and `Position-hold mode`. With **simple hardware**, **clear and extensible code architecture**, ESP-Drone can be used in **STEAM education** and other fields. The main code is ported from **Crazyflie** open source project with **GPL3.0** protocol.
 

@@ -1,12 +1,13 @@
 Set up Development Environment
 ================================
+:link_to_translation:`zh_CN:[中文]`
 
 Set up ESP-IDF Environment 
 ---------------------------------
 
 Please refer to `ESP-IDF Programming Guide <https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/get-started/index.html>`__\  and set up ESP-IDF environmnet step by step.
 
-Note：
+.. note::
 
 -  Please follow the link above and complete all the steps.
 -  Build one or more sample applications by following the steps in the link above.
@@ -50,9 +51,11 @@ Get Project Source Code
 **The code file structure is as follows:**
 
 .. figure:: ../../_static/espdrone_file_structure.png
+   :align: center
    :alt: espdrone_file_structure
+   :figclass: align-center
 
-   espdrone_file_structure
+    ESP-Drone File Structure
 
 ::
 
@@ -92,7 +95,7 @@ Get Project Source Code
    ├── README.md                        | project description
    └── sdkconfig.defaults            | default parameter
 
-**For more information, please refer to**\ ：\ `espdrone_file_structure <./_static/espdrone_file_structure.pdf>`__\ 
+**For more information, please refer to**: `espdrone_file_structure <./_static/espdrone_file_structure.pdf>`__. 
 
 Source Code Style
 --------------------

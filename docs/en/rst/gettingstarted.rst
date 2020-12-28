@@ -21,12 +21,12 @@ license.
 Main Features
 ----------------
 
-ESP-Drone supports the following features:
+ESP-Drone has the following features:
 
 - Stabilize mode: keep the drone stable to achieve smooth flight.
 - Height-hold mode: control thrust output to keep the drone flying at a fixed height.
-- Position-hold mode: keep the drone flying at its current position.
-- PC debugging: uses cfclient for static/dynamic debugging.
+- Position-hold mode: keep the drone flying at a fixed position.
+- PC debugging: use cfclient for static/dynamic debugging.
 - Controlled by APP: easily controlled over Wi-Fi by your mobile APP.
 - Controlled by gamepad: easily controlled via the gamepad by cfclient.
 
@@ -36,7 +36,7 @@ Main Components
 ESP-Drone 2.0 consists of a main board and several extension boards:
 
 -  **Main board**: integrates an ESP32-S2 module, necessary sensors for basic flight, and provides hardware extension interfaces.
--  **Extension boards**: integrates extension sensors via hardware extension interfaces of the main board, to implement advanced flight.  
+-  **Extension boards**: integrate extension sensors via hardware extension interfaces of the main board, to implement advanced flight.  
 
 .. list-table:: 
    :widths: 4 20 15 15 10 10
@@ -52,7 +52,7 @@ ESP-Drone 2.0 consists of a main board and several extension boards:
      - Main board - **ESP32-S2**
      - ESP32-S2-WROVER + MPU6050
      - Basic flight
-     - I2C, SPI, GPIO extension interfaces
+     - I2C, SPI, GPIO, extension interfaces
      - 
    * - 2
      - Extension board - **Position-hold module**
@@ -129,7 +129,7 @@ Download and Install ESP-Drone APP
 ----------------------------------------
 ESP-Drone APP is available for Android and iOS.
 
-For Android, please scan the QR below to download ESP-Drone APP:
+For Android, please scan the QR below to download ESP-Drone APP.
 
 .. figure:: ../../_static/android_app_download.png
    :align: center
@@ -311,7 +311,7 @@ Basic Flight Control
 2. Assisted mode
 
    - Altitude-hold mode: maintain flight altitude. To implement this mode, a barometric pressure sensor is needed.
-   - Position-hold mode: maintain current flight position. To implement this mode, a optical flow sensor and a Time of Flight (TOF) sensor are needed.
+   - Position-hold mode: maintain current flight position. To implement this mode, an optical flow sensor and a Time of Flight (TOF) sensor are needed.
    - Height-hold mode: keep flight height. Note: to apply this mode, the drone should fly at 40 cm or higher over the ground, and a TOF is needed.
    - Hover mode: stay and hover at 40 cm or higher over the take-off point. To implement this mode, a optical flow sensor and a TOF are needed.
 
@@ -329,7 +329,7 @@ Advanced Flight Control
 2. Max yaw rate: set the allowed yaw: ``yaw``.
 3. Max thrust: set the maximum thrust.
 4. Min thrust: set the minimum thrust.
-5. Slew limit: prevent sudden drop of thrust. When the thrust drops below this limit, the rates below `` Slew rate`` will not be allowed.
+5. Slew limit: prevent sudden drop of thrust. When the thrust drops below this limit, the rates below ``Slew rate`` will not be allowed.
 6. Slew rate: this is the maximum rate when the thrust is below ``slew limit``.
 
 Configure Input Device
@@ -344,8 +344,8 @@ Follow the prompts, route the controllers to each channel.
 
    Cfclient Input Device Configuration
 
-Monitor Flight Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Flight Data
+~~~~~~~~~~~~~~~~
 
 On the tab “Flight Control” of cfclient, you can check the drone status. The detailed information is shown at the bottom right, including:
 
@@ -355,9 +355,9 @@ On the tab “Flight Control” of cfclient, you can check the drone status. The
 4. M1/M2/M3/M4: actual output of motors
 
 Tune Online Parameters
-----------------------------------------
+--------------------------
 
-**Adjust PID parameters online**
+**Tune PID parameters online**
 
 .. figure:: ../../_static/cfclient_pid_tune.png
    :align: center
@@ -371,11 +371,11 @@ Tune Online Parameters
 
 1. The modified parameters take effect in real time, which avoids frequent flash of firmware.
 2. You can define in your code which parameters can be modified by PC in real time.
-3. Note that modifying parameters online is only for debugging purpose. The modified parameters will not be saved.
+3. Note that modifying parameters online is only for debugging purpose. The modified parameters will not be saved at power down.
 
 
-Flight Data Monitoring
--------------------------
+Monitor Flight Data
+-----------------------
 
 Configure the parameters to monitor at Tab Log configuration and Tab Log Blocks:
 

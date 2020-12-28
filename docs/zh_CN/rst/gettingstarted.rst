@@ -7,8 +7,7 @@
 项目简介
 ========
 
-ESP-Drone 是基于乐鑫 ESP32/ESP32-S2 开发的小型无人机解决方案，可使用手机
-APP 或游戏手柄通过 Wi-Fi
+ESP-Drone 是基于乐鑫 ESP32/ESP32-S2 开发的小型无人机解决方案，可使用手机 APP 或游戏手柄通过 Wi-Fi
 网络进行连接和控制。该方案硬件结构简单，代码架构清晰，支持功能扩展，可用于
 STEAM 教育等领域。项目部分代码来自 Crazyflie 开源工程，继承 GPL3.0
 开源协议。
@@ -28,8 +27,7 @@ ESP-Drone 具备以下特性：
 
 -  支持自稳定模式 (Stabilize mode)：自动控制机身水平，保持平稳飞行。
 -  支持定高模式 (Height-hold mode)：自动控制油门输出，保持固定高度。
--  支持定点模式 (Position-hold
-   mode)：自动控制机身角度，保持固定空间位置。
+-  支持定点模式 (Position-hold mode)：自动控制机身角度，保持固定空间位置。
 -  支持 PC 上位机调试：使用 cfclient 上位机进行静态/动态调试。
 -  支持 APP 控制：使用手机 APP 通过 Wi-Fi 轻松控制。
 -  支持游戏手柄 (gamepad) 控制：通过 cfclient 使用游戏手柄轻松控制。
@@ -59,13 +57,10 @@ ESP-IDF 简介
 
 ESP-IDF 是乐鑫为 ESP32/ESP32-S2 提供的物联网开发框架。
 
--  ESP-IDF 包含一系列库及头文件，提供了基于 ESP32/ESP32-S2
-   构建软件项目所需的核心组件。
--  ESP-IDF
-   还提供了开发和量产过程中最常用的工具及功能，例如：构建、烧录、调试和测量等。
+-  ESP-IDF 包含一系列库及头文件，提供了基于 ESP32/ESP32-S2 构建软件项目所需的核心组件。
+-  ESP-IDF 还提供了开发和量产过程中最常用的工具及功能，例如：构建、烧录、调试和测量等。
 
-详情可查阅：`ESP-IDF
-编程指南 <https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32s2/get-started/index.html>`__。
+详情可查阅：`ESP-IDF 编程指南 <https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32s2/get-started/index.html>`__。
 
 Crazyflie 简介
 ================
@@ -73,10 +68,8 @@ Crazyflie 简介
 Crazyflie 是来自 Bitcraze 开源工程的四旋翼飞行器，具备以下特性：
 
 -  支持多种传感器组合，可以轻松实现定高模式、定点模式等高级飞行模式。
--  基于 FreeRTOS
-   编写，将复杂的无人机系统，分解成多个具有不同优先级的软件任务。
--  设计了功能完备的 cfclient 上位机和 CRTP
-   通信协议，便于实现调试、测量和控制。
+-  基于 FreeRTOS 编写，将复杂的无人机系统，分解成多个具有不同优先级的软件任务。
+-  设计了功能完备的 cfclient 上位机和 CRTP 通信协议，便于实现调试、测量和控制。
 
 .. figure:: ../../_static/crazyflie-overview.png
    :align: center
@@ -89,7 +82,7 @@ Crazyflie 是来自 Bitcraze 开源工程的四旋翼飞行器，具备以下特
    Delft) <https://img-blog.csdnimg.cn/20191030202634944.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70>`__
 
 
-详情可查阅 `Crazyflie 官网 <https://www.bitcraze.io/>`__\ 。
+详情可查阅 `Crazyflie 官网 <https://www.bitcraze.io/>`__。
 
 准备工作
 ================
@@ -106,7 +99,7 @@ Crazyflie 是来自 Bitcraze 开源工程的四旋翼飞行器，具备以下特
    
    ESP32-S2-Drone V1.2 组装流程
 
-硬件介绍和管脚资源分配可查阅：\ `硬件参考 <./hardware.rst>`__\ 。
+硬件介绍和管脚资源分配可查阅：`硬件参考 <./hardware.rst>`__。
 
 安装 ESP-Drone APP
 --------------------
@@ -315,7 +308,7 @@ File <https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. 最大倾角 (Max angle)：设置最大允许的俯仰和翻滚角度：roll/pitch。
-2. 最大自选速度 (Max yaw rate)：设置允许的偏航速度：yaw。
+2. 最大自旋速度 (Max yaw rate)：设置允许的偏航速度：yaw。
 3. 最大油门 (Max thrust)：设置最大油门。
 4. 最小油门 (Min thrust)：设置最小油门。
 5. 压摆极限 (Slew limit)：防止油门骤降，油门低于该值时，下降速度将被限定。
@@ -406,11 +399,11 @@ File <https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/
 起飞前检查
 ================
 
--  将飞机头部朝前放置，尾部天线朝向自己。
--  将飞机置于水平面上，待机身稳定时上电。
--  观察上位机水平面是否置平。
--  观察通信建立以后，小飞机尾部绿灯是否快速闪烁。
--  观察小飞机头部红灯是否熄灭，亮起代表电量不足。
--  轻推左手小油门，检查飞机是否能快速响应。
--  轻推右手方向，检查方向控制是否正确。
+-  将小飞机头部朝前放置，尾部天线朝向自己；
+-  将小飞机置于水平面上，待机身稳定时上电；
+-  观察上位机水平面是否置平；
+-  观察通信建立以后，小飞机尾部绿灯是否快速闪烁；
+-  观察小飞机头部红灯是否熄灭，亮起代表电量不足；
+-  轻推左手小油门，检查飞机是否能快速响应；
+-  轻推右手方向，检查方向控制是否正确；
 -  起飞吧！

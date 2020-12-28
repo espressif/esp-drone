@@ -1,5 +1,6 @@
 搭建开发环境
 ============
+:link_to_translation:`en:[English]`
 
 ESP-IDF 环境搭建
 ----------------
@@ -50,9 +51,9 @@ ESP32/ESP32-S2 链接脚本修改
 **代码文件结构如下所示：**
 
 .. figure:: ../../_static/espdrone_file_structure.png
+   :align: center
    :alt: espdrone_file_structure
-
-   espdrone_file_structure
+   :figclass: align-center
 
 ::
 
@@ -158,7 +159,7 @@ ESP32/ESP32-S2 链接脚本修改
      uint16_t channelAux[MAX_AUX_RC_CHANNELS];
    } __attribute__((packed));
 
-**attribute** ((packed)) 的作用是：使编译器取消结构在编译过程中的优化对齐，而按照实际占用字节数进行对齐。这是 GCC 特有的语法，与操作系统无关，与编译器有关。GCC 和 VC（在 Windows 下）的编译器为非紧凑模式，TC 的编译器为紧凑模式。例如：
+``__attribute__((packed))`` 的作用是：使编译器取消结构在编译过程中的优化对齐，而按照实际占用字节数进行对齐。这是 GCC 特有的语法，与操作系统无关，与编译器有关。GCC 和 VC（在 Windows 下）的编译器为非紧凑模式，TC 的编译器为紧凑模式。例如：
 
 .. code:: text
 
