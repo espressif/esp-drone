@@ -5,9 +5,8 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * ESP-Drone Firmware
+ * Crazyflie control firmware
  *
- * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,6 +28,7 @@
 #define DEBUG_MODULE "COMM"
 #include "comm.h"
 #include "config.h"
+
 #include "crtp.h"
 #include "console.h"
 #include "crtpservice.h"
@@ -44,9 +44,9 @@ static bool isInit;
 
 void commInit(void)
 {
-  if (isInit){
-    return;
-    }
+  if (isInit) {
+    return;}
+
     /* These functions  are moved to be initialized early so
      * that DEBUG_PRINTD can be used early */
     //wifilinkInit();
@@ -59,6 +59,13 @@ void commInit(void)
     logInit();
     paramInit();
     //locSrvInit();
+
+  //setup CRTP communication channel
+  //TODO: check for USB first and prefer USB over radio
+  //if (usbTest())
+  //  crtpSetLink(usbGetLink);
+  //else if(radiolinkTest())
+  //  crtpSetLink(radiolinkGetLink());
     isInit = true;
 }
 

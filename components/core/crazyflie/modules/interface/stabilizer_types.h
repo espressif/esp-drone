@@ -29,17 +29,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "imu_types.h"
-//#include "lighthouse_geometry.h"
+//#include "lighthouse_calibration.h"
 
 /* Data structure used by the stabilizer subsystem.
  * All have a timestamp to be set when the data is calculated.
  */
-
-// Naive 3d vector type. new type copy from lighthouse_geometry.h
-#define vec3d_size 3
-typedef float vec3d[vec3d_size];
-typedef float mat3d[vec3d_size][vec3d_size];
-
 
 /** Attitude in euler angle form */
 typedef struct attitude_s {
@@ -49,6 +43,11 @@ typedef struct attitude_s {
   float pitch;
   float yaw;
 } attitude_t;
+
+/* vector */
+#define vec3d_size 3
+typedef float vec3d[vec3d_size];
+typedef float mat3d[vec3d_size][vec3d_size];
 
 /* x,y,z vector */
 struct vec3_s {
@@ -247,17 +246,18 @@ typedef struct {
 } yawErrorMeasurement_t;
 
 /** Sweep angle measurement */
-typedef struct {
-  uint32_t timestamp;
-  vec3d* baseStationPos;
-  mat3d* baseStationRot;     // Base station rotation matrix
-  mat3d* baseStationRotInv;  // Inverted base station rotation matrix
-  float angleX;
-  float angleY;
-  float stdDevX;
-  float stdDevY;
-  vec3d* sensorPos;
-} sweepAngleMeasurement_t;
+// typedef struct {
+//   uint32_t timestamp;
+//   const vec3d* sensorPos;    // Sensor position in the CF reference frame
+//   const vec3d* rotorPos;     // Pos of rotor origin in global reference frame
+//   const mat3d* rotorRot;     // Rotor rotation matrix
+//   const mat3d* rotorRotInv;  // Inverted rotor rotation matrix
+//   float t;                   // t is the tilt angle of the light plane on the rotor
+//   float measuredSweepAngle;
+//   float stdDev;
+//   const lighthouseCalibrationSweep_t* calib;
+//   lighthouseCalibrationMeasurementModel_t calibrationMeasurementModel;
+// } sweepAngleMeasurement_t;
 
 // Frequencies to bo used with the RATE_DO_EXECUTE_HZ macro. Do NOT use an arbitrary number.
 #define RATE_1000_HZ 1000

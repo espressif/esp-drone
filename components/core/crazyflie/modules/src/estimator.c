@@ -27,7 +27,7 @@ typedef struct {
   bool (*estimatorEnqueueAbsoluteHeight)(const heightMeasurement_t *height);
   bool (*estimatorEnqueueFlow)(const flowMeasurement_t *flow);
   bool (*estimatorEnqueueYawError)(const yawErrorMeasurement_t *error);
-  bool (*estimatorEnqueueSweepAngles)(const sweepAngleMeasurement_t *angles);
+  //bool (*estimatorEnqueueSweepAngles)(const sweepAngleMeasurement_t *angles);
 } EstimatorFcns;
 
 #define NOT_IMPLEMENTED ((void*)0)
@@ -47,7 +47,7 @@ static EstimatorFcns estimatorFunctions[] = {
         .estimatorEnqueueAbsoluteHeight = NOT_IMPLEMENTED,
         .estimatorEnqueueFlow = NOT_IMPLEMENTED,
         .estimatorEnqueueYawError = NOT_IMPLEMENTED,
-        .estimatorEnqueueSweepAngles = NOT_IMPLEMENTED,
+        //.estimatorEnqueueSweepAngles = NOT_IMPLEMENTED,
     }, // Any estimator
     {
         .init = estimatorComplementaryInit,
@@ -63,7 +63,7 @@ static EstimatorFcns estimatorFunctions[] = {
         .estimatorEnqueueAbsoluteHeight = NOT_IMPLEMENTED,
         .estimatorEnqueueFlow = NOT_IMPLEMENTED,
         .estimatorEnqueueYawError = NOT_IMPLEMENTED,
-        .estimatorEnqueueSweepAngles = NOT_IMPLEMENTED,
+        //.estimatorEnqueueSweepAngles = NOT_IMPLEMENTED,
     },
     {
         .init = estimatorKalmanInit,
@@ -79,7 +79,7 @@ static EstimatorFcns estimatorFunctions[] = {
         .estimatorEnqueueAbsoluteHeight = estimatorKalmanEnqueueAbsoluteHeight,
         .estimatorEnqueueFlow = estimatorKalmanEnqueueFlow,
         .estimatorEnqueueYawError = estimatorKalmanEnqueueYawError,
-        .estimatorEnqueueSweepAngles = estimatorKalmanEnqueueSweepAngles,
+        //.estimatorEnqueueSweepAngles = estimatorKalmanEnqueueSweepAngles,
     },
 };
 
@@ -229,10 +229,10 @@ bool estimatorEnqueueFlow(const flowMeasurement_t *flow) {
   return false;
 }
 
-bool estimatorEnqueueSweepAngles(const sweepAngleMeasurement_t *angles) {
-  if (estimatorFunctions[currentEstimator].estimatorEnqueueSweepAngles) {
-    return estimatorFunctions[currentEstimator].estimatorEnqueueSweepAngles(angles);
-  }
+// bool estimatorEnqueueSweepAngles(const sweepAngleMeasurement_t *angles) {
+//   if (estimatorFunctions[currentEstimator].estimatorEnqueueSweepAngles) {
+//     return estimatorFunctions[currentEstimator].estimatorEnqueueSweepAngles(angles);
+//   }
 
-  return false;
-}
+//   return false;
+// }

@@ -30,7 +30,7 @@
 #include <stdlib.h>
 
 #define DEBUG_MODULE "LHFL"
-#include "debug_cf.h"
+#include "debug.h"
 #include "lh_bootloader.h"
 #include "lighthouse_deck_flasher.h"
 
@@ -81,7 +81,7 @@ void lighthouseDeckFlasherCheckVersionAndBoot() {
     extern const int name ## Size; \
     static const __attribute__((used)) unsigned char* name = (unsigned char*) & incbin_ ## name ## _start; \
 
-INCBIN(bitstream, "blobs/lighthouse.bin");
+INCBIN(bitstream, BLOBS_LOC"lighthouse.bin");
 
 
 void lighthouseDeckFlasherCheckVersionAndBoot() {

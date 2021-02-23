@@ -59,6 +59,8 @@ void owInit()
 
   // Put reply semaphore in right state.
   xSemaphoreTake(waitForReply, portMAX_DELAY);
+
+  owCommonInit();
 }
 
 bool owTest()
@@ -116,7 +118,7 @@ bool owTest()
   }
 #endif
 
-  return true;
+  return owCommonTest();
 }
 
 void owSyslinkRecieve(SyslinkPacket *slp)
@@ -266,7 +268,7 @@ bool owRead(uint8_t selectMem, uint16_t address, uint8_t length, uint8_t *data)
   return status;
 }
 
-bool owWrite(uint8_t selectMem, uint16_t address, uint8_t length, uint8_t *data)
+bool owWrite(uint8_t selectMem, uint16_t address, uint8_t length, const uint8_t *data)
 {
   bool status = true;
   uint16_t currAddr = address;

@@ -1,3 +1,3 @@
 idf_component_register(SRCS "wifi_esp32.c"
                        INCLUDE_DIRS "." "include"
-                     REQUIRES crazyflie utils platform config)
+                     REQUIRES crazyflie platform config)

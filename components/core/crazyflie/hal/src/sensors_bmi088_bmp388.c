@@ -41,7 +41,7 @@
 #include "configblock.h"
 #include "param.h"
 #include "log.h"
-#include "debug_cf.h"
+#include "debug.h"
 #include "nvicconf.h"
 #include "ledseq.h"
 #include "sound.h"
@@ -121,7 +121,7 @@ static volatile uint64_t imuIntTimestamp;
 
 static Axis3i16 gyroRaw;
 static Axis3i16 accelRaw;
-static BiasObj gyroBiasRunning;
+NO_DMA_CCM_SAFE_ZERO_INIT static BiasObj gyroBiasRunning;
 static Axis3f gyroBias;
 #if defined(SENSORS_GYRO_BIAS_CALCULATE_STDDEV) && defined (GYRO_BIAS_LIGHT_WEIGHT)
 static Axis3f gyroBiasStdDev;
@@ -143,10 +143,10 @@ static bool isBarometerPresent = false;
 static uint8_t baroMeasDelayMin = SENSORS_DELAY_BARO;
 
 // Pre-calculated values for accelerometer alignment
-float cosPitch;
-float sinPitch;
-float cosRoll;
-float sinRoll;
+static float cosPitch;
+static float sinPitch;
+static float cosRoll;
+static float sinRoll;
 
 #ifdef GYRO_GYRO_BIAS_LIGHT_WEIGHT
 static bool processGyroBiasNoBuffer(int16_t gx, int16_t gy, int16_t gz, Axis3f *gyroBiasOut);
@@ -218,9 +218,9 @@ static void bmi088_ms_delay(uint32_t period)
   vTaskDelay(M2T(period)); // Delay a while to let the device stabilize
 }
 
-static void sensorsGyroGet(Axis3i16* dataOut)
+static uint16_t sensorsGyroGet(Axis3i16* dataOut)
 {
-  bmi088_get_gyro_data((struct bmi088_sensor_data*)dataOut, &bmi088Dev);
+  return bmi088_get_gyro_data((struct bmi088_sensor_data*)dataOut, &bmi088Dev);
 }
 
 static void sensorsAccelGet(Axis3i16* dataOut)
@@ -557,7 +557,38 @@ void sensorsBmi088Bmp388Init(void)
   sensorsTaskInit();
 }
 
-// TODO: Implement proper test
+static bool gyroSelftest()
+{
+  bool testStatus = true;
+
+  int i = 3;
+  uint16_t readResult = BMI088_OK;
+  do {
+    // For some reason it often doesn't work first time on the Roadrunner
+    readResult = sensorsGyroGet(&gyroRaw);
+  } while (readResult != BMI088_OK && i-- > 0);
+
+  if ((readResult != BMI088_OK) || (gyroRaw.x == 0 && gyroRaw.y == 0 && gyroRaw.z == 0))
+  {
+    DEBUG_PRINT("BMI088 gyro returning x=0 y=0 z=0 [FAILED]\n");
+    testStatus = false;
+  }
+
+  int8_t gyroResult = 0;
+  bmi088_perform_gyro_selftest(&gyroResult, &bmi088Dev);
+  if (gyroResult == BMI088_SELFTEST_PASS)
+  {
+    DEBUG_PRINT("BMI088 gyro self-test [OK]\n");
+  }
+  else
+  {
+    DEBUG_PRINT("BMI088 gyro self-test [FAILED]\n");
+    testStatus = false;
+  }
+
+  return testStatus;
+}
+
 bool sensorsBmi088Bmp388Test(void)
 {
   bool testStatus = true;
@@ -565,6 +596,11 @@ bool sensorsBmi088Bmp388Test(void)
   if (!isInit)
   {
     DEBUG_PRINT("Uninitialized\n");
+    testStatus = false;
+  }
+
+  if (! gyroSelftest())
+  {
     testStatus = false;
   }
 
@@ -653,7 +689,7 @@ static bool processGyroBias(int16_t gx, int16_t gy, int16_t gz, Axis3f *gyroBias
     if (gyroBiasRunning.isBiasValueFound)
     {
       soundSetEffect(SND_CALIB);
-      ledseqRun(SYS_LED, seq_calibrated);
+      ledseqRun(&seq_calibrated);
     }
   }
 
@@ -770,7 +806,25 @@ static bool sensorsFindBiasValue(BiasObj* bias)
 
 bool sensorsBmi088Bmp388ManufacturingTest(void)
 {
-  return true;
+  bool testStatus = true;
+  if (! gyroSelftest())
+  {
+    testStatus = false;
+  }
+
+  int8_t accResult = 0;
+  bmi088_perform_accel_selftest(&accResult, &bmi088Dev);
+  if (accResult == BMI088_SELFTEST_PASS)
+  {
+    DEBUG_PRINT("BMI088 acc self-test [OK]\n");
+  }
+  else
+  {
+    DEBUG_PRINT("BMI088 acc self-test [FAILED]\n");
+    testStatus = false;
+  }
+
+  return testStatus;
 }
 
 /**

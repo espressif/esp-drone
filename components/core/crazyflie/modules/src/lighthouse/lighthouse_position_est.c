@@ -28,48 +28,154 @@
 #include "stabilizer_types.h"
 #include "estimator.h"
 #include "estimator_kalman.h"
+#include "math.h"
+#include "cf_math.h"
 
 #include "log.h"
 #include "param.h"
 #include "statsCnt.h"
+#include "mem.h"
 
 #include "lighthouse_position_est.h"
+#include "lighthouse_geometry.h"
+#include "lighthouse_state.h"
 
-baseStationGeometry_t lighthouseBaseStationsGeometry[2]  = {
-{.origin = {-1.958483,  0.542299,  3.152727, }, .mat = {{0.79721498, -0.004274, 0.60368103, }, {0.0, 0.99997503, 0.00708, }, {-0.60369599, -0.005645, 0.79719502, }, }},
-{.origin = {1.062398, -2.563488,  3.112367, }, .mat = {{0.018067, -0.999336, 0.031647, }, {0.76125097, 0.034269, 0.64755201, }, {-0.648206, 0.012392, 0.76136398, }, }},
-};
-
+// lighthouseBaseStationsGeometry has been moved to lighthouse_core.c
 
 #define ONE_SECOND 1000
 #define HALF_SECOND 500
 static STATS_CNT_RATE_DEFINE(positionRate, ONE_SECOND);
 static STATS_CNT_RATE_DEFINE(estBs0Rate, HALF_SECOND);
 static STATS_CNT_RATE_DEFINE(estBs1Rate, HALF_SECOND);
-static statsCntRateLogger_t* bsEstRates[2] = {&estBs0Rate, &estBs1Rate};
+static statsCntRateLogger_t* bsEstRates[PULSE_PROCESSOR_N_BASE_STATIONS] = {&estBs0Rate, &estBs1Rate};
 
-baseStationEulerAngles_t lighthouseBaseStationAngles[2];
-static mat3d baseStationInvertedRotationMatrixes[2];
+// The light planes in LH2 are tilted +- 30 degrees
+static const float t30 = M_PI / 6;
 
-static void invertRotationMatrix(mat3d rot, mat3d inverted);
+static void lighthousePositionGeometryDataUpdated(const int baseStation);
+static void preProcessGeometryData(mat3d bsRot, mat3d bsRotInverted, mat3d lh1Rotor2Rot, mat3d lh1Rotor2RotInverted);
 
-void lightHousePositionGeometryDataUpdated() {
-  lighthouseGeometryCalculateAnglesFromRotationMatrix(&lighthouseBaseStationsGeometry[0], &lighthouseBaseStationAngles[0]);
-  lighthouseGeometryCalculateAnglesFromRotationMatrix(&lighthouseBaseStationsGeometry[1], &lighthouseBaseStationAngles[1]);
+// Geometry memory handling for the memory module
+static const uint32_t calibStartAddr = 0x1000;
+static const uint32_t pageSize = 0x100;
+static uint32_t handleMemGetSize(void) { return calibStartAddr + sizeof(lighthouseCoreState.bsCalibration); }
+static bool handleMemRead(const uint32_t memAddr, const uint8_t readLen, uint8_t* buffer);
+static bool handleMemWrite(const uint32_t memAddr, const uint8_t writeLen, const uint8_t* buffer);
+static const MemoryHandlerDef_t memDef = {
+  .type = MEM_TYPE_LH,
+  .getSize = handleMemGetSize,
+  .read = handleMemRead,
+  .write = handleMemWrite,
+};
 
-  invertRotationMatrix(lighthouseBaseStationsGeometry[0].mat, baseStationInvertedRotationMatrixes[0]);
-  invertRotationMatrix(lighthouseBaseStationsGeometry[1].mat, baseStationInvertedRotationMatrixes[1]);
+void lighthousePositionEstInit() {
+  for (int i = 0; i < PULSE_PROCESSOR_N_BASE_STATIONS; i++) {
+    lighthousePositionGeometryDataUpdated(i);
+  }
+  memoryRegisterHandler(&memDef);
 }
 
+static bool handleMemRead(const uint32_t memAddr, const uint8_t readLen, uint8_t* buffer) {
+  bool result = false;
 
-static void invertRotationMatrix(mat3d rot, mat3d inverted) {
-  // arm_mat_inverse_f32() alters the original matrix in the process, must make a copy to work from
-  float bs_r_tmp[3][3];
-  memcpy(bs_r_tmp, (float32_t *)rot, sizeof(bs_r_tmp));
-  arm_matrix_instance_f32 basestation_rotation_matrix_tmp = {3, 3, (float32_t *)bs_r_tmp};
+  if (memAddr < calibStartAddr) {
+    uint32_t index = memAddr / pageSize;
+    uint32_t inPageAddr = memAddr % pageSize;
+    if (index < PULSE_PROCESSOR_N_BASE_STATIONS) {
+      if (inPageAddr + readLen <= sizeof(baseStationGeometry_t)) {
+        uint8_t* start = (uint8_t*)&lighthouseCoreState.bsGeometry[index];
+        memcpy(buffer, start + inPageAddr, readLen);
 
-  arm_matrix_instance_f32 basestation_rotation_matrix_inv = {3, 3, (float32_t *)inverted};
-  arm_mat_inverse_f32(&basestation_rotation_matrix_tmp, &basestation_rotation_matrix_inv);
+        result = true;
+      }
+    }
+  } else {
+    uint32_t calibOffsetAddr = memAddr - calibStartAddr;
+    uint32_t index = calibOffsetAddr / pageSize;
+    uint32_t inPageAddr = calibOffsetAddr % pageSize;
+    if (index < PULSE_PROCESSOR_N_BASE_STATIONS) {
+      if (inPageAddr + readLen <= sizeof(lighthouseCalibration_t)) {
+        uint8_t* start = (uint8_t*)&lighthouseCoreState.bsCalibration[index];
+        memcpy(buffer, start + inPageAddr, readLen);
+
+        result = true;
+      }
+    }
+  }
+
+  return result;
+}
+
+static bool handleMemWrite(const uint32_t memAddr, const uint8_t writeLen, const uint8_t* buffer) {
+  bool result = false;
+
+  if (memAddr < calibStartAddr) {
+    uint32_t index = memAddr / pageSize;
+    uint32_t inPageAddr = memAddr % pageSize;
+    if (index < PULSE_PROCESSOR_N_BASE_STATIONS) {
+      if (inPageAddr + writeLen <= sizeof(baseStationGeometry_t)) {
+        // Mark the geometry as invalid since this write probably only will update part of it
+        // If this is the last write in this block, the valid flag will be part of the data and set appropriately
+        // This is based on the assumption that the writes are done in oder with increasing addresses
+        lighthouseCoreState.bsGeometry[index].valid = false;
+
+        uint8_t* start = (uint8_t*)&lighthouseCoreState.bsGeometry[index];
+        memcpy(start + inPageAddr, buffer, writeLen);
+
+        lighthousePositionGeometryDataUpdated(index);
+
+        result = true;
+      }
+    }
+  } else {
+    uint32_t calibOffsetAddr = memAddr - calibStartAddr;
+    uint32_t index = calibOffsetAddr / pageSize;
+    uint32_t inPageAddr = calibOffsetAddr % pageSize;
+    if (index < PULSE_PROCESSOR_N_BASE_STATIONS) {
+      if (inPageAddr + writeLen <= sizeof(lighthouseCalibration_t)) {
+        uint8_t* start = (uint8_t*)&lighthouseCoreState.bsCalibration[index];
+        memcpy(start + inPageAddr, buffer, writeLen);
+
+        result = true;
+      }
+    }
+  }
+
+  return result;
+}
+
+static void lighthousePositionGeometryDataUpdated(const int baseStation) {
+  if (lighthouseCoreState.bsGeometry[baseStation].valid) {
+    baseStationGeometryCache_t* cache = &lighthouseCoreState.bsGeoCache[baseStation];
+    preProcessGeometryData(lighthouseCoreState.bsGeometry[baseStation].mat, cache->baseStationInvertedRotationMatrixes, cache->lh1Rotor2RotationMatrixes, cache->lh1Rotor2InvertedRotationMatrixes);
+  }
+}
+
+void lighthousePositionSetGeometryData(const uint8_t baseStation, const baseStationGeometry_t* geometry) {
+  if (baseStation < PULSE_PROCESSOR_N_BASE_STATIONS) {
+    lighthouseCoreState.bsGeometry[baseStation] = *geometry;
+    lighthousePositionGeometryDataUpdated(baseStation);
+  }
+}
+
+static void preProcessGeometryData(mat3d bsRot, mat3d bsRotInverted, mat3d lh1Rotor2Rot, mat3d lh1Rotor2RotInverted) {
+  // For a rotation matrix inverse and transpose is equal. Use transpose instead
+  arm_matrix_instance_f32 bsRot_ = {3, 3, (float32_t *)bsRot};
+  arm_matrix_instance_f32 bsRotInverted_ = {3, 3, (float32_t *)bsRotInverted};
+  mat_trans(&bsRot_, &bsRotInverted_);
+
+  // In a LH1 system, the axis of rotation of the second rotor is perpendicular to the first rotor
+  mat3d secondRotorInvertedR = {
+    {1, 0, 0},
+    {0, 0, -1},
+    {0, 1, 0}
+  };
+  arm_matrix_instance_f32 secondRotorInvertedR_ = {3, 3, (float32_t *)secondRotorInvertedR};
+  arm_matrix_instance_f32 lh1Rotor2Rot_ = {3, 3, (float32_t *)lh1Rotor2Rot};
+  mat_mult(&bsRot_, &secondRotorInvertedR_, &lh1Rotor2Rot_);
+
+  arm_matrix_instance_f32 lh1Rotor2RotInverted_ = {3, 3, (float32_t *)lh1Rotor2RotInverted};
+  mat_trans(&lh1Rotor2Rot_, &lh1Rotor2RotInverted_);
 }
 
 
@@ -86,22 +192,23 @@ static vec3d sensorDeckPositions[4] = {
 
 static positionMeasurement_t ext_pos;
 static float sweepStd = 0.0004;
+static float sweepStdLh2 = 0.001;
 
 static vec3d position;
 static float deltaLog;
 
-static void estimatePositionCrossingBeams(pulseProcessorResult_t* angles, int baseStation) {
+static void estimatePositionCrossingBeams(const pulseProcessor_t *state, pulseProcessorResult_t* angles, int baseStation) {
   memset(&ext_pos, 0, sizeof(ext_pos));
   int sensorsUsed = 0;
   float delta;
 
   // Average over all sensors with valid data
   for (size_t sensor = 0; sensor < PULSE_PROCESSOR_N_SENSORS; sensor++) {
-      pulseProcessorBaseStationMeasuremnt_t* bs0Measurement = &angles->sensorMeasurements[sensor].baseStatonMeasurements[0];
-      pulseProcessorBaseStationMeasuremnt_t* bs1Measurement = &angles->sensorMeasurements[sensor].baseStatonMeasurements[1];
+      pulseProcessorBaseStationMeasuremnt_t* bs0Measurement = &angles->sensorMeasurementsLh1[sensor].baseStatonMeasurements[0];
+      pulseProcessorBaseStationMeasuremnt_t* bs1Measurement = &angles->sensorMeasurementsLh1[sensor].baseStatonMeasurements[1];
 
       if (bs0Measurement->validCount == PULSE_PROCESSOR_N_SWEEPS && bs1Measurement->validCount == PULSE_PROCESSOR_N_SWEEPS) {
-        lighthouseGeometryGetPositionFromRayIntersection(lighthouseBaseStationsGeometry, bs0Measurement->correctedAngles, bs1Measurement->correctedAngles, position, &delta);
+        lighthouseGeometryGetPositionFromRayIntersection(state->bsGeometry, bs0Measurement->correctedAngles, bs1Measurement->correctedAngles, position, &delta);
 
         deltaLog = delta;
 
@@ -125,40 +232,102 @@ static void estimatePositionCrossingBeams(pulseProcessorResult_t* angles, int ba
   }
 }
 
-static void estimatePositionSweeps(pulseProcessorResult_t* angles, int baseStation) {
+static void estimatePositionSweepsLh1(const pulseProcessor_t* appState, pulseProcessorResult_t* angles, int baseStation) {
+  const lighthouseCalibration_t* bsCalib = &appState->bsCalibration[baseStation];
+  sweepAngleMeasurement_t sweepInfo;
+  sweepInfo.stdDev = sweepStd;
+  sweepInfo.rotorPos = &appState->bsGeometry[baseStation].origin;
+  sweepInfo.t = 0;
+  sweepInfo.calibrationMeasurementModel = lighthouseCalibrationMeasurementModelLh1;
+
   for (size_t sensor = 0; sensor < PULSE_PROCESSOR_N_SENSORS; sensor++) {
-    pulseProcessorBaseStationMeasuremnt_t* bsMeasurement = &angles->sensorMeasurements[sensor].baseStatonMeasurements[baseStation];
+    pulseProcessorBaseStationMeasuremnt_t* bsMeasurement = &angles->sensorMeasurementsLh1[sensor].baseStatonMeasurements[baseStation];
     if (bsMeasurement->validCount == PULSE_PROCESSOR_N_SWEEPS) {
-      sweepAngleMeasurement_t sweepAngles;
-      sweepAngles.angleX = bsMeasurement->correctedAngles[0];
-      sweepAngles.angleY = bsMeasurement->correctedAngles[1];
+      sweepInfo.sensorPos = &sensorDeckPositions[sensor];
 
-      if (sweepAngles.angleX != 0 && sweepAngles.angleY != 0) {
-        sweepAngles.stdDevX = sweepStd;
-        sweepAngles.stdDevY = sweepStd;
+      sweepInfo.measuredSweepAngle = bsMeasurement->angles[0];
+      if (sweepInfo.measuredSweepAngle != 0) {
+        sweepInfo.rotorRot = &appState->bsGeometry[baseStation].mat;
+        sweepInfo.rotorRotInv = &appState->bsGeoCache[baseStation].baseStationInvertedRotationMatrixes;
+        sweepInfo.calib = &bsCalib->sweep[0];
 
-        sweepAngles.sensorPos = &sensorDeckPositions[sensor];
-
-        sweepAngles.baseStationPos = &lighthouseBaseStationsGeometry[baseStation].origin;
-        sweepAngles.baseStationRot = &lighthouseBaseStationsGeometry[baseStation].mat;
-        sweepAngles.baseStationRotInv = &baseStationInvertedRotationMatrixes[baseStation];
-
-        estimatorEnqueueSweepAngles(&sweepAngles);
+        estimatorEnqueueSweepAngles(&sweepInfo);
         STATS_CNT_RATE_EVENT(bsEstRates[baseStation]);
+        STATS_CNT_RATE_EVENT(&positionRate);
+      }
+
+      sweepInfo.measuredSweepAngle = bsMeasurement->angles[1];
+      if (sweepInfo.measuredSweepAngle != 0) {
+        sweepInfo.rotorRot = &appState->bsGeoCache[baseStation].lh1Rotor2RotationMatrixes;
+        sweepInfo.rotorRotInv = &appState->bsGeoCache[baseStation].lh1Rotor2InvertedRotationMatrixes;
+        sweepInfo.calib = &bsCalib->sweep[1];
+
+        estimatorEnqueueSweepAngles(&sweepInfo);
+        STATS_CNT_RATE_EVENT(bsEstRates[baseStation]);
+        STATS_CNT_RATE_EVENT(&positionRate);
       }
     }
   }
 }
 
-static bool estimateYawDeltaOneBaseStation(const int bs, const pulseProcessorResult_t* angles, baseStationGeometry_t baseStationGeometries[], const float cfPos[3], const float n[3], const arm_matrix_instance_f32 *RR, float *yawDelta) {
-  baseStationGeometry_t* baseStationGeometry = &baseStationGeometries[bs];
+static void estimatePositionSweepsLh2(const pulseProcessor_t* appState, pulseProcessorResult_t* angles, int baseStation) {
+  const lighthouseCalibration_t* bsCalib = &appState->bsCalibration[baseStation];
+  sweepAngleMeasurement_t sweepInfo;
+  sweepInfo.stdDev = sweepStdLh2;
+  sweepInfo.rotorPos = &appState->bsGeometry[baseStation].origin;
+  sweepInfo.rotorRot = &appState->bsGeometry[baseStation].mat;
+  sweepInfo.rotorRotInv = &appState->bsGeoCache[baseStation].baseStationInvertedRotationMatrixes;
+  sweepInfo.calibrationMeasurementModel = lighthouseCalibrationMeasurementModelLh2;
+
+  for (size_t sensor = 0; sensor < PULSE_PROCESSOR_N_SENSORS; sensor++) {
+    pulseProcessorBaseStationMeasuremnt_t* bsMeasurement = &angles->sensorMeasurementsLh2[sensor].baseStatonMeasurements[baseStation];
+    if (bsMeasurement->validCount == PULSE_PROCESSOR_N_SWEEPS) {
+      sweepInfo.sensorPos = &sensorDeckPositions[sensor];
+
+      sweepInfo.measuredSweepAngle = bsMeasurement->angles[0];
+      if (sweepInfo.measuredSweepAngle != 0) {
+        sweepInfo.t = -t30;
+        sweepInfo.calib = &bsCalib->sweep[0];
+        estimatorEnqueueSweepAngles(&sweepInfo);
+        STATS_CNT_RATE_EVENT(bsEstRates[baseStation]);
+        STATS_CNT_RATE_EVENT(&positionRate);
+      }
+
+      sweepInfo.measuredSweepAngle = bsMeasurement->angles[1];
+      if (sweepInfo.measuredSweepAngle != 0) {
+        sweepInfo.t = t30;
+        sweepInfo.calib = &bsCalib->sweep[1];
+        estimatorEnqueueSweepAngles(&sweepInfo);
+        STATS_CNT_RATE_EVENT(bsEstRates[baseStation]);
+        STATS_CNT_RATE_EVENT(&positionRate);
+      }
+    }
+  }
+}
+
+static void estimatePositionSweeps(const pulseProcessor_t* appState, pulseProcessorResult_t* angles, int baseStation) {
+  switch(angles->measurementType) {
+    case lighthouseBsTypeV1:
+      estimatePositionSweepsLh1(appState, angles, baseStation);
+      break;
+    case lighthouseBsTypeV2:
+      estimatePositionSweepsLh2(appState, angles, baseStation);
+      break;
+    default:
+      // Do nothing
+      break;
+  }
+}
+
+static bool estimateYawDeltaOneBaseStation(const int bs, const pulseProcessorResult_t* angles, const baseStationGeometry_t baseStationGeometries[], const float cfPos[3], const float n[3], const arm_matrix_instance_f32 *RR, float *yawDelta) {
+  const baseStationGeometry_t* baseStationGeometry = &baseStationGeometries[bs];
 
   vec3d baseStationPos;
   lighthouseGeometryGetBaseStationPosition(baseStationGeometry, baseStationPos);
 
   vec3d rays[PULSE_PROCESSOR_N_SENSORS];
   for (int sensor = 0; sensor < PULSE_PROCESSOR_N_SENSORS; sensor++) {
-    const pulseProcessorBaseStationMeasuremnt_t* bsMeasurement = &angles->sensorMeasurements[sensor].baseStatonMeasurements[bs];
+    const pulseProcessorBaseStationMeasuremnt_t* bsMeasurement = &angles->sensorMeasurementsLh1[sensor].baseStatonMeasurements[bs];
     lighthouseGeometryGetRay(baseStationGeometry, bsMeasurement->correctedAngles[0], bsMeasurement->correctedAngles[1], rays[sensor]);
   }
 
@@ -194,7 +363,7 @@ static bool estimateYawDeltaOneBaseStation(const int bs, const pulseProcessorRes
   }
 }
 
-static void estimateYaw(pulseProcessorResult_t* angles, int baseStation) {
+static void estimateYaw(const pulseProcessor_t *state, pulseProcessorResult_t* angles, int baseStation) {
   // TODO Most of these calculations should be moved into the estimator instead. It is a
   // bit dirty to get the state from the kalman filer here and calculate the yaw error outside
   // the estimator, but it will do for now.
@@ -214,21 +383,26 @@ static void estimateYaw(pulseProcessorResult_t* angles, int baseStation) {
 
   // Calculate yaw delta using only one base station for now
   float yawDelta;
-  if (estimateYawDeltaOneBaseStation(baseStation, angles, lighthouseBaseStationsGeometry, cfPos, n, &RR, &yawDelta)) {
+  if (estimateYawDeltaOneBaseStation(baseStation, angles, state->bsGeometry, cfPos, n, &RR, &yawDelta)) {
     yawErrorMeasurement_t yawDeltaMeasurement = {.yawError = yawDelta, .stdDev = 0.01};
     estimatorEnqueueYawError(&yawDeltaMeasurement);
   }
 }
 
-void lighthousePositionEstimatePoseCrossingBeams(pulseProcessorResult_t* angles, int baseStation) {
-  estimatePositionCrossingBeams(angles, baseStation);
-  estimateYaw(angles, baseStation);
+void lighthousePositionEstimatePoseCrossingBeams(const pulseProcessor_t *state, pulseProcessorResult_t* angles, int baseStation) {
+  if (state->bsGeometry[0].valid && state->bsGeometry[1].valid) {
+    estimatePositionCrossingBeams(state, angles, baseStation);
+    estimateYaw(state, angles, baseStation);
+  }
 }
 
-void lighthousePositionEstimatePoseSweeps(pulseProcessorResult_t* angles, int baseStation) {
-  estimatePositionSweeps(angles, baseStation);
-  estimateYaw(angles, baseStation);
+void lighthousePositionEstimatePoseSweeps(const pulseProcessor_t *state, pulseProcessorResult_t* angles, int baseStation) {
+  if (state->bsGeometry[baseStation].valid) {
+    estimatePositionSweeps(state, angles, baseStation);
+    estimateYaw(state, angles, baseStation);
+  }
 }
+
 
 LOG_GROUP_START(lighthouse)
 STATS_CNT_RATE_LOG_ADD(posRt, &positionRate)
@@ -244,4 +418,5 @@ LOG_GROUP_STOP(lighthouse)
 
 PARAM_GROUP_START(lighthouse)
 PARAM_ADD(PARAM_FLOAT, sweepStd, &sweepStd)
+PARAM_ADD(PARAM_FLOAT, sweepStd2, &sweepStdLh2)
 PARAM_GROUP_STOP(lighthouse)

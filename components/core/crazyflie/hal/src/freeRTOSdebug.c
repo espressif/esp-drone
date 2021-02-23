@@ -1,6 +1,6 @@
 /**
- *    ||          ____  _ __                           
- * +------+      / __ )(_) /_______________ _____  ___ 
+ *    ||          ____  _ __
+ * +------+      / __ )(_) /_______________ _____  ___
  * | 0xBC |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
@@ -25,12 +25,13 @@
  * debug.c - Various debug functions
  */
 #include <stdint.h>
-#define DEBUG_MODULE "FreeRTOSConfig"
+
 #include "freertos/FreeRTOSConfig.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "config.h"
+#define DEBUG_MODULE "FreeRTOSConfig"
 #include "debug_cf.h"
 #include "nvicconf.h"
 #include "led.h"

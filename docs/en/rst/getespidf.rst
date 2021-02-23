@@ -9,8 +9,9 @@ Please refer to `ESP-IDF Programming Guide <https://docs.espressif.com/projects/
 
 .. note::
 
--  Please follow the link above and complete all the steps.
--  Build one or more sample applications by following the steps in the link above.
+-  ESP-IDF branch ``release /v4.2`` is suggested.
+-  Please follow and complete all setup steps.
+-  Build a example of ESP-IDF to make sure the setup is successful.
 
 Modify ESP32/ESP32-S2 Link Script
 --------------------------------------

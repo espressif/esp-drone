@@ -196,9 +196,9 @@
 
 ```
 #define LINK_LED         LED_BLUE
-//#define CHG_LED          LED_RED
+#define CHG_LED          LED_RED
 #define LOWBAT_LED       LED_RED
-//#define LINK_DOWN_LED  LED_BLUE
+#define LINK_DOWN_LED    LED_BLUE
 #define SYS_LED          LED_GREEN 
 #define ERR_LED1         LED_RED
 #define ERR_LED2         LED_RED

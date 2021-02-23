@@ -5,9 +5,8 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * ESP-Drone Firmware
+ * Crazyflie control firmware
  *
- * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,18 +26,21 @@
 
 #include <stdbool.h>
 #include <errno.h>
+
 /*FreeRtos includes*/
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
-#include "freertos/queue.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+#include "queue.h"
 
 #include "config.h"
+
 #include "crtp.h"
 #include "info.h"
 #include "cfassert.h"
 #include "queuemonitor.h"
 #include "static_mem.h"
+
 #include "log.h"
 
 #define DEBUG_MODULE "CRTP"
@@ -82,8 +84,8 @@ static xQueueHandle queues[CRTP_NBR_OF_PORTS];
 static volatile CrtpCallback callbacks[CRTP_NBR_OF_PORTS];
 static void updateStats();
 
-STATIC_MEM_TASK_ALLOC(crtpTxTask, CRTP_TX_TASK_STACKSIZE);
-STATIC_MEM_TASK_ALLOC(crtpRxTask, CRTP_RX_TASK_STACKSIZE);
+STATIC_MEM_TASK_ALLOC_STACK_NO_DMA_CCM_SAFE(crtpTxTask, CRTP_TX_TASK_STACKSIZE);
+STATIC_MEM_TASK_ALLOC_STACK_NO_DMA_CCM_SAFE(crtpRxTask, CRTP_RX_TASK_STACKSIZE);
 
 void crtpInit(void)
 {

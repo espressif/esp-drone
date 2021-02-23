@@ -27,10 +27,6 @@ typedef struct {
 #define TASK_PM_ID_NBR          5
 #define TASK_PROXIMITY_ID_NBR   6
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 typedef enum {
     Bit_RESET = 0,
     Bit_SET

@@ -85,7 +85,7 @@ static int usblinkReceiveCRTPPacket(CRTPPacket *p)
 {
   if (xQueueReceive(crtpPacketDelivery, p, M2T(100)) == pdTRUE)
   {
-    ledseqRun(LINK_LED, seq_linkup);
+    ledseqRun(&seq_linkUp);
     return 0;
   }
 
@@ -107,7 +107,7 @@ static int usblinkSendPacket(CRTPPacket *p)
   dataSize = p->size + 1;
 
 
-  ledseqRun(LINK_DOWN_LED, seq_linkup);
+  ledseqRun(&seq_linkDown);
 
   return usbSendData(dataSize, sendBuffer);
 }

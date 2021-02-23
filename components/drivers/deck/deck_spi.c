@@ -44,7 +44,7 @@
 static bool isInit = false;
 static SemaphoreHandle_t spiMutex;
 
-static void spiConfigureWithSpeed(uint16_t baudRatePrescaler);
+static void spiConfigureWithSpeed(uint32_t baudRatePrescaler);
 
 static spi_device_handle_t spi;
 
@@ -88,7 +88,7 @@ void spiBegin(void)
 }
 
 
-static void spiConfigureWithSpeed(uint16_t baudRatePrescaler)
+static void spiConfigureWithSpeed(uint32_t baudRatePrescaler)
 {
     //TODO:
 }
@@ -137,7 +137,7 @@ bool spiExchange(size_t length, bool is_tx, const uint8_t *data_tx, uint8_t *dat
     return true;
 }
 
-void spiBeginTransaction(uint16_t baudRatePrescaler)
+void spiBeginTransaction(uint32_t baudRatePrescaler)
 {
     xSemaphoreTake(spiMutex, portMAX_DELAY);
     spiConfigureWithSpeed(baudRatePrescaler);

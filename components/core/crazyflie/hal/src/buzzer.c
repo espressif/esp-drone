@@ -27,10 +27,11 @@
 #define DEBUG_MODULE "BUZZER"
 
 #include "buzzer.h"
-#include "config.h"
+//#include "buzzdeck.h"
 #include "sdkconfig.h"
 
-static struct buzzerControl *ctrl;
+static struct buzzerControl * ctrl;
+
 extern void buzzDeckInit();
 
 void buzzerInit()

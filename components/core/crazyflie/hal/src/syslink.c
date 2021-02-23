@@ -35,7 +35,7 @@
 #include "semphr.h"
 
 #include "config.h"
-#include "debug_cf.h"
+#include "debug.h"
 #include "syslink.h"
 #include "radiolink.h"
 #include "uart_syslink.h"
@@ -55,7 +55,7 @@ static void syslinkRouteIncommingPacket(SyslinkPacket *slp);
 
 static xSemaphoreHandle syslinkAccess;
 
-STATIC_MEM_TASK_ALLOC(syslinkTask, SYSLINK_TASK_STACKSIZE);
+STATIC_MEM_TASK_ALLOC_STACK_NO_DMA_CCM_SAFE(syslinkTask, SYSLINK_TASK_STACKSIZE);
 
 /* Syslink task, handles communication between nrf and stm and dispatch messages
  */

@@ -28,12 +28,11 @@
 
 
 #include <stdbool.h>
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/timers.h"
-
+#include "FreeRTOS.h"
+#include "timers.h"
 #include "cfassert.h"
 #include "param.h"
+#include "static_mem.h"
 
 #include "sysload.h"
 #include "stm32_legacy.h"
@@ -53,7 +52,7 @@ typedef struct {
 } taskData_t;
 
 #define TASK_MAX_COUNT 32
-static taskData_t previousSnapshot[TASK_MAX_COUNT];
+NO_DMA_CCM_SAFE_ZERO_INIT static taskData_t previousSnapshot[TASK_MAX_COUNT];
 static int taskTopIndex = 0;
 static uint32_t previousTotalRunTime = 0;
 

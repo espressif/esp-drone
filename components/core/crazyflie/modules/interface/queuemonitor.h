@@ -5,9 +5,8 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * ESP-Drone Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ * Crazyflie control firmware
+ *
  * Copyright (C) 2012 BitCraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,10 +28,10 @@
 #define __QUEUE_MONITOR_H__
 
 
-#include "freertos/FreeRTOS.h"
+#include "FreeRTOS.h"
 
 #ifdef DEBUG_QUEUE_MONITOR
-  #include "freertos/queue.h"
+  #include "queue.h"
 
   void queueMonitorInit();
   #define DEBUG_QUEUE_MONITOR_REGISTER(queue) qmRegisterQueue(queue, __FILE__, #queue)

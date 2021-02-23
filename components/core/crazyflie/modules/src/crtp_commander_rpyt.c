@@ -26,13 +26,13 @@
  */
 #include <math.h>
 #include <stdbool.h>
-#include "freertos/FreeRTOS.h"
 
 #include "crtp_commander.h"
 #include "commander.h"
 #include "estimator.h"
 #include "crtp.h"
 #include "param.h"
+#include "FreeRTOS.h"
 #include "num.h"
 #include "stm32_legacy.h"
 #define DEBUG_MODULE "MODE"
@@ -250,7 +250,6 @@ void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk)
       // legacy rate input is inverted
       setpoint->attitudeRate.yaw = -values->yaw;
       yawModeUpdate(setpoint);
-
       setpoint->mode.yaw = modeVelocity;
     } else {
       setpoint->mode.yaw = modeAbs;

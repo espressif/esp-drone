@@ -46,7 +46,7 @@
 #include "system.h"
 #include "configblock.h"
 #include "param.h"
-#include "debug_cf.h"
+#include "debug.h"
 #include "nvicconf.h"
 #include "ledseq.h"
 #include "sound.h"
@@ -179,10 +179,10 @@ static bool isMagnetometerPresent = false;
 static uint8_t baroMeasDelayMin = SENSORS_DELAY_BARO;
 
 // Pre-calculated values for accelerometer alignment
-float cosPitch;
-float sinPitch;
-float cosRoll;
-float sinRoll;
+static float cosPitch;
+static float sinPitch;
+static float cosRoll;
+static float sinRoll;
 
 static void sensorsDeviceInit(void);
 static void sensorsTaskInit(void);
@@ -539,7 +539,7 @@ static void sensorsTask(void *param)
             {
               // soundSetEffect(SND_CALIB);
               DEBUG_PRINT("Sensor calibration [OK].\n");
-              ledseqRun(SYS_LED, seq_calibrated);
+              ledseqRun(&seq_calibrated);
               allSensorsAreCalibrated= true;
             }
         }

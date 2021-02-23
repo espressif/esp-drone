@@ -28,21 +28,24 @@
 #include <stdbool.h>
 
 /* FreeRtos includes */
-#include "freertos/FreeRTOS.h"
+#include "FreeRTOS.h"
 #include <stdint.h>
 #include <string.h>
 
 #include "config.h"
 #include "crtp.h"
 #include "platformservice.h"
+//#include "syslink.h"
 #include "version.h"
 #include "platform.h"
+#include "app_channel.h"
 
 static bool isInit=false;
 
 typedef enum {
   platformCommand   = 0x00,
   versionCommand    = 0x01,
+  appChannel        = 0x02,
 } Channel;
 
 typedef enum {
@@ -63,6 +66,8 @@ void platformserviceInit(void)
 {
   if (isInit)
     return;
+
+  appchannelInit();
 
   // Register a callback to service the Platform port
   crtpRegisterPortCB(CRTP_PORT_PLATFORM, platformserviceHandler);
@@ -85,6 +90,10 @@ void platformserviceHandler(CRTPPacket *p)
       break;
     case versionCommand:
       versionCommandProcess(p);
+      break;
+    case appChannel:
+      appchannelIncomingPacket(p);
+      break;
     default:
       break;
   }
@@ -92,14 +101,25 @@ void platformserviceHandler(CRTPPacket *p)
 
 static void platformCommandProcess(uint8_t command, uint8_t *data)
 {
-    switch (command) {
-        case setContinousWave:
-            //TODO:
-            break;
+ // SyslinkPacket slp;
 
-        default:
-            break;
-    }
+  switch (command) {
+    case setContinousWave:
+      // slp.type = SYSLINK_RADIO_CONTWAVE;
+      // slp.length = 1;
+      // slp.data[0] = data[0];
+      // syslinkSendPacket(&slp);
+      break;
+    default:
+      break;
+  }
+}
+
+void platformserviceSendAppchannelPacket(CRTPPacket *p)
+{
+  p->port = CRTP_PORT_PLATFORM;
+  p->channel = appChannel;
+  crtpSendPacket(p);
 }
 
 static void versionCommandProcess(CRTPPacket *p)

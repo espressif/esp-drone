@@ -103,3 +103,6 @@ int plan_start_trajectory(struct planner *p, const struct piecewise_traj* trajec
 
 // start compressed trajectory
 int plan_start_compressed_trajectory(struct planner *p, struct piecewise_traj_compressed* trajectory);
+
+// Query if the trjectory is finished
+bool plan_is_finished(struct planner *p, float t);

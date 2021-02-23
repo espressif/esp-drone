@@ -29,12 +29,16 @@
 
 #include <stdbool.h>
 
+#include "crtp.h"
+
 /**
  * Initialize the platform CRTP port
  */
 void platformserviceInit(void);
 
 bool platformserviceTest(void);
+
+void platformserviceSendAppchannelPacket(CRTPPacket *p);
 
 #endif /* __PLATFORMSERVICE_H__ */
 

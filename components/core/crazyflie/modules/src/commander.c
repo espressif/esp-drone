@@ -24,9 +24,10 @@
  *
  */
 #include <string.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 
 #include "commander.h"
 #include "crtp_commander.h"
@@ -126,6 +127,10 @@ void commanderGetSetpoint(setpoint_t *setpoint, const state_t *state)
     setpoint->attitudeRate.yaw = 0;
     // Keep Z as it is
   }
+  // This copying is not strictly necessary because stabilizer.c already keeps
+  // a static state_t containing the most recent state estimate. However, it is
+  // not accessible by the public interface.
+  lastState = *state;
 }
 
 bool commanderTest(void)

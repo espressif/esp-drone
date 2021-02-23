@@ -27,10 +27,10 @@
 
 #include <stdbool.h>
 
-/* FreeRTOS includes */
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
+/* FreeRtos includes */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
 
 #include "version.h"
 #include "config.h"
@@ -42,9 +42,11 @@
 #include "config.h"
 #include "system.h"
 #include "platform.h"
+//#include "storage.h"
 #include "configblock.h"
 #include "worker.h"
 #include "freeRTOSdebug.h"
+//#include "uart_syslink.h"
 //#include "uart1.h"
 //#include "uart2.h"
 #include "wifi_esp32.h"
@@ -68,10 +70,20 @@
 #define DEBUG_MODULE "SYS"
 #include "debug_cf.h"
 #include "static_mem.h"
+//#include "peer_localization.h"
+#include "cfassert.h"
+
+#ifndef START_DISARMED
+#define ARM_INIT true
+#else
+#define ARM_INIT false
+#endif
 
 /* Private variable */
 static bool selftestPassed;
 static bool canFly;
+static bool armed = ARM_INIT;
+static bool forceArm;
 static bool isInit;
 
 STATIC_MEM_TASK_ALLOC(systemTask, SYSTEM_TASK_STACKSIZE);
@@ -109,14 +121,27 @@ void systemInit(void)
   crtpInit();
   consoleInit();
 
+  /* DEBUG_PRINT("----------------------------\n");
+  DEBUG_PRINT("%s is up and running!\n", platformConfigGetDeviceTypeName());
+
+  if (V_PRODUCTION_RELEASE) {
+    DEBUG_PRINT("Production release %s\n", V_STAG);
+  } else {
+    DEBUG_PRINT("Build %s:%s (%s) %s\n", V_SLOCAL_REVISION,
+                V_SREVISION, V_STAG, (V_MODIFIED)?"MODIFIED":"CLEAN");
+  }
+  DEBUG_PRINT("I am 0x%08X%08X%08X and I have %dKB of flash!\n",
+              *((int*)(MCU_ID_ADDRESS+8)), *((int*)(MCU_ID_ADDRESS+4)),
+              *((int*)(MCU_ID_ADDRESS+0)), *((short*)(MCU_FLASH_SIZE_ADDRESS)));*/
 
   configblockInit();
+  //storageInit();
   workerInit();
   adcInit();
   ledseqInit();
   pmInit();
   buzzerInit();
-  DEBUG_PRINT_LOCAL("----------------------------\n");
+//  peerLocalizationInit();
 
 #ifdef APP_ENABLED
   appInit();
@@ -145,6 +170,7 @@ void systemTask(void *arg)
   bool pass = true;
 
   ledInit();
+  ledSet(CHG_LED, 1);
   wifiInit();
   vTaskDelay(M2T(500));
 
@@ -174,7 +200,7 @@ void systemTask(void *arg)
   //  platformSetLowInterferenceRadioMode();
   //}
   soundInit();
-  memInit();
+  //memInit();
 
 #ifdef PROXIMITY_ENABLED
   proximityInit();
@@ -187,6 +213,7 @@ void systemTask(void *arg)
   DEBUG_PRINTI("systemTest = %d ", pass);
   pass &= configblockTest();
   DEBUG_PRINTI("configblockTest = %d ", pass);
+  //pass &= storageTest();
   pass &= commTest();
   DEBUG_PRINTI("commTest = %d ", pass);
   pass &= commanderTest();
@@ -195,10 +222,13 @@ void systemTask(void *arg)
   DEBUG_PRINTI("stabilizerTest = %d ", pass);
   pass &= estimatorKalmanTaskTest();
   DEBUG_PRINTI("estimatorKalmanTaskTest = %d ", pass);
+  //pass &= deckTest();
   //pass &= soundTest();
-  pass &= memTest();
+  //pass &= memTest();
   DEBUG_PRINTI("memTest = %d ", pass);
   //pass &= watchdogNormalStartTest();
+  pass &= cfAssertNormalStartTest();
+//  pass &= peerLocalizationTest();
 
   //Start the firmware
   if(pass)
@@ -207,8 +237,8 @@ void systemTask(void *arg)
     systemStart();
     DEBUG_PRINTI("systemStart ! selftestPassed = %d", selftestPassed);
     soundSetEffect(SND_STARTUP);
-    ledseqRun(SYS_LED, seq_alive);
-    ledseqRun(LINK_LED, seq_testPassed);
+    ledseqRun(&seq_alive);
+    ledseqRun(&seq_testPassed);
   }
   else
   {
@@ -217,7 +247,7 @@ void systemTask(void *arg)
     {
       while(1)
       {
-        ledseqRun(SYS_LED, seq_testPassed); //Red passed == not passed!
+        ledseqRun(&seq_testFailed);
         vTaskDelay(M2T(2000));
         // System can be forced to start by setting the param to 1 from the cfclient
         if (selftestPassed)
@@ -274,7 +304,16 @@ bool systemCanFly(void)
   return canFly;
 }
 
-//TODO:watchdog disable now
+void systemSetArmed(bool val)
+{
+  armed = val;
+}
+
+bool systemIsArmed()
+{
+
+  return armed || forceArm;
+}
 // void vApplicationIdleHook( void )
 // {
 //   static uint32_t tickOfLatestWatchdogReset = M2T(0);
@@ -294,11 +333,21 @@ bool systemCanFly(void)
 // #endif
 // }
 
+/*System parameters (mostly for test, should be removed from here) */
+/*PARAM_GROUP_START(cpu)
+PARAM_ADD(PARAM_UINT16 | PARAM_RONLY, flash, MCU_FLASH_SIZE_ADDRESS)
+PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id0, MCU_ID_ADDRESS+0)
+PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id1, MCU_ID_ADDRESS+4)
+PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id2, MCU_ID_ADDRESS+8)
+PARAM_GROUP_STOP(cpu)*/
+
 PARAM_GROUP_START(system)
-PARAM_ADD(PARAM_INT8, selftestPassed, &selftestPassed)
+PARAM_ADD(PARAM_INT8 | PARAM_RONLY, selftestPassed, &selftestPassed)
+PARAM_ADD(PARAM_INT8, forceArm, &forceArm)
 PARAM_GROUP_STOP(sytem)
 
 /* Loggable variables */
 LOG_GROUP_START(sys)
 LOG_ADD(LOG_INT8, canfly, &canFly)
+LOG_ADD(LOG_INT8, armed, &armed)
 LOG_GROUP_STOP(sys)

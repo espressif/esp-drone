@@ -5,9 +5,8 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * ESP-Drone Firmware
+ * Crazyflie Firmware
  *
- * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,8 +26,8 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "crtp.h"
 #include "crtp_localization_service.h"
@@ -38,14 +37,23 @@
 #include "stabilizer_types.h"
 #include "stabilizer.h"
 #include "configblock.h"
+//#include "worker.h"
+//#include "lighthouse_core.h"
 
 //#include "locodeck.h"
 
 #include "estimator.h"
 #include "quatcompress.h"
-#include "stm32_legacy.h"
+
+#include "peer_localization.h"
+
+#include "num.h"
 
 #define NBR_OF_RANGES_IN_PACKET   5
+#define NBR_OF_SWEEPS_IN_PACKET   2
+#define NBR_OF_SENSOR_DIFFS_IN_PACKET   3
+#define NBR_OF_BASESTATIONS   2
+#define NBR_OF_
 #define DEFAULT_EMERGENCY_STOP_TIMEOUT (1 * RATE_MAIN_LOOP)
 
 typedef enum
@@ -64,6 +72,17 @@ typedef struct
     float range;
   } __attribute__((packed)) ranges[NBR_OF_RANGES_IN_PACKET];
 } __attribute__((packed)) rangePacket;
+
+typedef struct {
+  uint8_t type;
+  uint8_t basestation;
+  struct {
+  float sweep;
+    struct {
+      uint16_t angleDiff;
+    } __attribute__((packed)) angleDiffs [NBR_OF_SENSOR_DIFFS_IN_PACKET];
+  } __attribute__((packed)) sweeps [NBR_OF_SWEEPS_IN_PACKET];
+} __attribute__((packed)) anglePacket;
 
 // up to 4 items per CRTP packet
 typedef struct {
@@ -90,18 +109,20 @@ static poseMeasurement_t ext_pose;
 static CRTPPacket pkRange;
 static uint8_t rangeIndex;
 static bool enableRangeStreamFloat = false;
+
+static CRTPPacket LhAngle;
+static bool enableLighthouseAngleStream = false;
 static float extPosStdDev = 0.01;
 static float extQuatStdDev = 4.5e-3;
 static bool isInit = false;
 static uint8_t my_id;
 static uint16_t tickOfLastPacket; // tick when last packet was received
 
-static void locSrvCrtpCB(CRTPPacket *pk);
-static void extPositionHandler(CRTPPacket *pk);//package from an external positioning system to enhance kalman filtering
-static void genericLocHandle(CRTPPacket *pk);//LPP Short packet tunnel and emergency stop
-static void extPositionPackedHandler(CRTPPacket *pk);//undefined
+static void locSrvCrtpCB(CRTPPacket* pk);
+static void extPositionHandler(CRTPPacket* pk);
+static void genericLocHandle(CRTPPacket* pk);
+static void extPositionPackedHandler(CRTPPacket* pk);
 
-//Register the CRTP_PORT_LOCALIZATION port and set the callback function
 void locSrvInit()
 {
   if (isInit) {
@@ -133,66 +154,140 @@ static void locSrvCrtpCB(CRTPPacket* pk)
   }
 }
 
-static void extPositionHandler(CRTPPacket* pk)
-{
+static void extPositionHandler(CRTPPacket* pk) {
   const struct CrtpExtPosition* data = (const struct CrtpExtPosition*)pk->data;
 
   ext_pos.x = data->x;
   ext_pos.y = data->y;
   ext_pos.z = data->z;
   ext_pos.stdDev = extPosStdDev;
+
   estimatorEnqueuePosition(&ext_pos);
   tickOfLastPacket = xTaskGetTickCount();
 }
 
-static void genericLocHandle(CRTPPacket* pk)
-{
-  uint8_t type = pk->data[0];
-  if (pk->size < 1) return;
+static void extPoseHandler(const CRTPPacket* pk) {
+  const struct CrtpExtPose* data = (const struct CrtpExtPose*)&pk->data[1];
 
-  if (type == LPS_SHORT_LPP_PACKET && pk->size >= 2) {
-    
-	//TODO:
-    bool success = false;//lpsSendLppShort(pk->data[1], &pk->data[2], pk->size-2);
+  ext_pose.x = data->x;
+  ext_pose.y = data->y;
+  ext_pose.z = data->z;
+  ext_pose.quat.x = data->qx;
+  ext_pose.quat.y = data->qy;
+  ext_pose.quat.z = data->qz;
+  ext_pose.quat.w = data->qw;
+  ext_pose.stdDevPos = extPosStdDev;
+  ext_pose.stdDevQuat = extQuatStdDev;
+
+  estimatorEnqueuePose(&ext_pose);
+  tickOfLastPacket = xTaskGetTickCount();
+}
+
+static void extPosePackedHandler(const CRTPPacket* pk) {
+  uint8_t numItems = (pk->size - 1) / sizeof(extPosePackedItem);
+  for (uint8_t i = 0; i < numItems; ++i) {
+    const extPosePackedItem* item = (const extPosePackedItem*)&pk->data[1 + i * sizeof(extPosePackedItem)];
+    if (item->id == my_id) {
+      ext_pose.x = item->x / 1000.0f;
+      ext_pose.y = item->y / 1000.0f;
+      ext_pose.z = item->z / 1000.0f;
+      quatdecompress(item->quat, (float *)&ext_pose.quat.q0);
+      ext_pose.stdDevPos = extPosStdDev;
+      ext_pose.stdDevQuat = extQuatStdDev;
+      estimatorEnqueuePose(&ext_pose);
+      tickOfLastPacket = xTaskGetTickCount();
+    } else {
+      ext_pos.x = item->x / 1000.0f;
+      ext_pos.y = item->y / 1000.0f;
+      ext_pos.z = item->z / 1000.0f;
+      ext_pos.stdDev = extPosStdDev;
+      peerLocalizationTellPosition(item->id, &ext_pos);
+    }
+  }
+}
+
+static void lpsShortLppPacketHandler(CRTPPacket* pk) {
+  if (pk->size >= 2) {
+    bool success = lpsSendLppShort(pk->data[1], &pk->data[2], pk->size-2);
 
     pk->port = CRTP_PORT_LOCALIZATION;
     pk->channel = GENERIC_TYPE;
     pk->size = 3;
+    pk->data[0] = LPS_SHORT_LPP_PACKET;
     pk->data[2] = success?1:0;
     crtpSendPacket(pk);
-  } else if (type == EMERGENCY_STOP) {
-    stabilizerSetEmergencyStop();
-  } else if (type == EMERGENCY_STOP_WATCHDOG) {
-    stabilizerSetEmergencyStopTimeout(DEFAULT_EMERGENCY_STOP_TIMEOUT);
-  } else if (type == EXT_POSE) {
-    const struct CrtpExtPose* data = (const struct CrtpExtPose*)&pk->data[1];
-    ext_pose.x = data->x;
-    ext_pose.y = data->y;
-    ext_pose.z = data->z;
-    ext_pose.quat.x = data->qx;
-    ext_pose.quat.y = data->qy;
-    ext_pose.quat.z = data->qz;
-    ext_pose.quat.w = data->qw;
-    ext_pose.stdDevPos = extPosStdDev;
-    ext_pose.stdDevQuat = extQuatStdDev;
-    estimatorEnqueuePose(&ext_pose);
-    tickOfLastPacket = xTaskGetTickCount();
-  } else if (type == EXT_POSE_PACKED) {
-    uint8_t numItems = (pk->size - 1) / sizeof(extPosePackedItem);
-    for (uint8_t i = 0; i < numItems; ++i) {
-      const extPosePackedItem* item = (const extPosePackedItem*)&pk->data[1 + i * sizeof(extPosePackedItem)];
-      if (item->id == my_id) {
-        ext_pose.x = item->x / 1000.0f;
-        ext_pose.y = item->y / 1000.0f;
-        ext_pose.z = item->z / 1000.0f;
-        quatdecompress(item->quat, (float *)&ext_pose.quat.q0);
-        ext_pose.stdDevPos = extPosStdDev;
-        ext_pose.stdDevQuat = extQuatStdDev;
-        estimatorEnqueuePose(&ext_pose);
-        tickOfLastPacket = xTaskGetTickCount();
-        break;
-      }
+  }
+}
+
+typedef union {
+  struct {
+    // A bit field indicating for which base stations to store geometry data
+    uint16_t geoDataBsField;
+    // A bit field indicating for which base stations to store calibration data
+    uint16_t calibrationDataBsField;
+  } __attribute__((packed));
+  uint32_t combinedField;
+} __attribute__((packed)) LhPersistArgs_t;
+
+static void lhPersistDataWorker(void* arg) {
+  LhPersistArgs_t* args = (LhPersistArgs_t*) &arg;
+
+  bool result = true;
+
+  for (int baseStation = 0; baseStation < PULSE_PROCESSOR_N_BASE_STATIONS; baseStation++) {
+    uint16_t mask = 1 << baseStation;
+    bool storeGeo = (args->geoDataBsField & mask) != 0;
+    bool storeCalibration = (args->calibrationDataBsField & mask) != 0;
+    if (! lighthouseCorePersistData(baseStation, storeGeo, storeCalibration)) {
+      result = false;
+      break;
     }
+  }
+
+  CRTPPacket response = {
+    .port = CRTP_PORT_LOCALIZATION,
+    .channel = GENERIC_TYPE,
+    .size = 2,
+    .data = {LH_PERSIST_DATA, result}
+  };
+
+  crtpSendPacket(&response);
+}
+
+static void lhPersistDataHandler(CRTPPacket* pk) {
+  if (pk->size >= (1 + sizeof(LhPersistArgs_t))) {
+    LhPersistArgs_t* args = (LhPersistArgs_t*) &pk->data[1];
+    workerSchedule(lhPersistDataWorker, (void*)args->combinedField);
+  }
+}
+
+static void genericLocHandle(CRTPPacket* pk)
+{
+  const uint8_t type = pk->data[0];
+  if (pk->size < 1) return;
+
+  switch (type) {
+    case LPS_SHORT_LPP_PACKET:
+      lpsShortLppPacketHandler(pk);
+      break;
+    case EMERGENCY_STOP:
+      stabilizerSetEmergencyStop();
+      break;
+    case EMERGENCY_STOP_WATCHDOG:
+      stabilizerSetEmergencyStopTimeout(DEFAULT_EMERGENCY_STOP_TIMEOUT);
+      break;
+    case EXT_POSE:
+      extPoseHandler(pk);
+      break;
+    case EXT_POSE_PACKED:
+      extPosePackedHandler(pk);
+      break;
+    case LH_PERSIST_DATA:
+      lhPersistDataHandler(pk);
+      break;
+    default:
+      // Nothing here
+      break;
   }
 }
 
@@ -201,28 +296,18 @@ static void extPositionPackedHandler(CRTPPacket* pk)
   uint8_t numItems = pk->size / sizeof(extPositionPackedItem);
   for (uint8_t i = 0; i < numItems; ++i) {
     const extPositionPackedItem* item = (const extPositionPackedItem*)&pk->data[i * sizeof(extPositionPackedItem)];
+    ext_pos.x = item->x / 1000.0f;
+    ext_pos.y = item->y / 1000.0f;
+    ext_pos.z = item->z / 1000.0f;
+    ext_pos.stdDev = extPosStdDev;
     if (item->id == my_id) {
-      ext_pos.x = item->x / 1000.0f;
-      ext_pos.y = item->y / 1000.0f;
-      ext_pos.z = item->z / 1000.0f;
-      ext_pos.stdDev = extPosStdDev;
       estimatorEnqueuePosition(&ext_pos);
       tickOfLastPacket = xTaskGetTickCount();
-      break;
+    }
+    else {
+      peerLocalizationTellPosition(item->id, &ext_pos);
     }
   }
-}
-
-void locSrvSendPacket(locsrv_t type, uint8_t *data, uint8_t length)
-{
-  CRTPPacket pk;
-
-  ASSERT(length < CRTP_MAX_DATA_SIZE);
-
-  pk.port = CRTP_PORT_LOCALIZATION;
-  pk.channel = GENERIC_TYPE;
-  memcpy(pk.data, data, length);
-  crtpSendPacket(&pk);
 }
 
 void locSrvSendRangeFloat(uint8_t id, float range)
@@ -249,6 +334,33 @@ void locSrvSendRangeFloat(uint8_t id, float range)
   }
 }
 
+void locSrvSendLighthouseAngle(int basestation, pulseProcessorResult_t* angles)
+{
+  anglePacket *ap = (anglePacket *)LhAngle.data;
+
+  if (enableLighthouseAngleStream) {
+    ap->basestation = basestation;
+
+    for(uint8_t its = 0; its < NBR_OF_SWEEPS_IN_PACKET; its++) {
+      float angle_first_sensor =  angles->sensorMeasurementsLh1[0].baseStatonMeasurements[basestation].correctedAngles[its];
+      ap->sweeps[its].sweep = angle_first_sensor;
+
+      for(uint8_t itd = 0; itd < NBR_OF_SENSOR_DIFFS_IN_PACKET; itd++) {
+        float angle_other_sensor = angles->sensorMeasurementsLh1[itd + 1].baseStatonMeasurements[basestation].correctedAngles[its];
+        uint16_t angle_diff = single2half(angle_first_sensor - angle_other_sensor);
+        ap->sweeps[its].angleDiffs[itd].angleDiff = angle_diff;
+      }
+    }
+
+    ap->type = LH_ANGLE_STREAM;
+    LhAngle.port = CRTP_PORT_LOCALIZATION;
+    LhAngle.channel = GENERIC_TYPE;
+    LhAngle.size = sizeof(anglePacket);
+    crtpSendPacket(&LhAngle);
+  }
+}
+
+
 LOG_GROUP_START(ext_pos)
   LOG_ADD(LOG_FLOAT, X, &ext_pos.x)
   LOG_ADD(LOG_FLOAT, Y, &ext_pos.y)
@@ -261,6 +373,7 @@ LOG_GROUP_STOP(locSrvZ)
 
 PARAM_GROUP_START(locSrv)
   PARAM_ADD(PARAM_UINT8, enRangeStreamFP32, &enableRangeStreamFloat)
+  PARAM_ADD(PARAM_UINT8, enLhAngleStream, &enableLighthouseAngleStream)
   PARAM_ADD(PARAM_FLOAT, extPosStdDev, &extPosStdDev)
   PARAM_ADD(PARAM_FLOAT, extQuatStdDev, &extQuatStdDev)
 PARAM_GROUP_STOP(locSrv)

@@ -63,10 +63,10 @@
 
 #include "stm32_legacy.h"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "task.h"
+#include "semphr.h"
 #include "sensors.h"
 #include "static_mem.h"
 
@@ -74,7 +74,9 @@
 #include "log.h"
 #include "param.h"
 #include "physicalConstants.h"
+
 #include "statsCnt.h"
+#include "rateSupervisor.h"
 #include "config.h"
 
 #define DEBUG_MODULE "ESTKALMAN"
@@ -160,13 +162,13 @@ static inline bool stateEstimatorHasYawErrorPacket(yawErrorMeasurement_t *error)
   return (pdTRUE == xQueueReceive(yawErrorDataQueue, error, 0));
 }
 
-static xQueueHandle sweepAnglesDataQueue;
-STATIC_MEM_QUEUE_ALLOC(sweepAnglesDataQueue, 10, sizeof(sweepAngleMeasurement_t));
+// static xQueueHandle sweepAnglesDataQueue;
+// STATIC_MEM_QUEUE_ALLOC(sweepAnglesDataQueue, 10, sizeof(sweepAngleMeasurement_t));
 
-static inline bool stateEstimatorHasSweepAnglesPacket(sweepAngleMeasurement_t *angles)
-{
-  return (pdTRUE == xQueueReceive(sweepAnglesDataQueue, angles, 0));
-}
+// static inline bool stateEstimatorHasSweepAnglesPacket(sweepAngleMeasurement_t *angles)
+// {
+//   return (pdTRUE == xQueueReceive(sweepAnglesDataQueue, angles, 0));
+// }
 
 // Semaphore to signal that we got data from the stabilzer loop to process
 static SemaphoreHandle_t runTaskSemaphore;
@@ -181,10 +183,8 @@ static StaticSemaphore_t dataMutexBuffer;
  * Constants used in the estimator
  */
 
-#define CRAZYFLIE_WEIGHT_grams (27.0f)
-
 //thrust is thrust mapped for 65536 <==> 60 GRAMS!
-#define CONTROL_TO_ACC (GRAVITY_MAGNITUDE*60.0f/CRAZYFLIE_WEIGHT_grams/65536.0f)
+#define CONTROL_TO_ACC (GRAVITY_MAGNITUDE*60.0f/(CF_MASS*1000.0f)/65536.0f)
 
 
 /**
@@ -214,7 +214,7 @@ static StaticSemaphore_t dataMutexBuffer;
  * For more information, refer to the paper
  */
 
-static kalmanCoreData_t coreData;
+NO_DMA_CCM_SAFE_ZERO_INIT static kalmanCoreData_t coreData;
 
 /**
  * Internal variables. Note that static declaration results in default initialization (to 0)
@@ -248,41 +248,22 @@ static STATS_CNT_RATE_DEFINE(finalizeCounter, ONE_SECOND);
 static STATS_CNT_RATE_DEFINE(measurementAppendedCounter, ONE_SECOND);
 static STATS_CNT_RATE_DEFINE(measurementNotAppendedCounter, ONE_SECOND);
 
+static rateSupervisor_t rateSupervisorContext;
+
+#define WARNING_HOLD_BACK_TIME M2T(2000)
+static uint32_t warningBlockTime = 0;
+
 #ifdef KALMAN_USE_BARO_UPDATE
 static const bool useBaroUpdate = true;
 #else
 static const bool useBaroUpdate = false;
 #endif
 
-/**
- * Supporting and utility functions
- */
-
-static inline void mat_trans(const xtensa_matrix_instance_f32 *pSrc, xtensa_matrix_instance_f32 *pDst)
-{
-    configASSERT(XTENSA_MATH_SUCCESS == xtensa_mat_trans_f32(pSrc, pDst));
-}
-static inline void mat_inv(const xtensa_matrix_instance_f32 *pSrc, xtensa_matrix_instance_f32 *pDst)
-{
-    configASSERT(XTENSA_MATH_SUCCESS == xtensa_mat_inverse_f32(pSrc, pDst));
-}
-static inline void mat_mult(const xtensa_matrix_instance_f32 *pSrcA, const xtensa_matrix_instance_f32 *pSrcB, xtensa_matrix_instance_f32 *pDst)
-{
-    configASSERT(XTENSA_MATH_SUCCESS == xtensa_mat_mult_f32(pSrcA, pSrcB, pDst));
-}
-static inline float xtensa_sqrt(float32_t in)
-{
-    float pOut = 0;
-    xtensa_status result = xtensa_sqrt_f32(in, &pOut);
-    configASSERT(XTENSA_MATH_SUCCESS == result);
-    return pOut;
-}
-
 static void kalmanTask(void* parameters);
 static bool predictStateForward(uint32_t osTick, float dt);
 static bool updateQueuedMeasurments(const Axis3f *gyro, const uint32_t tick);
 
-STATIC_MEM_TASK_ALLOC(kalmanTask, 3 * configBASE_STACK_SIZE);
+STATIC_MEM_TASK_ALLOC_STACK_NO_DMA_CCM_SAFE(kalmanTask, 3 * configMINIMAL_STACK_SIZE);
 
 // --------------------------------------------------
 
@@ -296,7 +277,7 @@ void estimatorKalmanTaskInit() {
   tofDataQueue = STATIC_MEM_QUEUE_CREATE(tofDataQueue);
   heightDataQueue = STATIC_MEM_QUEUE_CREATE(heightDataQueue);
   yawErrorDataQueue = STATIC_MEM_QUEUE_CREATE(yawErrorDataQueue);
-  sweepAnglesDataQueue = STATIC_MEM_QUEUE_CREATE(sweepAnglesDataQueue);
+  //sweepAnglesDataQueue = STATIC_MEM_QUEUE_CREATE(sweepAnglesDataQueue);
 
   vSemaphoreCreateBinary(runTaskSemaphore);
 
@@ -319,13 +300,15 @@ static void kalmanTask(void* parameters) {
   uint32_t lastPNUpdate = xTaskGetTickCount();
   uint32_t nextBaroUpdate = xTaskGetTickCount();
 
+  rateSupervisorInit(&rateSupervisorContext, xTaskGetTickCount(), M2T(1000), 99, 101, 1);
+
   while (true) {
     xSemaphoreTake(runTaskSemaphore, portMAX_DELAY);
 
     // If the client triggers an estimator reset via parameter update
     if (coreData.resetEstimation) {
       estimatorKalmanInit();
-      coreData.resetEstimation = false;
+      paramSetInt(paramGetVarId("kalman", "resetEstimation"), 0);
     }
 
     // Tracks whether an update to the state has been made, and the state therefore requires finalization
@@ -347,6 +330,10 @@ static void kalmanTask(void* parameters) {
       }
 
       nextPrediction = osTick + S2T(1.0f / PREDICT_RATE);
+
+      if (!rateSupervisorValidate(&rateSupervisorContext, T2M(osTick))) {
+        DEBUG_PRINT("WARNING: Kalman prediction rate low (%u)\n", rateSupervisorLatestCount(&rateSupervisorContext));
+      }
     }
 
     /**
@@ -388,7 +375,10 @@ static void kalmanTask(void* parameters) {
       xSemaphoreTake(dataMutex, portMAX_DELAY);
       memcpy(&gyro, &gyroSnapshot, sizeof(gyro));
       xSemaphoreGive(dataMutex);
-      doneUpdate = doneUpdate || updateQueuedMeasurments(&gyro, osTick);
+
+      if(updateQueuedMeasurments(&gyro, osTick)) {
+        doneUpdate = true;
+      }
     }
 
     /**
@@ -404,7 +394,11 @@ static void kalmanTask(void* parameters) {
       STATS_CNT_RATE_EVENT(&finalizeCounter);
       if (! kalmanSupervisorIsStateWithinBounds(&coreData)) {
         coreData.resetEstimation = true;
-        DEBUG_PRINT("State out of bounds, resetting\n");
+
+        if (osTick > warningBlockTime) {
+          warningBlockTime = osTick + WARNING_HOLD_BACK_TIME;
+          DEBUG_PRINT("State out of bounds, resetting\n");
+        }
       }
     }
 
@@ -579,12 +573,12 @@ static bool updateQueuedMeasurments(const Axis3f *gyro, const uint32_t tick) {
     doneUpdate = true;
   }
 
-  sweepAngleMeasurement_t angles;
-  while (stateEstimatorHasSweepAnglesPacket(&angles))
-  {
-    kalmanCoreUpdateWithSweepAngles(&coreData, &angles, tick);
-    doneUpdate = true;
-  }
+  // sweepAngleMeasurement_t angles;
+  // while (stateEstimatorHasSweepAnglesPacket(&angles))
+  // {
+  //   kalmanCoreUpdateWithSweepAngles(&coreData, &angles, tick);
+  //   doneUpdate = true;
+  // }
 
   return doneUpdate;
 }
@@ -689,11 +683,11 @@ bool estimatorKalmanEnqueueYawError(const yawErrorMeasurement_t* error)
   return appendMeasurement(yawErrorDataQueue, (void *)error);
 }
 
-bool estimatorKalmanEnqueueSweepAngles(const sweepAngleMeasurement_t *angles)
-{
-  ASSERT(isInit);
-  return appendMeasurement(sweepAnglesDataQueue, (void *)angles);
-}
+// bool estimatorKalmanEnqueueSweepAngles(const sweepAngleMeasurement_t *angles)
+// {
+//   ASSERT(isInit);
+//   return appendMeasurement(sweepAnglesDataQueue, (void *)angles);
+// }
 
 bool estimatorKalmanTest(void)
 {

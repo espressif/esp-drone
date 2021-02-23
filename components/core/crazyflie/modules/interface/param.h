@@ -34,15 +34,95 @@
 void paramInit(void);
 bool paramTest(void);
 
-/* Internal access of param variables */
-int paramGetVarId(char* group, char* name);
-int paramGetType(int varid);
-void paramGetGroupAndName(int varid, char** group, char** name);
-void* paramGetAddress(int varid);
+/* Public API to access param variables */
+
+/** Variable identifier.
+ * 
+ * Should be fetched with paramGetVarId(). This is to be considered as an
+ * opaque type, internal structure might change.
+ * 
+ * Use PARAM_VARID_IS_VALID() to check if the ID is valid.
+ */
+typedef struct paramVarId_s {
+  uint16_t id;
+  uint16_t ptr;
+} __attribute__((packed)) paramVarId_t;
+
+/** Get the varId from group and name of variable
+ * 
+ * @param group Group name of the variable
+ * @param name Name of the variable
+ * @return The variable ID or an invalid ID. Use PARAM_VARID_IS_VALID() to check validity.
+ */
+paramVarId_t paramGetVarId(char* group, char* name);
+
+/** Check variable ID validity
+ * 
+ * @param varId variable ID, returned by paramGetVarId()
+ * @return true if the variable ID is valid, false otherwise.
+ */
+#define PARAM_VARID_IS_VALID(varId) (varId.id != 0xffffu)
+
+/** Return the parameter type
+ * 
+ * @param varId variable ID, returned by paramGetVarId()
+ * @return Type of the variable. The value correspond to the defines used when
+ *         declaring a param variable.
+ */
+int paramGetType(paramVarId_t varid);
+
+/** Get group and name strings of a parameter
+ * 
+ * @param varId variable ID, returned by paramGetVarId()
+ * @param group Pointer to a char* that will be filled with the group name
+ * @param group Pointer to a char* that will be filled with the variable name
+ * 
+ * The string buffers must be able to hold at least 32 bytes.
+ */
+void paramGetGroupAndName(paramVarId_t varid, char** group, char** name);
+
+/** Get parameter variable size in byte
+ * 
+ * @param type Type returned by paramGetType()
+ * @return Size in byte occupied by variable of this type
+ */
 uint8_t paramVarSize(int type);
-float paramGetFloat(int varid);
-int paramGetInt(int varid);
-unsigned int paramGetUint(int varid);
+
+/** Return float value of a parameter
+ * 
+ * @param varId variable ID, returned by paramGetVarId()
+ * @return Current value of the variable
+ */
+float paramGetFloat(paramVarId_t varid);
+
+/** Return int value of a parameter
+ * 
+ * @param varId variable ID, returned by paramGetVarId()
+ * @return Current value of the variable
+ */
+int paramGetInt(paramVarId_t varid);
+
+/** Return Unsigned int value of a paramter
+ * 
+ * @param varId variable ID, returned by paramGetVarId()
+ * @return Current value of the variable
+ */
+unsigned int paramGetUint(paramVarId_t varid);
+
+/** Set int value of a parameter
+ * 
+ * @param varId variable ID, returned by paramGetVarId()
+ * @param valuei Value to set in the variable
+ */
+void paramSetInt(paramVarId_t varid, int valuei);
+
+/** Set float value of a parameter
+ * 
+ * @param varId variable ID, returned by paramGetVarId()
+ * @param valuef Value to set in the variable
+ */
+void paramSetFloat(paramVarId_t varid, float valuef);
+
 
 /* Basic parameter structure */
 struct param_s {

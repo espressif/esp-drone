@@ -1,4 +1,4 @@
-#define DEBUG_MODULE "CTRL"
+#define DEBUG_MODULE "CONTROLLER"
 #include "debug_cf.h"
 
 #include "cfassert.h"
@@ -8,8 +8,6 @@
 #include "controller_indi.h"
 
 #define DEFAULT_CONTROLLER ControllerTypePID
-#define CONTROLLER_NAME ControllerTypeAny
-
 static ControllerType currentController = ControllerTypeAny;
 
 static void initController();
@@ -40,7 +38,7 @@ void controllerInit(ControllerType controller) {
     currentController = DEFAULT_CONTROLLER;
   }
 
-  ControllerType forcedController = CONTROLLER_NAME;
+  ControllerType forcedController = ControllerTypeAny;
   if (forcedController != ControllerTypeAny) {
     DEBUG_PRINTD("Controller type forced\n");
     currentController = forcedController;

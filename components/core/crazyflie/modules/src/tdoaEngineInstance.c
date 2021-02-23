@@ -28,8 +28,9 @@
 #include "tdoaEngineInstance.h"
 #include "log.h"
 #include "param.h"
+#include "static_mem.h"
 
-tdoaEngineState_t tdoaEngineState;
+NO_DMA_CCM_SAFE_ZERO_INIT tdoaEngineState_t tdoaEngineState;
 
 LOG_GROUP_START(tdoaEngine)
 STATS_CNT_RATE_LOG_ADD(stRx, &tdoaEngineState.stats.packetsReceived)
