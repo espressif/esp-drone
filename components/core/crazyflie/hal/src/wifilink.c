@@ -1,5 +1,10 @@
 /*
-*
+ *    ||          ____  _ __
+ * +------+      / __ )(_) /_______________ _____  ___
+ * | 0xBC |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
+ * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
+ *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
+ *
  * ESP-Drone Firmware
  *
  * Copyright 2019-2020  Espressif Systems (Shanghai)
@@ -23,19 +28,18 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
-#include "freertos/semphr.h"
-
 #include "config.h"
 #include "wifilink.h"
+#include "wifi_esp32.h"
 #include "crtp.h"
 #include "configblock.h"
 #include "ledseq.h"
 #include "pm_esplane.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 #include "queuemonitor.h"
-#include "wifi_esp32.h"
+#include "semphr.h"
 #include "stm32_legacy.h"
 
 #define DEBUG_MODULE "WIFILINK"
@@ -123,8 +127,7 @@ static void wifilinkTask(void *param)
 static int wifilinkReceiveCRTPPacket(CRTPPacket *p)
 {
     if (xQueueReceive(crtpPacketDelivery, p, M2T(100)) == pdTRUE) {
-        ledseqRun(LINK_LED, seq_linkup);
-        DEBUG_PRINTD("3.wifilinkReceiveCRTPPacket got data size = %d", p->size);
+        ledseqRun(&seq_linkUp);
         return 0;
     }
 
@@ -146,7 +149,7 @@ static int wifilinkSendPacket(CRTPPacket *p)
     dataSize = p->size + 1;
 
 
-    /*ledseqRun(LINK_DOWN_LED, seq_linkup);*/
+    /*ledseqRun(&seq_linkDown);*/
 
     return wifiSendData(dataSize, sendBuffer);
 }
@@ -184,4 +187,3 @@ struct crtpLinkOperations *wifilinkGetLink()
 {
     return &wifilinkOp;
 }
-

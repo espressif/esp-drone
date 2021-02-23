@@ -49,7 +49,7 @@
 #include "static_mem.h"
 
 
-__ALIGN_BEGIN USB_OTG_CORE_HANDLE    USB_OTG_dev __ALIGN_END ;
+NO_DMA_CCM_SAFE_ZERO_INIT __ALIGN_BEGIN USB_OTG_CORE_HANDLE    USB_OTG_dev __ALIGN_END ;
 
 static bool isInit = false;
 static bool doingTransfer = false;

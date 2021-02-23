@@ -34,15 +34,84 @@
 void logInit(void);
 bool logTest(void);
 
-/* Internal access of log variables */
-int logGetVarId(char* group, char* name);
-int logGetType(int varid);
-void logGetGroupAndName(int varid, char** group, char** name);
-void* logGetAddress(int varid);
+/* Public API to access of log variables */
+
+/** Variable identifier.
+ * 
+ * Should be fetched with logGetVarId(). This is to be considered as an
+ * opaque type, internal structure might change.
+ * 
+ * Use LOG_VARID_IS_VALID() to check if the ID is valid.
+ */
+typedef uint16_t logVarId_t;
+
+/** Get the varId from group and name of variable
+ * 
+ * @param group Group name of the variable
+ * @param name Name of the variable
+ * @return The variable ID or an invalid ID. Use LOG_VARID_IS_VALID() to check validity.
+ */
+logVarId_t logGetVarId(char* group, char* name);
+
+/** Check variable ID validity
+ * 
+ * @param varId variable ID, returned by logGetLogId()
+ * @return true if the variable ID is valid, false otherwise.
+ */
+#define LOG_VARID_IS_VALID(varId) (varId != 0xffffu)
+
+/** Return the logging type
+ * 
+ * @param varId variable ID, returned by logGetVarId()
+ * @return Type of the variable. The value correspond to the defines used when
+ *         declaring a param variable.
+ */
+int logGetType(logVarId_t varid);
+
+/** Get group and name strings of a parameter
+ * 
+ * @param varId variable ID, returned by logGetVarId()
+ * @param group Pointer to a char* that will be filled with the group name
+ * @param group Pointer to a char* that will be filled with the variable name
+ * 
+ * The string buffers must be able to hold at least 32 bytes.
+ */
+void logGetGroupAndName(logVarId_t varid, char** group, char** name);
+
+/** Get address of the logging variable
+ * 
+ * @param varId variable ID, returned by logGetVarId()
+ * @return Address of the location of log variable
+ *  */
+void* logGetAddress(logVarId_t varid);
+
+/** Get log variable size in byte
+ * 
+ * @param type Type returned by logGetType()
+ * @return Size in byte occupied by variable of this type
+ */
 uint8_t logVarSize(int type);
-float logGetFloat(int varid);
-int logGetInt(int varid);
-unsigned int logGetUint(int varid);
+
+/** Return float value of a logging variable
+ * 
+ * @param varId variable ID, returned by logGetVarId()
+ * @return Current value of the variable
+ */
+float logGetFloat(logVarId_t varid);
+
+/** Return int value of a logging variable
+ * 
+ * @param varId variable ID, returned by logGetVarId()
+ * @return Current value of the variable
+ */
+int logGetInt(logVarId_t varid);
+
+/** Return Unsigned int value of a logging variable
+ * 
+ * @param varId variable ID, returned by paramGetVarId()
+ * @return Current value of the variable
+ */
+unsigned int logGetUint(logVarId_t varid);
 
 /* Basic log structure */
 struct log_s {

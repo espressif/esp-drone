@@ -27,6 +27,7 @@
 #define _CRTP_LOCALIZATION_SERVICE_H_
 
 #include "stabilizer_types.h"
+//#include "pulse_processor.h"
 
 /**
  * CRTP external position data struct
@@ -60,6 +61,8 @@ typedef enum
   COMM_GNSS_PROPRIETARY    = 7,
   EXT_POSE                 = 8,
   EXT_POSE_PACKED          = 9,
+  LH_ANGLE_STREAM          = 10,
+  LH_PERSIST_DATA          = 11,
 } locsrv_t;
 
 // Set up the callback for the CRTP_PORT_LOCALIZATION
@@ -67,5 +70,6 @@ void locSrvInit(void);
 
 // Send range in float. After 5 ranges it will send the packet.
 void locSrvSendRangeFloat(uint8_t id, float range);
+//void locSrvSendLighthouseAngle(int basestation, pulseProcessorResult_t* angles);
 
 #endif /* _CRTP_LOCALIZATION_SERVICE_H_ */

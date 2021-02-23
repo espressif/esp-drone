@@ -42,10 +42,23 @@ typedef struct {
   int hitCount;
 } lighthouseBsIdentificationData_t;
 
-typedef enum {
-    lighthouseBsTypeUnknown = 0,
-    lighthouseBsTypeV1 = 1,
-    lighthouseBsTypeV2 = 2,
-} lighthouseBaseStationType_t;
-
+void lighthouseCoreInit();
 void lighthouseCoreTask(void *param);
+
+/**
+ * @brief Set calibration data for one base station of the system
+ *
+ * @param baseStation   The id of the base station
+ * @param calibration   Pointer to calibration data
+ */
+void lighthouseCoreSetCalibrationData(const uint8_t baseStation, const lighthouseCalibration_t* calibration);
+
+/**
+ * @brief Copy current data in RAM to permanent storage
+ *
+ * @param baseStation  The base station id to store data for
+ * @param geoData      If true, write geometry data for the base station
+ * @param calibData    if true, write calibration data for the base station
+ * @return true if data was stored
+ */
+bool lighthouseCorePersistData(const uint8_t baseStation, const bool geoData, const bool calibData);

@@ -1,6 +1,11 @@
 /**
-*
- * ESP-Drone Firmware
+ *    ||          ____  _ __
+ * +------+      / __ )(_) /_______________ _____  ___
+ * | 0xBC |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
+ * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
+ *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
+ *
+ * ESP-Drone firmware
  *
  * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
@@ -25,33 +30,34 @@
 
 #include "driver/adc.h"
 #include "syslink.h"
+//#include "deck.h"
 
 #ifndef CRITICAL_LOW_VOLTAGE
-#define PM_BAT_CRITICAL_LOW_VOLTAGE   3.0f
+  #define PM_BAT_CRITICAL_LOW_VOLTAGE   3.0f
 #else
-#define PM_BAT_CRITICAL_LOW_VOLTAGE   CRITICAL_LOW_VOLTAGE
+  #define PM_BAT_CRITICAL_LOW_VOLTAGE   CRITICAL_LOW_VOLTAGE
 #endif
 #ifndef CRITICAL_LOW_TIMEOUT
-#define PM_BAT_CRITICAL_LOW_TIMEOUT   M2T(1000 * 5) // 5 sec default
+  #define PM_BAT_CRITICAL_LOW_TIMEOUT   M2T(1000 * 5) // 5 sec default
 #else
-#define PM_BAT_CRITICAL_LOW_TIMEOUT   CRITICAL_LOW_TIMEOUT
+  #define PM_BAT_CRITICAL_LOW_TIMEOUT   CRITICAL_LOW_TIMEOUT
 #endif
 
 #ifndef LOW_VOLTAGE
-#define PM_BAT_LOW_VOLTAGE   3.2f
+  #define PM_BAT_LOW_VOLTAGE   3.2f
 #else
-#define PM_BAT_LOW_VOLTAGE   LOW_VOLTAGE
+  #define PM_BAT_LOW_VOLTAGE   LOW_VOLTAGE
 #endif
 #ifndef LOW_TIMEOUT
-#define PM_BAT_LOW_TIMEOUT   M2T(1000 * 5) // 5 sec default
+  #define PM_BAT_LOW_TIMEOUT   M2T(1000 * 5) // 5 sec default
 #else
-#define PM_BAT_LOW_TIMEOUT   LOW_TIMEOUT
+  #define PM_BAT_LOW_TIMEOUT   LOW_TIMEOUT
 #endif
 
 #ifndef SYSTEM_SHUTDOWN_TIMEOUT
-#define PM_SYSTEM_SHUTDOWN_TIMEOUT    M2T(1000 * 60 * 5) // 5 min default
+  #define PM_SYSTEM_SHUTDOWN_TIMEOUT    M2T(1000 * 60 * 5) // 5 min default
 #else
-#define PM_SYSTEM_SHUTDOWN_TIMEOUT    M2T(1000 * 60 * SYSTEM_SHUTDOWN_TIMEOUT)
+  #define PM_SYSTEM_SHUTDOWN_TIMEOUT    M2T(1000 * 60 * SYSTEM_SHUTDOWN_TIMEOUT)
 #endif
 
 #define PM_BAT_DIVIDER                3.0f
@@ -73,25 +79,28 @@
 #define PM_BAT_IIR_LPF_ATTENUATION (int)(ADC_SAMPLING_FREQ / (int)(2 * 3.1415f * PM_BAT_WANTED_LPF_CUTOFF_HZ))
 #define PM_BAT_IIR_LPF_ATT_FACTOR  (int)((1<<PM_BAT_IIR_SHIFT) / PM_BAT_IIR_LPF_ATTENUATION)
 
-typedef enum {
-    battery,
-    charging,
-    charged,
-    lowPower,
-    shutDown,
+typedef enum
+{
+  battery,
+  charging,
+  charged,
+  lowPower,
+  shutDown,
 } PMStates;
 
-typedef enum {
-    charge100mA,
-    charge300mA,
-    charge500mA,
-    chargeMax,
+typedef enum
+{
+  charge100mA,
+  charge300mA,
+  charge500mA,
+  chargeMax,
 } PMChargeStates;
 
-typedef enum {
-    USBNone,
-    USB500mA,
-    USBWallAdapter,
+typedef enum
+{
+  USBNone,
+  USB500mA,
+  USBWallAdapter,
 } PMUSBPower;
 
 void pmInit(void);
@@ -126,6 +135,22 @@ float pmGetBatteryVoltageMax(void);
  * Should be called for every new adcValues sample.
  */
 //void pmBatteryUpdate(AdcGroup* adcValues);
+
+/**
+ * Returns true if the battery is below its low capacity threshold for an
+ * extended period of time.
+ */
+bool pmIsBatteryLow(void);
+
+/**
+ * Returns true if the charger is currently connected
+ */
+bool pmIsChargerConnected(void);
+
+/**
+ * Returns true if the battery is currently charging
+ */
+bool pmIsCharging(void);
 
 /**
  * Returns true if the battery is currently in use

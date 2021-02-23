@@ -27,8 +27,8 @@
 #include <errno.h>
 
 /* FreeRtos includes */
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "config.h"
 #include "crtp.h"
@@ -73,6 +73,7 @@ static const uint8_t typeLength[] = {
 #define CMD_GET_INFO_V2 3 // version 2: up to 16k entries
 
 #define MISC_SETBYNAME 0
+#define MISC_VALUE_UPDATED 1
 
 //Private functions
 static void paramTask(void * prm);
@@ -102,7 +103,7 @@ static CRTPPacket p;
 
 static bool isInit = false;
 
-STATIC_MEM_TASK_ALLOC(paramTask, PARAM_TASK_STACKSIZE);
+STATIC_MEM_TASK_ALLOC_STACK_NO_DMA_CCM_SAFE(paramTask, PARAM_TASK_STACKSIZE);
 
 void paramInit(void)
 {
@@ -547,29 +548,41 @@ static int variableGetIndex(int id)
 }
 
 /* Public API to access param TOC from within the copter */
-int paramGetVarId(char* group, char* name)
+static paramVarId_t invalidVarId = {0xffffu, 0xffffu};
+
+paramVarId_t paramGetVarId(char* group, char* name)
 {
-  int i;
+  int ptr;
+  int id = 0;
+  paramVarId_t varId = invalidVarId;
   char * currgroup = "";
 
-  for(i=0; i<paramsLen; i++)
+  for(ptr=0; ptr<paramsLen; ptr++)
   {
-    if (params[i].type & PARAM_GROUP) {
-      if (params[i].type & PARAM_START)
-        currgroup = params[i].name;
-    } if ((!strcmp(group, currgroup)) && (!strcmp(name, params[i].name)))
-      return i;
+    if (params[ptr].type & PARAM_GROUP) {
+      if (params[ptr].type & PARAM_START) {
+        currgroup = params[ptr].name;
+      }
+    } else {
+      id += 1;
+    }
+    
+    if ((!strcmp(group, currgroup)) && (!strcmp(name, params[ptr].name))) {
+      varId.ptr = ptr;
+      varId.id = id - 1;
+      return varId;
+    }
   }
 
-  return -1;
+  return invalidVarId;
 }
 
-int paramGetType(int varid)
+int paramGetType(paramVarId_t varid)
 {
-  return params[varid].type;
+  return params[varid.ptr].type;
 }
 
-void paramGetGroupAndName(int varid, char** group, char** name)
+void paramGetGroupAndName(paramVarId_t varid, char** group, char** name)
 {
   char * currgroup = "";
   *group = 0;
@@ -582,7 +595,7 @@ void paramGetGroupAndName(int varid, char** group, char** name)
       }
     }
 
-    if (i == varid) {
+    if (i == varid.ptr) {
       *group = currgroup;
       *name = params[i].name;
       break;
@@ -590,82 +603,157 @@ void paramGetGroupAndName(int varid, char** group, char** name)
   }
 }
 
-void* paramGetAddress(int varid)
-{
-  return params[varid].address;
-}
-
 uint8_t paramVarSize(int type)
 {
   return typeLength[type];
 }
 
-int paramGetInt(int varid)
+int paramGetInt(paramVarId_t varid)
 {
   int valuei = 0;
 
-  ASSERT(varid >= 0);
+  ASSERT(PARAM_VARID_IS_VALID(varid));
 
-  switch(params[varid].type)
+  switch(params[varid.ptr].type)
   {
     case PARAM_UINT8:
-      valuei = *(uint8_t *)params[varid].address;
+      valuei = *(uint8_t *)params[varid.ptr].address;
       break;
     case PARAM_INT8:
-      valuei = *(int8_t *)params[varid].address;
+      valuei = *(int8_t *)params[varid.ptr].address;
       break;
     case PARAM_UINT16:
-      valuei = *(uint16_t *)params[varid].address;
+      valuei = *(uint16_t *)params[varid.ptr].address;
       break;
     case PARAM_INT16:
-      valuei = *(int16_t *)params[varid].address;
+      valuei = *(int16_t *)params[varid.ptr].address;
       break;
     case PARAM_UINT32:
-      valuei = *(uint32_t *)params[varid].address;
+      valuei = *(uint32_t *)params[varid.ptr].address;
       break;
     case PARAM_INT32:
-      valuei = *(int32_t *)params[varid].address;
+      valuei = *(int32_t *)params[varid.ptr].address;
       break;
     case PARAM_FLOAT:
-      valuei = *(float *)params[varid].address;
+      valuei = *(float *)params[varid.ptr].address;
       break;
     case PARAM_UINT8 | PARAM_RONLY:
-      valuei = *(uint8_t *)params[varid].address;
+      valuei = *(uint8_t *)params[varid.ptr].address;
       break;
     case PARAM_INT8 | PARAM_RONLY:
-      valuei = *(int8_t *)params[varid].address;
+      valuei = *(int8_t *)params[varid.ptr].address;
       break;
     case PARAM_UINT16 | PARAM_RONLY:
-      valuei = *(uint16_t *)params[varid].address;
+      valuei = *(uint16_t *)params[varid.ptr].address;
       break;
     case PARAM_INT16 | PARAM_RONLY:
-      valuei = *(int16_t *)params[varid].address;
+      valuei = *(int16_t *)params[varid.ptr].address;
       break;
     case PARAM_UINT32 | PARAM_RONLY:
-      valuei = *(uint32_t *)params[varid].address;
+      valuei = *(uint32_t *)params[varid.ptr].address;
       break;
     case PARAM_INT32 | PARAM_RONLY:
-      valuei = *(int32_t *)params[varid].address;
+      valuei = *(int32_t *)params[varid.ptr].address;
       break;
     case PARAM_FLOAT | PARAM_RONLY:
-      valuei = *(float *)params[varid].address;
+      valuei = *(float *)params[varid.ptr].address;
       break;
   }
 
   return valuei;
 }
 
-float paramGetFloat(int varid)
+float paramGetFloat(paramVarId_t varid)
 {
-  ASSERT(varid >= 0);
+  ASSERT(PARAM_VARID_IS_VALID(varid));
 
-  if (params[varid].type == PARAM_FLOAT || params[varid].type == (PARAM_FLOAT | PARAM_RONLY))
-    return *(float *)params[varid].address;
+  if (params[varid.ptr].type == PARAM_FLOAT || params[varid.ptr].type == (PARAM_FLOAT | PARAM_RONLY))
+    return *(float *)params[varid.ptr].address;
 
   return paramGetInt(varid);
 }
 
-unsigned int paramGetUint(int varid)
+unsigned int paramGetUint(paramVarId_t varid)
 {
   return (unsigned int)paramGetInt(varid);
+}
+
+void paramSetInt(paramVarId_t varid, int valuei)
+{
+  ASSERT(PARAM_VARID_IS_VALID(varid));
+
+  static CRTPPacket pk;
+  pk.header=CRTP_HEADER(CRTP_PORT_PARAM, MISC_CH);
+  pk.data[0] = MISC_VALUE_UPDATED;
+  pk.data[1] = varid.id & 0xffu;
+  pk.data[2] = (varid.id >> 8) & 0xffu;
+  pk.size=3;
+
+  switch(params[varid.ptr].type)
+  {
+    case PARAM_UINT8:
+      *(uint8_t *)params[varid.ptr].address = (uint8_t) valuei;
+      memcpy(&pk.data[2], &valuei, 1);
+      pk.size += 1;
+      break;
+    case PARAM_INT8:
+      *(int8_t *)params[varid.ptr].address = (int8_t) valuei;
+      memcpy(&pk.data[2], &valuei, 1);
+      pk.size += 1;
+      break;
+    case PARAM_UINT16:
+      *(uint16_t *)params[varid.ptr].address = (uint16_t) valuei;
+      memcpy(&pk.data[2], &valuei, 2);
+      pk.size += 2;
+      break;
+    case PARAM_INT16:
+      *(int16_t *)params[varid.ptr].address = (int16_t) valuei;
+      memcpy(&pk.data[2], &valuei, 2);
+      pk.size += 2;
+      break;
+    case PARAM_UINT32:
+      *(uint32_t *)params[varid.ptr].address = (uint32_t) valuei;
+      memcpy(&pk.data[2], &valuei, 4);
+      pk.size += 4;
+      break;
+    case PARAM_INT32:
+      *(int32_t *)params[varid.ptr].address = (int32_t) valuei;
+      memcpy(&pk.data[2], &valuei, 4);
+      pk.size += 4;
+      break;
+    case PARAM_FLOAT:
+    // Todo: are floats handy to have here?
+      *(float *)params[varid.ptr].address = (float) valuei;
+      memcpy(&pk.data[2], &valuei, 4);
+      pk.size += 4;
+
+      break;
+  }
+
+#ifndef SILENT_PARAM_UPDATES
+  crtpSendPacket(&pk);
+#endif
+}
+
+void paramSetFloat(paramVarId_t varid, float valuef)
+{
+  ASSERT(PARAM_VARID_IS_VALID(varid));
+
+  static CRTPPacket pk;
+  pk.header=CRTP_HEADER(CRTP_PORT_PARAM, MISC_CH);
+  pk.data[0] = MISC_VALUE_UPDATED;
+  pk.data[1] = varid.id & 0xffu;
+  pk.data[2] = (varid.id >> 8) & 0xffu;
+  pk.size=3;
+
+  if (params[varid.ptr].type == PARAM_FLOAT ) {
+      *(float *)params[varid.ptr].address = valuef;
+
+      memcpy(&pk.data[2], &valuef, 4);
+      pk.size += 4;
+  }
+
+#ifndef SILENT_PARAM_UPDATES
+  crtpSendPacket(&pk);
+#endif
 }

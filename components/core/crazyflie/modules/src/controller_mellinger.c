@@ -42,10 +42,9 @@ We added the following:
 #include "math3d.h"
 #include "position_controller.h"
 #include "controller_mellinger.h"
+#include "physicalConstants.h"
 
-#define GRAVITY_MAGNITUDE (9.81f)
-
-static float g_vehicleMass = 0.032; // TODO: should be CF global for other modules
+static float g_vehicleMass = CF_MASS;
 static float massThrust = 132000;
 
 // XY Position PID

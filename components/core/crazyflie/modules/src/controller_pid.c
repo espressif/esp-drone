@@ -1,4 +1,4 @@
-#define DEBUG_MODULE "CTRL_P"
+
 #include "stabilizer.h"
 #include "stabilizer_types.h"
 

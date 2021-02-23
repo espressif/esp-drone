@@ -1,4 +1,9 @@
 /**
+ *    ||          ____  _ __
+ * +------+      / __ )(_) /_______________ _____  ___
+ * | 0xBC |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
+ * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
+ *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
  * ESP-Drone Firmware
  *
@@ -23,11 +28,12 @@
  */
 #include <math.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
-#include "freertos/projdefs.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "task.h"
+
+#include "queue.h"
+#include "projdefs.h"
 #include "esp_timer.h"
 #include "driver/gpio.h"
 
@@ -795,7 +801,7 @@ static bool processGyroBias(int16_t gx, int16_t gy, int16_t gz, Axis3f *gyroBias
         if (gyroBiasRunning.isBiasValueFound) {
             //TODO:
             soundSetEffect(SND_CALIB);
-            ledseqRun(SYS_LED, seq_calibrated);
+            ledseqRun(&seq_calibrated);
             DEBUG_PRINTI("isBiasValueFound!");
         }
     }

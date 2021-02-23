@@ -13,7 +13,7 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-#include  "queuemonitor.h"
+#include "queuemonitor.h"
 #include "wifi_esp32.h"
 #include "stm32_legacy.h"
 #define DEBUG_MODULE  "WIFI_UDP"
@@ -154,7 +154,7 @@ static void udp_server_rx_task(void *pvParameters)
             //remove cksum, do not belong to CRTP
             inPacket.size = len - 1;
             //check packet
-            if (cksum == calculate_cksum(inPacket.data, len - 1)){
+            if (cksum == calculate_cksum(inPacket.data, len - 1) && inPacket.size < 64){
                 xQueueSend(udpDataRx, &inPacket, M2T(2));
                 if(!isUDPConnected) isUDPConnected = true;
             }else{

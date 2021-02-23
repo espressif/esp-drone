@@ -5,9 +5,8 @@
  * | / ,--´  |    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *    +------`   /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * ESP-Drone Firmware
+ * Crazyflie control firmware
  *
- * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2019 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,9 +25,10 @@
  * estimator_complementary.c - a complementary estimator
  */
 
-#define DEBUG_MODULE "ESTIMATOR_C"
-#include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
+
+
+#include "FreeRTOS.h"
+#include "queue.h"
 #include "stabilizer.h"
 #include "estimator_complementary.h"
 #include "sensfusion6.h"

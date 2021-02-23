@@ -74,8 +74,6 @@
 //#define DEBUG_UDP
 //#define DEBUG_EP2
 
-//#define BUZZER_ON
-
 // Task priorities. Higher number higher priority
 #define STABILIZER_TASK_PRI     5
 #define SENSORS_TASK_PRI        4
@@ -101,6 +99,7 @@
 #define OA_DECK_TASK_PRI        3
 #define UART1_TEST_TASK_PRI     1
 #define UART2_TEST_TASK_PRI     1
+#define LEDSEQCMD_TASK_PRI      1
 //if task watchdog triggered,KALMAN_TASK_PRI should set lower or set lower flow frequency
 #ifdef TARGET_MCU_ESP32
   #define KALMAN_TASK_PRI         2
@@ -133,6 +132,7 @@
 
 // Task names
 #define SYSTEM_TASK_NAME        "SYSTEM"
+#define LEDSEQCMD_TASK_NAME     "LEDSEQCMD"
 #define ADC_TASK_NAME           "ADC"
 #define PM_TASK_NAME            "PWRMGNT"
 #define CRTP_TX_TASK_NAME       "CRTP-TX"
@@ -179,30 +179,31 @@
 
 //Task stack sizes
 #define SYSTEM_TASK_STACKSIZE         (6 * configBASE_STACK_SIZE)
+#define LEDSEQCMD_TASK_STACKSIZE      (2 * configBASE_STACK_SIZE)
 #define ADC_TASK_STACKSIZE            (1 * configBASE_STACK_SIZE)
 #define PM_TASK_STACKSIZE             (4 * configBASE_STACK_SIZE)
 #define CRTP_TX_TASK_STACKSIZE        (2 * configBASE_STACK_SIZE)
-#define CRTP_RX_TASK_STACKSIZE        (2 * configBASE_STACK_SIZE)
+#define CRTP_RX_TASK_STACKSIZE        (6 * configBASE_STACK_SIZE)
 #define CRTP_RXTX_TASK_STACKSIZE      (1 * configBASE_STACK_SIZE)
-#define LOG_TASK_STACKSIZE            (2 * configBASE_STACK_SIZE)
+#define LOG_TASK_STACKSIZE            (3 * configBASE_STACK_SIZE)
 #define MEM_TASK_STACKSIZE            (2 * configBASE_STACK_SIZE)
 #define PARAM_TASK_STACKSIZE          (2 * configBASE_STACK_SIZE)
-#define SENSORS_TASK_STACKSIZE        (4 * configBASE_STACK_SIZE)
-#define STABILIZER_TASK_STACKSIZE     (4 * configBASE_STACK_SIZE)
+#define SENSORS_TASK_STACKSIZE        (5 * configBASE_STACK_SIZE)
+#define STABILIZER_TASK_STACKSIZE     (5 * configBASE_STACK_SIZE)
 #define NRF24LINK_TASK_STACKSIZE      (1 * configBASE_STACK_SIZE)
 #define ESKYLINK_TASK_STACKSIZE       (1 * configBASE_STACK_SIZE)
 #define SYSLINK_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
 #define USBLINK_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
-#define WIFILINK_TASK_STACKSIZE       (4 * configBASE_STACK_SIZE)
+#define WIFILINK_TASK_STACKSIZE       (5 * configBASE_STACK_SIZE)
 #define UDP_TX_TASK_STACKSIZE         (2 * configBASE_STACK_SIZE)
-#define UDP_RX_TASK_STACKSIZE         (2 * configBASE_STACK_SIZE)
+#define UDP_RX_TASK_STACKSIZE         (4 * configBASE_STACK_SIZE)
 #define UDP_RX2_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
 #define PROXIMITY_TASK_STACKSIZE      (1 * configBASE_STACK_SIZE)
 #define EXTRX_TASK_STACKSIZE          (1 * configBASE_STACK_SIZE)
 #define UART_RX_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
 #define ZRANGER_TASK_STACKSIZE        (2 * configBASE_STACK_SIZE)
-#define ZRANGER2_TASK_STACKSIZE       (3 * configBASE_STACK_SIZE)
-#define FLOW_TASK_STACKSIZE           (2 * configBASE_STACK_SIZE)
+#define ZRANGER2_TASK_STACKSIZE       (4 * configBASE_STACK_SIZE)
+#define FLOW_TASK_STACKSIZE           (3 * configBASE_STACK_SIZE)
 #define USDLOG_TASK_STACKSIZE         (2 * configBASE_STACK_SIZE)
 #define USDWRITE_TASK_STACKSIZE       (2 * configBASE_STACK_SIZE)
 #define PCA9685_TASK_STACKSIZE        (2 * configBASE_STACK_SIZE)

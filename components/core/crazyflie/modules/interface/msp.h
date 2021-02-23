@@ -25,7 +25,7 @@
  * msp.h - Definitions for the MultiWii Serial Protocol
  *
  * The MultiWii Serial Protocol is a commonly used protocol for OSDs,
- * data logging, and communicaton with a ground telemetry station.
+ * data logging, and communication with a ground telemetry station.
  * For more details, see the official MSP documentation and support thread:
  *  - http://www.multiwii.com/wiki/index.php?title=Multiwii_Serial_Protocol
  *  - http://www.multiwii.com/forum/viewtopic.php?f=8&t=1516

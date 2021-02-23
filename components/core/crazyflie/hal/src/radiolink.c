@@ -45,7 +45,7 @@
 #include "static_mem.h"
 
 #define RADIOLINK_TX_QUEUE_SIZE (1)
-#define RADIOLINK_CTRP_QUEUE_SIZE (5)
+#define RADIOLINK_CRTP_QUEUE_SIZE (5)
 #define RADIO_ACTIVITY_TIMEOUT_MS (1000)
 
 #define RADIOLINK_P2P_QUEUE_SIZE (5)
@@ -54,7 +54,7 @@ static xQueueHandle  txQueue;
 STATIC_MEM_QUEUE_ALLOC(txQueue, RADIOLINK_TX_QUEUE_SIZE, sizeof(SyslinkPacket));
 
 static xQueueHandle crtpPacketDelivery;
-STATIC_MEM_QUEUE_ALLOC(crtpPacketDelivery, RADIOLINK_CTRP_QUEUE_SIZE, sizeof(CRTPPacket));
+STATIC_MEM_QUEUE_ALLOC(crtpPacketDelivery, RADIOLINK_CRTP_QUEUE_SIZE, sizeof(CRTPPacket));
 
 static bool isInit;
 
@@ -160,18 +160,18 @@ void radiolinkSyslinkDispatch(SyslinkPacket *slp)
   {
     slp->length--; // Decrease to get CRTP size.
     xQueueSend(crtpPacketDelivery, &slp->length, 0);
-    ledseqRun(LINK_LED, seq_linkup);
+    ledseqRun(&seq_linkUp);
     // If a radio packet is received, one can be sent
     if (xQueueReceive(txQueue, &txPacket, 0) == pdTRUE)
     {
-      ledseqRun(LINK_DOWN_LED, seq_linkup);
+      ledseqRun(&seq_linkDown);
       syslinkSendPacket(&txPacket);
     }
   } else if (slp->type == SYSLINK_RADIO_RAW_BROADCAST)
   {
     slp->length--; // Decrease to get CRTP size.
     xQueueSend(crtpPacketDelivery, &slp->length, 0);
-    ledseqRun(LINK_LED, seq_linkup);
+    ledseqRun(&seq_linkUp);
     // no ack for broadcasts
   } else if (slp->type == SYSLINK_RADIO_RSSI)
   {
@@ -179,7 +179,7 @@ void radiolinkSyslinkDispatch(SyslinkPacket *slp)
     memcpy(&rssi, slp->data, sizeof(uint8_t)); //rssi will not change on disconnect
   } else if (slp->type == SYSLINK_RADIO_P2P_BROADCAST)
   {
-    ledseqRun(LINK_LED, seq_linkup);
+    ledseqRun(&seq_linkUp);
     P2PPacket p2pp;
     p2pp.port=slp->data[0];
     p2pp.rssi = slp->data[1];
@@ -236,7 +236,7 @@ bool radiolinkSendP2PPacketBroadcast(P2PPacket *p)
   memcpy(slp.data, p->raw, p->size + 1);
 
   syslinkSendPacket(&slp);
-  ledseqRun(LINK_DOWN_LED, seq_linkup);
+  ledseqRun(&seq_linkDown);
 
   return true;
 }

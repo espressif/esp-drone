@@ -7,7 +7,7 @@
  *
  * Crazyflie control firmware
  *
- * Copyright (C) 2011-2012 Bitcraze AB
+ * Copyright (C) 2011-2020 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,13 +28,16 @@
 
 #include <stdbool.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/timers.h"
-#include "freertos/semphr.h"
-
 #include "ledseq.h"
+
+#include "FreeRTOS.h"
+#include "timers.h"
+#include "semphr.h"
+#include "static_mem.h"
+
 #include "led.h"
 #include "stm32_legacy.h"
+#include "config.h"
 
 #ifdef CALIBRATED_LED_MORSE
   #define DOT 100
@@ -44,33 +47,24 @@
   #define WORD_GAP (7 * DOT)
 #endif // #ifdef CALIBRATED_LED_MORSE
 
-/* Led sequence priority */
-static ledseq_t const * sequences[] = {
-  seq_testPassed,
-  seq_lowbat,
-  seq_charged,
-  seq_charging,
-  seq_chargingMax,
-  seq_bootloader,
-  seq_armed,
-  seq_calibrated,
-  seq_alive,
-  seq_linkup,
-};
+#define LEDSEQ_CHARGE_CYCLE_TIME_500MA  1000
+#define LEDSEQ_CHARGE_CYCLE_TIME_MAX    500
 
 /* Led sequences */
-const ledseq_t seq_lowbat[] = {
+ledseqStep_t seq_lowbat_def[] = {
   { true, LEDSEQ_WAITMS(1000)},
   {    0, LEDSEQ_LOOP},
 };
 
-const ledseq_t seq_armed[] = {
-  { true, LEDSEQ_WAITMS(50)},
-  {false, LEDSEQ_WAITMS(250)},
-  {    0, LEDSEQ_LOOP},
+ledseqContext_t seq_lowbat = {
+  .sequence = seq_lowbat_def,
+  .led = LOWBAT_LED,
 };
 
-const ledseq_t seq_calibrated[] = {
+#define NO_CONTEXT 0
+ledseqContext_t* sequences = NO_CONTEXT;
+
+ledseqStep_t seq_calibrated_def[] = {
 #ifndef CALIBRATED_LED_MORSE
   { true, LEDSEQ_WAITMS(50)},
   {false, LEDSEQ_WAITMS(450)},
@@ -96,51 +90,60 @@ const ledseq_t seq_calibrated[] = {
 #endif // ifndef CALIBRATED_LED_MORSE
 };
 
-const ledseq_t seq_alive[] = {
+ledseqContext_t seq_calibrated = {
+  .sequence = seq_calibrated_def,
+  .led = SYS_LED,
+};
+
+ledseqStep_t seq_alive_def[] = {
   { true, LEDSEQ_WAITMS(50)},
   {false, LEDSEQ_WAITMS(1950)},
   {    0, LEDSEQ_LOOP},
 };
 
-
-//TODO: Change, right now is called so fast it looks like seq_lowbat
-const ledseq_t seq_altHold[] = {
-  { true, LEDSEQ_WAITMS(1)},
-  {false, LEDSEQ_WAITMS(50)},
-  {    0, LEDSEQ_STOP},
+ledseqContext_t seq_alive = {
+  .sequence = seq_alive_def,
+  .led = SYS_LED,
 };
 
-const ledseq_t seq_linkup[] = {
+ledseqStep_t seq_linkup_def[] = {
   { true, LEDSEQ_WAITMS(1)},
   {false, LEDSEQ_WAITMS(0)},
   {    0, LEDSEQ_STOP},
 };
 
+ledseqContext_t seq_linkUp = {
+  .sequence = seq_linkup_def,
+  .led = LINK_LED,
+};
 
-const ledseq_t seq_charged[] = {
+ledseqContext_t seq_linkDown = {
+  .sequence = seq_linkup_def,
+  .led = LINK_DOWN_LED,
+};
+
+ledseqStep_t seq_charged_def[] = {
   { true, LEDSEQ_WAITMS(1000)},
   {    0, LEDSEQ_LOOP},
 };
 
-ledseq_t seq_charging[] = {
+ledseqContext_t seq_charged = {
+  .sequence = seq_charged_def,
+  .led = CHG_LED,
+};
+
+ledseqStep_t seq_charging_def[] = {
   { true, LEDSEQ_WAITMS(200)},
   {false, LEDSEQ_WAITMS(800)},
   {    0, LEDSEQ_LOOP},
 };
 
-ledseq_t seq_chargingMax[] = {
-  { true, LEDSEQ_WAITMS(100)},
-  {false, LEDSEQ_WAITMS(400)},
-  {    0, LEDSEQ_LOOP},
+ledseqContext_t seq_charging = {
+  .sequence = seq_charging_def,
+  .led = CHG_LED,
 };
 
-const ledseq_t seq_bootloader[] = {
-  { true, LEDSEQ_WAITMS(500)},
-  {false, LEDSEQ_WAITMS(500)},
-  {    0, LEDSEQ_LOOP},
-};
-
-const ledseq_t seq_testPassed[] = {
+ledseqStep_t seq_testPassed_def[] = {
   { true, LEDSEQ_WAITMS(50)},
   {false, LEDSEQ_WAITMS(50)},
   { true, LEDSEQ_WAITMS(50)},
@@ -158,61 +161,97 @@ const ledseq_t seq_testPassed[] = {
   {false, LEDSEQ_STOP},
 };
 
-/* Led sequence handling machine implementation */
-#define SEQ_NUM (sizeof(sequences)/sizeof(sequences[0]))
+ledseqContext_t seq_testPassed = {
+  .sequence = seq_testPassed_def,
+  .led = LINK_LED,
+};
 
+ledseqContext_t seq_testFailed = {
+  .sequence = seq_testPassed_def,
+  .led = SYS_LED,
+};
+
+struct ledseqCmd_s {
+  enum {run, stop} command;
+  ledseqContext_t *sequence;
+};
+
+/* Led sequence handling machine implementation */
 static void runLedseq(xTimerHandle xTimer);
-static int getPrio(const ledseq_t *seq);
 static void updateActive(led_t led);
 
-//State of every sequence for every led: LEDSEQ_STOP if stopped or the current
-//step
-static int state[LED_NUM][SEQ_NUM];
-//Active sequence for each led
-static int activeSeq[LED_NUM];
+NO_DMA_CCM_SAFE_ZERO_INIT static ledseqContext_t* activeSeq[LED_NUM];
 
-static xTimerHandle timer[LED_NUM];
-static StaticTimer_t timerBuffer[LED_NUM];
+NO_DMA_CCM_SAFE_ZERO_INIT static xTimerHandle timer[LED_NUM];
+NO_DMA_CCM_SAFE_ZERO_INIT static StaticTimer_t timerBuffer[LED_NUM];
 
-static xSemaphoreHandle ledseqSem;
+static xSemaphoreHandle ledseqMutex;
+static xQueueHandle ledseqCmdQueue;
 
 static bool isInit = false;
 static bool ledseqEnabled = false;
 
-void ledseqInit()
-{
-  int i,j;
+static void lesdeqCmdTask(void* param);
 
-  if(isInit)
+void ledseqInit() {
+  if(isInit) {
     return;
+  }
 
   ledInit();
 
+  /* Led sequence priority */
+  ledseqRegisterSequence(&seq_testPassed);
+  ledseqRegisterSequence(&seq_testFailed);
+  ledseqRegisterSequence(&seq_lowbat);
+  ledseqRegisterSequence(&seq_charged);
+  ledseqRegisterSequence(&seq_charging);
+  ledseqRegisterSequence(&seq_calibrated);
+  ledseqRegisterSequence(&seq_alive);
+  ledseqRegisterSequence(&seq_linkUp);
+  ledseqRegisterSequence(&seq_linkDown);
+
   //Initialise the sequences state
-  for(i=0; i<LED_NUM; i++) {
-    activeSeq[i] = LEDSEQ_STOP;
-    for(j=0; j<SEQ_NUM; j++)
-      state[i][j] = LEDSEQ_STOP;
+  for(int i=0; i<LED_NUM; i++) {
+    activeSeq[i] = 0;
   }
 
   //Init the soft timers that runs the led sequences for each leds
-  for(i=0; i<LED_NUM; i++) {
+  for(int i=0; i<LED_NUM; i++) {
     timer[i] = xTimerCreateStatic("ledseqTimer", M2T(1000), pdFALSE, (void*)i, runLedseq, &timerBuffer[i]);
   }
 
-  vSemaphoreCreateBinary(ledseqSem);
+  ledseqMutex = xSemaphoreCreateMutex();
+
+  ledseqCmdQueue = xQueueCreate(10, sizeof(struct ledseqCmd_s));
+  xTaskCreate(lesdeqCmdTask, LEDSEQCMD_TASK_NAME, LEDSEQCMD_TASK_STACKSIZE, NULL, LEDSEQCMD_TASK_PRI, NULL);
 
   isInit = true;
 }
 
-bool ledseqTest(void)
-{
+static void lesdeqCmdTask(void* param) {
+  struct ledseqCmd_s command;
+  while(1) {
+    xQueueReceive(ledseqCmdQueue, &command, portMAX_DELAY);
+
+    switch(command.command) {
+      case run:
+        ledseqRunBlocking(command.sequence);
+        break;
+      case stop:
+        ledseqStopBlocking(command.sequence);
+        break;
+    }
+  }
+}
+
+bool ledseqTest(void) {
   bool status;
 
   status = isInit & ledTest();
   #ifdef TURN_OFF_LEDS
   ledseqEnable(false);
-  ledSet(LED_BLUE, 0);
+  ledSet(LED_BLUE_L, 0);
   #else
   ledseqEnable(true);
   #endif
@@ -220,117 +259,146 @@ bool ledseqTest(void)
   return status;
 }
 
-void ledseqEnable(bool enable)
-{
+void ledseqEnable(bool enable) {
   ledseqEnabled = enable;
 }
 
-void ledseqRun(led_t led, const ledseq_t *sequence)
-{
-  int prio = getPrio(sequence);
+bool ledseqRun(ledseqContext_t *context) {
+  struct ledseqCmd_s command;
+  command.command = run;
+  command.sequence = context;
+  if (xQueueSend(ledseqCmdQueue, &command, 0) == pdPASS) {
+    return true;
+  }
+  return false;
+}
 
-  if(prio<0) return;
+void ledseqRunBlocking(ledseqContext_t *context) {
+  const led_t led = context->led;
 
-  xSemaphoreTake(ledseqSem, portMAX_DELAY);
-  state[led][prio] = 0;  //Reset the seq. to its first step
+  xSemaphoreTake(ledseqMutex, portMAX_DELAY);
+  context->state = 0;  //Reset the seq. to its first step
   updateActive(led);
-  xSemaphoreGive(ledseqSem);
+  xSemaphoreGive(ledseqMutex);
 
-  //Run the first step if the new seq is the active sequence
-  if(activeSeq[led] == prio)
+  // Run the first step if the new seq is the active sequence
+  if(activeSeq[led] == context) {
     runLedseq(timer[led]);
+  }
 }
 
-void ledseqSetTimes(ledseq_t *sequence, int32_t onTime, int32_t offTime)
-{
-  sequence[0].action = onTime;
-  sequence[1].action = offTime;
+void ledseqSetChargeLevel(const float chargeLevel) {
+  int onTime = LEDSEQ_CHARGE_CYCLE_TIME_500MA * chargeLevel;
+  int offTime = LEDSEQ_CHARGE_CYCLE_TIME_500MA - onTime;
+
+  seq_charging.sequence[0].action = onTime;
+  seq_charging.sequence[1].action = offTime;
 }
 
-void ledseqStop(led_t led, const ledseq_t *sequence)
-{
-  int prio = getPrio(sequence);
+bool ledseqStop(ledseqContext_t *context) {
+  struct ledseqCmd_s command;
+  command.command = stop;
+  command.sequence = context;
+  if (xQueueSend(ledseqCmdQueue, &command, 0) == pdPASS) {
+    return true;
+  }
+  return false;
+}
 
-  if(prio<0) return;
+void ledseqStopBlocking(ledseqContext_t *context) {
+  const led_t led = context->led;
 
-  xSemaphoreTake(ledseqSem, portMAX_DELAY);
-  state[led][prio] = LEDSEQ_STOP;  //Stop the seq.
+  xSemaphoreTake(ledseqMutex, portMAX_DELAY);
+  context->state = LEDSEQ_STOP;  //Stop the seq.
   updateActive(led);
-  xSemaphoreGive(ledseqSem);
+  xSemaphoreGive(ledseqMutex);
 
   //Run the next active sequence (if any...)
   runLedseq(timer[led]);
 }
 
 /* Center of the led sequence machine. This function is executed by the FreeRTOS
- * timer and runs the sequences
+ * timers and runs the sequences
  */
-static void runLedseq( xTimerHandle xTimer )
-{
-  led_t led = (led_t)pvTimerGetTimerID(xTimer);
-  const ledseq_t *step;
-  bool leave=false;
-
-  if (!ledseqEnabled)
+static void runLedseq( xTimerHandle xTimer ) {
+  if (!ledseqEnabled) {
     return;
+  }
 
+  led_t led = (led_t)pvTimerGetTimerID(xTimer);
+  ledseqContext_t* context = activeSeq[led];
+  if (NO_CONTEXT == context) {
+    return;
+  }
+
+  bool leave = false;
   while(!leave) {
-    int prio = activeSeq[led];
-
-    if (prio == LEDSEQ_STOP)
+    if (context->state == LEDSEQ_STOP) {
       return;
+    }
 
-    step = &sequences[prio][state[led][prio]];
+    const ledseqStep_t* step = &context->sequence[context->state];
 
-    state[led][prio]++;
+    xSemaphoreTake(ledseqMutex, portMAX_DELAY);
+    context->state++;
+    led_t led = context->led;
 
-    xSemaphoreTake(ledseqSem, portMAX_DELAY);
-    switch(step->action)
-    {
+    switch(step->action) {
       case LEDSEQ_LOOP:
-        state[led][prio] = 0;
+        context->state = 0;
         break;
       case LEDSEQ_STOP:
-        state[led][prio] = LEDSEQ_STOP;
+        context->state = LEDSEQ_STOP;
         updateActive(led);
         break;
       default:  //The step is a LED action and a time
         ledSet(led, step->value);
-        if (step->action == 0)
+        if (step->action == 0) {
           break;
+        }
         xTimerChangePeriod(xTimer, M2T(step->action), 0);
         xTimerStart(xTimer, 0);
-        leave=true;
+        leave = true;
         break;
     }
-    xSemaphoreGive(ledseqSem);
+    xSemaphoreGive(ledseqMutex);
   }
 }
 
-//Utility functions
-static int getPrio(const ledseq_t *seq)
-{
-  int prio;
+void ledseqRegisterSequence(ledseqContext_t* context) {
+  context->state = LEDSEQ_STOP;
+  context->nextContext = NO_CONTEXT;
 
-  //Find the priority of the sequence
-  for(prio=0; prio<SEQ_NUM; prio++)
-    if(sequences[prio]==seq) return prio;
+  if (sequences == NO_CONTEXT) {
+    sequences = context;
+  } else {
+    ledseqContext_t* last = sequences;
+    if (last == context) {
+      // Skip if already registered
+      return;
+    }
 
-  return -1; //Invalid sequence
+    while (last->nextContext != NO_CONTEXT) {
+      last = last->nextContext;
+      if (last == context) {
+        // Skip if already registered
+        return;
+      }
+    }
+
+    last->nextContext = context;
+  }
 }
 
-static void updateActive(led_t led)
-{
-  int prio;
+// Utility functions
 
-  activeSeq[led]=LEDSEQ_STOP;
+static void updateActive(led_t led) {
+  activeSeq[led] = NO_CONTEXT;
   ledSet(led, false);
 
-  for(prio=0;prio<SEQ_NUM;prio++)
-  {
-    if (state[led][prio] != LEDSEQ_STOP)
-    {
-      activeSeq[led]=prio;
+  for (ledseqContext_t* sequence = sequences; sequence != 0; sequence = sequence->nextContext) {
+    if (sequence->led == led && sequence->state != LEDSEQ_STOP) {
+      activeSeq[led] = sequence;
       break;
     }
   }

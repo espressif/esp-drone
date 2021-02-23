@@ -5,9 +5,8 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * ESP-Drone Firmware
+ * Crazyflie control firmware
  *
- * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -52,31 +51,92 @@
 #define LEDSEQ_WAITMS(X) (X)
 #define LEDSEQ_STOP      -1
 #define LEDSEQ_LOOP      -2
+
 typedef struct {
   bool value;
   int action;
-} ledseq_t;
+} ledseqStep_t;
 
-//Public API
+typedef struct ledseqContext_s {
+  ledseqStep_t* const sequence;
+  struct ledseqContext_s* nextContext;
+  int state;
+  const led_t led;
+} ledseqContext_t;
+
+// Public API
 void ledseqInit(void);
 bool ledseqTest(void);
 
+/**
+ * @brief Enable/disable the led sequence module
+ *
+ * @param enable Enabled if true
+ */
 void ledseqEnable(bool enable);
-void ledseqRun(led_t led, const ledseq_t * sequence);
-void ledseqStop(led_t led, const ledseq_t * sequence);
-void ledseqSetTimes(ledseq_t *sequence, int32_t onTime, int32_t offTime);
 
-//Existing led sequences
-extern const ledseq_t seq_armed[];
-extern const ledseq_t seq_calibrated[];
-extern const ledseq_t seq_alive[];
-extern const ledseq_t seq_lowbat[];
-extern const ledseq_t seq_linkup[];
-extern const ledseq_t seq_altHold[];
-extern const ledseq_t seq_charged[];
-extern ledseq_t seq_charging[];
-extern ledseq_t seq_chargingMax[];
-extern const ledseq_t seq_bootloader[];
-extern const ledseq_t seq_testPassed[];
+/**
+ * @brief Register a new LED sequence. Sequences must be
+ *        registerd before they can be used, registration order detemines the
+ *        relative priorities between sequences.
+ *
+ * @param context Pointer to a LED seqence runtime context. Note the
+ *        context will be part of linked list of contexts and must exist
+ *        as long as the system is running.
+ */
+void ledseqRegisterSequence(ledseqContext_t* context);
+
+/**
+ * @brief Run a LED sequence. This function is non-blocking any may fail to start the sequence.
+ *
+ * @param context The context for the sequence to start
+ * @return true If the sequence was started
+ * @return false If the sequence did not start
+ */
+bool ledseqRun(ledseqContext_t* context);
+
+/**
+ * @brief Run a LED sequence. This function is blocking and may take some time,
+ *        but is quaranteed to mark the sequence as started.
+ *
+ * @param context The context for the sequence to start
+ */
+void ledseqRunBlocking(ledseqContext_t* context);
+
+/**
+ * @brief Stop a LED sequence. This function is non-blocking any may fail to stop the sequence.
+ *
+ * @param context The context for the sequence to stop
+ * @return true If the sequence was stopped
+ * @return false If the sequence did not stop
+ */
+bool ledseqStop(ledseqContext_t* context);
+
+/**
+ * @brief Stop a LED sequence. This function is blocking and may take some time,
+ *        but is quaranteed to mark the sequence as started.
+ *
+ * @param context The context for the sequence to stop
+ */
+void ledseqStopBlocking(ledseqContext_t* context);
+
+/**
+ * @brief Set interval in the charging sequence to reflect the
+ *        charge level
+ *
+ * @param chargeLevel The charge level between 0.0 and 1.0
+ */
+void ledseqSetChargeLevel(const float chargeLevel);
+
+// System led sequences
+extern ledseqContext_t seq_calibrated;
+extern ledseqContext_t seq_alive;
+extern ledseqContext_t seq_lowbat;
+extern ledseqContext_t seq_linkUp;
+extern ledseqContext_t seq_linkDown;
+extern ledseqContext_t seq_charged;
+extern ledseqContext_t seq_charging;
+extern ledseqContext_t seq_testPassed;
+extern ledseqContext_t seq_testFailed;
 
 #endif

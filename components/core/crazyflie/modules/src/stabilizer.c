@@ -26,8 +26,8 @@
 
 #include <math.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "stm32_legacy.h"
 #include "system.h"
@@ -43,6 +43,8 @@
 #include "sitaw.h"
 #include "controller.h"
 #include "power_distribution.h"
+//#include "collision_avoidance.h"
+
 #include "estimator.h"
 //#include "usddeck.h" //usddeckLoggingMode_e
 #include "quatcompress.h"
@@ -50,10 +52,13 @@
 #define DEBUG_MODULE "STAB"
 #include "debug_cf.h"
 #include "static_mem.h"
+#include "rateSupervisor.h"
 
 static bool isInit;
 static bool emergencyStop = false;
 static int emergencyStopTimeout = EMERGENCY_STOP_TIMEOUT_DISABLED;
+
+static bool checkStops;
 
 #define PROPTEST_NBR_OF_VARIANCE_VALUES   100
 static bool startPropTest = false;
@@ -77,6 +82,8 @@ typedef enum { configureAcc, measureNoiseFloor, measureProp, testBattery, restar
 #endif
 
 static STATS_CNT_RATE_DEFINE(stabilizerRate, 500);
+static rateSupervisor_t rateSupervisorContext;
+static bool rateWarningDisplayed = false;
 
 static struct {
   // position - mm
@@ -191,6 +198,7 @@ void stabilizerInit(StateEstimatorType estimator)
   controllerInit(ControllerTypeAny);
   powerDistributionInit();
   sitAwInit();
+  //collisionAvoidanceInit();
   estimatorType = getStateEstimator();
   controllerType = getControllerType();
 
@@ -207,6 +215,7 @@ bool stabilizerTest(void)
   pass &= stateEstimatorTest();
   pass &= controllerTest();
   pass &= powerDistributionTest();
+  //pass &= collisionAvoidanceTest();
 
   return pass;
 }
@@ -244,12 +253,14 @@ static void stabilizerTask(void* param)
   DEBUG_PRINTI("Wait for sensor calibration...\n");
 
   // Wait for sensors to be calibrated
-  lastWakeTime = xTaskGetTickCount ();
+  lastWakeTime = xTaskGetTickCount();
   while(!sensorsAreCalibrated()) {
     vTaskDelayUntil(&lastWakeTime, F2T(RATE_MAIN_LOOP));
   }
   // Initialize tick to something else then 0
   tick = 1;
+
+  rateSupervisorInit(&rateSupervisorContext, xTaskGetTickCount(), M2T(1000), 997, 1003, 1);
 
   DEBUG_PRINTI("Ready to fly.\n");
 
@@ -285,12 +296,14 @@ static void stabilizerTask(void* param)
       compressSetpoint();
 
       sitAwUpdateSetpoint(&setpoint, &sensorData, &state);
+      //collisionAvoidanceUpdateSetpoint(&setpoint, &sensorData, &state, tick);
 
       controller(&control, &setpoint, &sensorData, &state, tick);
 
       checkEmergencyStopTimeout();
 
-      if (emergencyStop) {
+      checkStops = systemIsArmed();
+      if (emergencyStop || (systemIsArmed() == false)) {
         powerStop();
       } else {
         powerDistribution(&control);
@@ -306,6 +319,13 @@ static void stabilizerTask(void* param)
     calcSensorToOutputLatency(&sensorData);
     tick++;
     STATS_CNT_RATE_EVENT(&stabilizerRate);
+
+    if (!rateSupervisorValidate(&rateSupervisorContext, xTaskGetTickCount())) {
+      if (!rateWarningDisplayed) {
+        DEBUG_PRINT("WARNING: stabilizer loop rate is off (%u)\n", rateSupervisorLatestCount(&rateSupervisorContext));
+        rateWarningDisplayed = true;
+      }
+    }
   }
 }
 
@@ -365,9 +385,9 @@ static bool evaluateTest(float low, float high, float value, uint8_t motor)
 static void testProps(sensorData_t *sensors)
 {
   static uint32_t i = 0;
-  static float accX[PROPTEST_NBR_OF_VARIANCE_VALUES];
-  static float accY[PROPTEST_NBR_OF_VARIANCE_VALUES];
-  static float accZ[PROPTEST_NBR_OF_VARIANCE_VALUES];
+  NO_DMA_CCM_SAFE_ZERO_INIT static float accX[PROPTEST_NBR_OF_VARIANCE_VALUES];
+  NO_DMA_CCM_SAFE_ZERO_INIT static float accY[PROPTEST_NBR_OF_VARIANCE_VALUES];
+  NO_DMA_CCM_SAFE_ZERO_INIT static float accZ[PROPTEST_NBR_OF_VARIANCE_VALUES];
   static float accVarXnf;
   static float accVarYnf;
   static float accVarZnf;
@@ -506,7 +526,8 @@ static void testProps(sensorData_t *sensors)
       if (!evaluateTest(0, PROPELLER_BALANCE_TEST_THRESHOLD,  accVarX[m] + accVarY[m], m))
       {
         nrFailedTests++;
-        for (int j = 0; j < 3; j++){
+        for (int j = 0; j < 3; j++)
+        {
           motorsBeep(m, true, testsound[m], (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / A4)/ 20);
           vTaskDelay(M2T(MOTORS_TEST_ON_TIME_MS));
           motorsBeep(m, false, 0, 0);
@@ -552,6 +573,7 @@ LOG_ADD(LOG_FLOAT, motorVarXM4, &accVarX[3])
 LOG_ADD(LOG_FLOAT, motorVarYM4, &accVarY[3])
 LOG_ADD(LOG_UINT8, motorPass, &motorPass)
 LOG_ADD(LOG_UINT16, motorTestCount, &motorTestCount)
+LOG_ADD(LOG_UINT8, checkStops, &checkStops)
 LOG_GROUP_STOP(health)
 
 LOG_GROUP_START(ctrltarget)

@@ -16,15 +16,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * Motors.h - Motor driver header file
- *
- * The motors PWM ratio is a value on 16 bits (from 0 to 0xFFFF)
- * the functions of the driver will make the conversions to the actual PWM
- * precision (ie. if the precision is 8bits 0xFFFF and 0xFF00 are equivalents).
- *
- * The precision is set in number of bits by the define MOTORS_PWM_BITS
- * The timer prescaler is set by MOTORS_PWM_PRESCALE
  */
 #ifndef __PIEZO_H__
 #define __PIEZO_H__

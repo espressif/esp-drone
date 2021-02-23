@@ -87,7 +87,7 @@ typedef struct {
   float R[3][3];
 
   // The covariance matrix
-  float P[KC_STATE_DIM][KC_STATE_DIM];
+  __attribute__((aligned(4))) float P[KC_STATE_DIM][KC_STATE_DIM];
   xtensa_matrix_instance_f32 Pm;
 
   // Indicates that the internal state is corrupt and should be reset
@@ -129,7 +129,7 @@ void kalmanCoreUpdateWithTof(kalmanCoreData_t* this, tofMeasurement_t *tof);
 void kalmanCoreUpdateWithYawError(kalmanCoreData_t *this, yawErrorMeasurement_t *error);
 
 // Measurement of sweep angles from a Lighthouse base station
-void kalmanCoreUpdateWithSweepAngles(kalmanCoreData_t *this, sweepAngleMeasurement_t *angles, const uint32_t tick);
+//void kalmanCoreUpdateWithSweepAngles(kalmanCoreData_t *this, sweepAngleMeasurement_t *angles, const uint32_t tick);
 
 /**
  * Primary Kalman filter functions

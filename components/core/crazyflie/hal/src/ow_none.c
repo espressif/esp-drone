@@ -1,6 +1,6 @@
 /**
- *    ||          ____  _ __                           
- * +------+      / __ )(_) /_______________ _____  ___ 
+ *    ||          ____  _ __
+ * +------+      / __ )(_) /_______________ _____  ___
  * | 0xBC |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
@@ -35,11 +35,12 @@
 
 void owInit()
 {
+  owCommonInit();
 }
 
 bool owTest()
 {
-  return true;
+  return owCommonTest();
 }
 
 void owSyslinkRecieve(SyslinkPacket *slp)
@@ -61,8 +62,7 @@ bool owRead(uint8_t selectMem, uint16_t address, uint8_t length, uint8_t *data)
   return false;
 }
 
-bool owWrite(uint8_t selectMem, uint16_t address, uint8_t length, uint8_t *data)
+bool owWrite(uint8_t selectMem, uint16_t address, uint8_t length, const uint8_t *data)
 {
   return false;
 }
-
