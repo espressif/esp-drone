@@ -207,7 +207,7 @@ menu "ESPDrone Config"
                 GPIO number (IOxx) MPU_PIN_INT
 
         config ADC1_PIN
-            int "EXT01_PIN GPIO number"
+            int "ADC1_PIN GPIO number"
             range 32 39 if TARGET_ESPLANE_V1
             default 35 if TARGET_ESPLANE_V1
             range 1 10 if TARGET_ESPLANE_V2_S2
