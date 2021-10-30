@@ -12,7 +12,7 @@
 
 ## ESP32/ESP32-S2 链接脚本修改
 
-打开 ESP32/ESP32-S2 的链接脚本模板 `${IDF_PATH}/components/esp32/ld/esp32.project.ld.in` 和 ` ${IDF_PATH}/components/esp32s2/ld/esp32s2.project.ld.in`，将以下代码添加到 `.flash.rodata` 段的末尾。
+打开 ESP32/ESP32-S2 的链接脚本模板 `${IDF_PATH}/components/esp_system/ld/esp32/sections.ld.in` 和 ` ${IDF_PATH}/components/esp_system/ld/esp32/sections.ld.in`，将以下代码添加到 `.flash.rodata` 段的末尾。
 
 ```
    /* Parameters and log system data */
