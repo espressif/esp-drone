@@ -26,25 +26,19 @@
 
 void pinMode(uint32_t pin, uint32_t mode)
 {
-#ifdef TARGET_MCU_ESP32
-    if (pin > 35) {
-#elif defined(TARGET_MCU_ESP32S2)
-    if (pin > 43) {
-#endif
+    if (!GPIO_IS_VALID_GPIO((int)pin)) {
         return;
     }
 
-    gpio_config_t io_conf;
-    //disable interrupt
-    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
-    //bit mask of the pins that you want to set,e.g.GPIO18/19
-    io_conf.pin_bit_mask = (1ULL << pin);
-    //disable pull-down mode
-    io_conf.pull_down_en = 0;
-    //disable pull-up mode
-    io_conf.pull_up_en = 0;
-    //configure GPIO with the given settings
-
+    gpio_config_t io_conf = {
+        //bit mask of the pins that you want to set,e.g.GPIO18/19
+        .pin_bit_mask = (1ULL << pin),
+        //disable pull-down mode
+        .pull_down_en = 0,
+        //disable pull-up mode
+        .pull_up_en = 0,
+        //configure GPIO with the given settings
+    };
     //set as output mode
     if (mode == OUTPUT) {
         io_conf.mode = GPIO_MODE_OUTPUT;
@@ -65,11 +59,7 @@ void pinMode(uint32_t pin, uint32_t mode)
 
 void digitalWrite(uint32_t pin, uint32_t val)
 {
-#ifdef TARGET_MCU_ESP32
-    if (pin > 35) {
-#elif defined(TARGET_MCU_ESP32S2)
-    if (pin > 43) {
-#endif
+    if (!GPIO_IS_VALID_GPIO((int)pin)) {
         return;
     }
 
@@ -82,12 +72,8 @@ void digitalWrite(uint32_t pin, uint32_t val)
 
 int digitalRead(uint32_t pin)
 {
-#ifdef TARGET_MCU_ESP32
-    if (pin > 35) {
-#elif defined(TARGET_MCU_ESP32S2)
-    if (pin > 43) {
-#endif
-        return 0;
+    if (!GPIO_IS_VALID_GPIO((int)pin)) {
+        return -1;
     }
 
     int val = gpio_get_level(pin);

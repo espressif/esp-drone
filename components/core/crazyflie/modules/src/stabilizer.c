@@ -25,6 +25,7 @@
  */
 
 #include <math.h>
+#include <inttypes.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -322,7 +323,7 @@ static void stabilizerTask(void* param)
 
     if (!rateSupervisorValidate(&rateSupervisorContext, xTaskGetTickCount())) {
       if (!rateWarningDisplayed) {
-        DEBUG_PRINT("WARNING: stabilizer loop rate is off (%u)\n", rateSupervisorLatestCount(&rateSupervisorContext));
+        DEBUG_PRINT("WARNING: stabilizer loop rate is off (%"PRIu32")\n", rateSupervisorLatestCount(&rateSupervisorContext));
         rateWarningDisplayed = true;
       }
     }

@@ -5,9 +5,36 @@ stages:
 variables:
   BATCH_BUILD: "1"
   V: "0"
-  MAKEFLAGS: "-j5 --no-keep-going"
-  IDF_PATH: "$CI_PROJECT_DIR/esp-idf"
   IDF_CI_BUILD: "1"
+
+before_script:
+  # add gitlab ssh key
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - echo -n $GITLAB_KEY > ~/.ssh/id_rsa_base64
+  - base64 --decode --ignore-garbage ~/.ssh/id_rsa_base64 > ~/.ssh/id_rsa
+  - chmod 600 ~/.ssh/id_rsa
+  - echo -e "Host gitlab.espressif.cn\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+  - git --version
+  - git submodule update --init --recursive --force
+
+.build_examples_template: &build_examples_template
+  stage: build
+  image: espressif/idf:release-v4.4
+  tags:
+    - build
+
+build_demo_cmake:
+  <<: *build_examples_template
+  script:
+    - idf.py fullclean
+    - idf.py build
+    - idf.py fullclean
+    - idf.py set-target esp32s2
+    - idf.py build
+    - idf.py fullclean
+    - idf.py set-target esp32s3
+    - idf.py build
 
 build_docs:
     stage: build

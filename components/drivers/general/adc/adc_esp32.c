@@ -21,9 +21,9 @@
  *
  */
 
+#include "esp_idf_version.h"
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
-
 #include "adc_esp32.h"
 #include "config.h"
 #include "pm_esplane.h"
@@ -34,42 +34,17 @@
 static bool isInit;
 
 static esp_adc_cal_characteristics_t *adc_chars;
-#ifdef TARGET_MCU_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 static const adc_channel_t channel = ADC_CHANNEL_7; //GPIO35 if ADC1
-static const adc_bits_width_t width = ADC_WIDTH_BIT_12;
-#elif defined(TARGET_MCU_ESP32S2)
+#elif defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3)
 static const adc_channel_t channel = ADC_CHANNEL_1;     // GPIO2 if ADC1
-static const adc_bits_width_t width = ADC_WIDTH_BIT_13;
 #endif
 
+static const adc_bits_width_t width = ADC_WIDTH_MAX-1;
 static const adc_atten_t atten = ADC_ATTEN_DB_11;   //11dB attenuation (ADC_ATTEN_DB_11) gives full-scale voltage 3.9V
 static const adc_unit_t unit = ADC_UNIT_1;
 #define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES   30          //Multisampling
-
-static void checkEfuse(void)
-{
-#ifdef TARGET_MCU_ESP32
-    //Check if TP is burned into eFuse
-    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
-        printf("eFuse Two Point: Supported\n");
-    } else {
-        printf("eFuse Two Point: NOT supported\n");
-    }
-    //Check Vref is burned into eFuse
-    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_VREF) == ESP_OK) {
-        printf("eFuse Vref: Supported\n");
-    } else {
-        printf("eFuse Vref: NOT supported\n");
-    }
-#elif defined(TARGET_MCU_ESP32S2)
-    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
-        printf("eFuse Two Point: Supported\n");
-    } else {
-        printf("Cannot retrieve eFuse Two Point calibration values. Default calibration values will be used.\n");
-    }
-#endif
-}
 
 static void print_char_val_type(esp_adc_cal_value_t val_type)
 {
@@ -106,8 +81,6 @@ void adcInit(void)
         return;
     }
 
-    checkEfuse();
-    //Configure ADC
     if (unit == ADC_UNIT_1) {
         adc1_config_width(width);
         adc1_config_channel_atten(channel, atten);

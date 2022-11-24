@@ -146,7 +146,7 @@ void logBlockTimed(xTimerHandle timer);
 
 //These are set by the Linker
 extern struct log_s _log_start;
-extern struct log_s _log_stop;
+extern struct log_s _log_end;
 
 //Pointer to the logeters list and length of it
 static struct log_s * logs;
@@ -181,7 +181,7 @@ void logInit(void)
     return;
 
   logs = &_log_start;
-  logsLen = &_log_stop - &_log_start;
+  logsLen = &_log_end - &_log_start;
 
   // Calculate a hash of the toc by chaining description of each elements
   // Using the CRTP packet as temporary buffer

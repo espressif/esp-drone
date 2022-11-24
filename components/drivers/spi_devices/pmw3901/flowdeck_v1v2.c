@@ -86,10 +86,10 @@ static void flowdeckTask(void *param)
 
     while (1) {
 // if task watchdog triggered,flow frequency should set lower
-#ifdef TARGET_MCU_ESP32S2
+#ifdef CONFIG_IDF_TARGET_ESP32S2
         vTaskDelay(10);
-#elif defined(TARGET_MCU_ESP32)
-        vTaskDelay(10);
+#elif defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32)
+        vTaskDelay(5);
 #endif
 
         pmw3901ReadMotion(NCS_PIN, &currentMotion);
@@ -122,10 +122,10 @@ static void flowdeckTask(void *param)
             flowData.stdDevY = stdFlow;    // [pixels] should perhaps be made larger?
 
 // if task watchdog triggered,flow frequency should set lower
-#ifdef TARGET_MCU_ESP32S2
+#ifdef CONFIG_IDF_TARGET_ESP32S2
             flowData.dt = 0.01;
-#elif defined(TARGET_MCU_ESP32)
-            flowData.dt = 0.01;
+#elif defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32)
+            flowData.dt = 0.005;
 #endif
 
 #if defined(USE_MA_SMOOTHING)

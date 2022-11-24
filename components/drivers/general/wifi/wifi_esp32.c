@@ -27,7 +27,13 @@ static struct sockaddr_in6 source_addr; // Large enough for both IPv4 or IPv6
 //#define WIFI_SSID      "Udp Server"
 static char WIFI_SSID[32] = "ESP-DRONE";
 static char WIFI_PWD[64] = "12345678" ;
-#define MAX_STA_CONN (1)
+static uint8_t WIFI_CH = 1;
+#define MAX_STA_CONN (3)
+
+#ifndef MAC2STR
+#define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
+#define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
+#endif
 
 static char rx_buffer[UDP_SERVER_BUFSIZE];
 static char tx_buffer[UDP_SERVER_BUFSIZE];
@@ -65,17 +71,13 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
 {
     if (event_id == WIFI_EVENT_AP_STACONNECTED) {
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *) event_data;
-        DEBUG_PRINT_LOCAL("station "MACSTR" join, AID=%d",
-                          MAC2STR(event->mac), event->aid);
+        DEBUG_PRINT_LOCAL("station" MACSTR "join, AID=%d", MAC2STR(event->mac), event->aid);
 
     } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *) event_data;
-        DEBUG_PRINT_LOCAL("station "MACSTR" leave, AID=%d",
-                          MAC2STR(event->mac), event->aid);
+        DEBUG_PRINT_LOCAL("station" MACSTR "leave, AID=%d", MAC2STR(event->mac), event->aid);
     } 
 }
-
-
 
 bool wifiTest(void)
 {
@@ -224,13 +226,17 @@ void wifiInit(void)
     ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, mac));
     sprintf(WIFI_SSID, "ESP-DRONE_%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
-    wifi_config_t wifi_config;
+    wifi_config_t wifi_config = {
+        .ap = {
+            .channel = WIFI_CH,
+            .max_connection = MAX_STA_CONN,
+            .authmode = WIFI_AUTH_WPA_WPA2_PSK,
+        },
+    };
+
     memcpy(wifi_config.ap.ssid, WIFI_SSID, strlen(WIFI_SSID) + 1) ;
     wifi_config.ap.ssid_len = strlen(WIFI_SSID);
     memcpy(wifi_config.ap.password, WIFI_PWD, strlen(WIFI_PWD) + 1) ;
-    wifi_config.ap.max_connection = MAX_STA_CONN;
-    wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
-    wifi_config.ap.channel  = 13;
 
     if (strlen(WIFI_PWD) == 0) {
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;

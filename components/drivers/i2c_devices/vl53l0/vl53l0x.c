@@ -91,7 +91,7 @@ uint16_t vl53l0xReadReg16Bit(VL53L0xDev *dev, uint8_t reg);
 static bool vl53l0xWriteReg16Bit(VL53L0xDev *dev, uint8_t reg, uint16_t val);
 static bool vl53l0xWriteReg32Bit(VL53L0xDev *dev, uint8_t reg, uint32_t val);
 
-static int nextI2CAddress = VL53L0X_DEFAULT_ADDRESS + 1;
+//static int nextI2CAddress = VL53L0X_DEFAULT_ADDRESS + 1;
 
 /** Default constructor, uses default I2C address.
  * @see VL53L0X_DEFAULT_ADDRESS

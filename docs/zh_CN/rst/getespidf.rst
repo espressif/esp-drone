@@ -5,34 +5,14 @@
 ESP-IDF 环境搭建
 ----------------
 
-请参照 `ESP-IDF 编程指南 <https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32s2/get-started/index.html>`__\ ，按照步骤设置 ESP-IDF。
+请参照 `ESP-IDF 编程指南 <https://docs.espressif.com/projects/esp-idf/en/release-v4.4/esp32s2/get-started/index.html>`__\ ，按照步骤设置 ESP-IDF。
 
 注意事项：
 
--  推荐安装 ESP-IDF `release/v4.2` 分支；
+-  推荐安装 ESP-IDF `release/v4.4` 分支；
 -  请完成 ESP-IDF 所有安装步骤;
 -  建议首先编译一个 ESP-IDF 示例程序，用以检查安装的完整性。
 
-ESP32/ESP32-S2 链接脚本修改
----------------------------
-
-打开 ESP32/ESP32-S2 的链接脚本模板 ``${IDF_PATH}/components/esp32/ld/esp32.project.ld.in`` 和 ``${IDF_PATH}/components/esp32s2/ld/esp32s2.project.ld.in``\ ，将以下代码添加到 ``.flash.rodata`` 段的末尾。
-
-::
-
-      /* Parameters and log system data */
-       _param_start = .;
-       KEEP(*(.param))
-       KEEP(*(.param.*))
-       _param_stop = .;
-       . = ALIGN(4);
-       _log_start = .;
-       KEEP(*(.log))
-       KEEP(*(.log.*))
-       _log_stop = .;
-       . = ALIGN(4);
-
-以上代码可以实现将具有 ``.param.*`` 或 ``.log.*`` 段属性的变量，放置在连续的存储区域，从而加快变量遍历速度。
 
 获取项目源代码
 --------------

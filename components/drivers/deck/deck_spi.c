@@ -74,19 +74,20 @@ void spiBegin(void)
         /*.pre_cb = lcd_spi_pre_transfer_callback, //Specify pre-transfer callback to handle D/C line*/
     };
     //Initialize the SPI bus
-#ifdef TARGET_MCU_ESP32
-    ret = spi_bus_initialize(HSPI_HOST, &buscfg, 1);
-#elif defined(TARGET_MCU_ESP32S2)
-    ret = spi_bus_initialize(HSPI_HOST, &buscfg, 2);
+    spi_host_device_t host_id = SPI2_HOST;
+#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 3, 0))
+    ret = spi_bus_initialize(host_id, &buscfg, SPI_DMA_CH_AUTO);
+#else
+    int dma_chan = host_id; //set dma channel equals to host_id by default
+    ret = spi_bus_initialize(host_id, &buscfg, dma_chan);
 #endif
     ESP_ERROR_CHECK(ret);
     //Attach the pmw3901 to the SPI bus
-    ret = spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
+    ret = spi_bus_add_device(host_id, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
 
     isInit = true;
 }
-
 
 static void spiConfigureWithSpeed(uint32_t baudRatePrescaler)
 {
@@ -105,7 +106,7 @@ bool spiExchange(size_t length, bool is_tx, const uint8_t *data_tx, uint8_t *dat
     }
 
     if (length == 0) {
-        return;    //no need to send anything
+        return true;    //no need to send anything
     }
 
     esp_err_t ret;

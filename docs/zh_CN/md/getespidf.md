@@ -3,7 +3,7 @@
 
 ## ESP-IDF 环境搭建
 
-请参照 [ESP-IDF 编程指南](https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32s2/get-started/index.html)，按照步骤设置 ESP-IDF。
+请参照 [ESP-IDF 编程指南](https://docs.espressif.com/projects/esp-idf/en/release-v4.4/esp32s2/get-started/index.html)，按照步骤设置 ESP-IDF。
 
 注意事项：
 
@@ -19,12 +19,12 @@
     _param_start = .;
     KEEP(*(.param))
     KEEP(*(.param.*))
-    _param_stop = .;
+    _param_end = .;
     . = ALIGN(4);
     _log_start = .;
     KEEP(*(.log))
     KEEP(*(.log.*))
-    _log_stop = .;
+    _log_end = .;
     . = ALIGN(4);
 ```
 

@@ -1,4 +1,0 @@
-#
-# FreeRTOS
-#
-CONFIG_FREERTOS_UNICORE=n

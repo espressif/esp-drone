@@ -47,11 +47,17 @@
 #define QUAD_FORMATION_X
 
 #ifdef CONFIG_TARGET_ESPLANE_V2_S2
-  #define TARGET_MCU_ESP32S2
+#ifndef CONFIG_IDF_TARGET_ESP32S2
+#error "ESPLANE_V2 hardware with ESP32S2 onboard"
+#endif
 #elif defined(CONFIG_TARGET_ESPLANE_V1)
-  #define TARGET_MCU_ESP32
+#ifndef CONFIG_IDF_TARGET_ESP32
+#error "ESPLANE_V1 hardware with ESP32 onboard"
+#endif
 #elif defined(CONFIG_TARGET_ESP32_S2_DRONE_V1_2)
-  #define TARGET_MCU_ESP32S2
+#ifdef CONFIG_IDF_TARGET_ESP32
+#error "ESP32_S2_DRONE_V1_2 hardware with ESP32S2/S3 onboard"
+#endif
 #endif
 
 #ifdef STM32F4XX 
@@ -147,10 +153,10 @@
 #define ESKYLINK_TASK_NAME      "ESKYLINK"
 #define SYSLINK_TASK_NAME       "SYSLINK"
 #define USBLINK_TASK_NAME       "USBLINK"
-#define WIFILINK_TASK_NAME       "WIFILINK"
-#define UDP_TX_TASK_NAME "UDP_TX"
-#define UDP_RX_TASK_NAME  "UDP_RX"
-#define UDP_RX2_TASK_NAME  "UDP_RX2"
+#define WIFILINK_TASK_NAME      "WIFILINK"
+#define UDP_TX_TASK_NAME        "UDP_TX"
+#define UDP_RX_TASK_NAME        "UDP_RX"
+#define UDP_RX2_TASK_NAME       "UDP_RX2"
 #define PROXIMITY_TASK_NAME     "PROXIMITY"
 #define EXTRX_TASK_NAME         "EXTRX"
 #define UART_RX_TASK_NAME       "UART"
@@ -194,7 +200,7 @@
 #define ESKYLINK_TASK_STACKSIZE       (1 * configBASE_STACK_SIZE)
 #define SYSLINK_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
 #define USBLINK_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
-#define WIFILINK_TASK_STACKSIZE       (5 * configBASE_STACK_SIZE)
+#define WIFILINK_TASK_STACKSIZE       (6 * configBASE_STACK_SIZE)
 #define UDP_TX_TASK_STACKSIZE         (2 * configBASE_STACK_SIZE)
 #define UDP_RX_TASK_STACKSIZE         (4 * configBASE_STACK_SIZE)
 #define UDP_RX2_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
