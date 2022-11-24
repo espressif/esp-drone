@@ -31,24 +31,19 @@
 #error
 #endif
 
-
 #define DEFAULT_PLATFORM_STRING "0;EP20"
 
-
-#ifndef UNIT_TEST_MODE
-static char *getAddressOfOtpMemoryBlock(int blockNr)
-{
-    //TODO:
-    //return block adress
-    return (char *)(0x1fff7800 + blockNr * 0x20);
-}
-#else
-// This function is replaced by a mock in unit tests
-char *getAddressOfOtpMemoryBlock(const int blockNr);
-#endif
-
-
-
+//     //TODO:
+// #ifndef UNIT_TEST_MODE
+// static char *getAddressOfOtpMemoryBlock(int blockNr)
+// {
+//     //return block adress
+//     return (char *)(0x1fff7800 + blockNr * 0x20);
+// }
+// #else
+// // This function is replaced by a mock in unit tests
+// char *getAddressOfOtpMemoryBlock(const int blockNr);
+// #endif
 
 void platformGetDeviceTypeString(char *deviceTypeString)
 {

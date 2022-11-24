@@ -25,21 +25,17 @@
 #include <string.h>
 
 #include "esp_err.h"
-#include "esp_spi_flash.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
 #include "eeprom.h"
 #include "debug_cf.h"
 #include "eprintf.h"
 
-
 #ifdef EEPROM_RUN_WRITE_READ_TEST
+#include "esp_spi_flash.h"
 static bool eepromTestWriteRead(void);
 #endif
 
-static uint8_t devAddr;
-static I2C_Dev *I2Cx;
 static bool isInit;
 
 bool eepromInit(I2C_Dev *i2cPort)
@@ -48,9 +44,7 @@ bool eepromInit(I2C_Dev *i2cPort)
         return true;
     }
 
-    // I2Cx = i2cPort;
-    // devAddr = EEPROM_I2C_ADDR;
-    spi_flash_init();
+    //TODOspi_flash_init();
     DEBUG_PRINTI("spi_flash_init ... !");
 
     isInit = true;
@@ -107,7 +101,7 @@ bool eepromTestConnection(void)
 bool eepromReadBuffer(uint8_t *buffer, size_t readAddr, size_t len)
 {
     bool status = false;
-    esp_err_t err = spi_flash_read(readAddr, buffer, len);
+    esp_err_t err = ESP_OK; //TODO spi_flash_read(readAddr, buffer, len);
 
     if (err == ESP_OK) {
 
@@ -126,7 +120,8 @@ bool eepromWriteBuffer(uint8_t *buffer, size_t writeAddr, size_t len)
     bool status = false;
     writeAddr += EEPROM_IN_FLASH_ADDR;
 
-    if (spi_flash_write(writeAddr, buffer, len) == ESP_OK) {
+    //TODO if (spi_flash_write(writeAddr, buffer, len) == ESP_OK) {
+    if (1) {
 
         status = true;
 

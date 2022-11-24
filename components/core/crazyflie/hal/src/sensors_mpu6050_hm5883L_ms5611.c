@@ -140,9 +140,7 @@ static xQueueHandle barometerDataQueue;
 STATIC_MEM_QUEUE_ALLOC(barometerDataQueue, 1, sizeof(baro_t));
 
 static xSemaphoreHandle sensorsDataReady;
-static StaticSemaphore_t sensorsDataReadyBuffer;
 static xSemaphoreHandle dataReady;
-static StaticSemaphore_t dataReadyBuffer;
 
 static bool isInit = false;
 static sensorData_t sensorData;
@@ -168,15 +166,22 @@ static void applyAxis3fLpf(lpf2pData *data, Axis3f *in);
 
 static bool isBarometerPresent = false;
 static bool isMagnetometerPresent = false;
+#ifdef SENSORS_ENABLE_RANGE_VL53L1X
 static bool isVl53l1xPresent = false;
+#endif
+#ifdef SENSORS_ENABLE_RANGE_VL53L0X
 static bool isVl53l0xPresent = false;
+#endif
+#ifdef SENSORS_ENABLE_FLOW_PMW3901
 static bool isPmw3901Present = false;
-
+#endif
 static bool isMpu6050TestPassed = false;
+#ifdef SENSORS_ENABLE_MAG_HM5883L
 static bool isHmc5883lTestPassed = false;
+#endif
+#ifdef SENSORS_ENABLE_PRESSURE_MS5611
 static bool isMs5611TestPassed = false;
-static bool isVl53l1xTestPassed = false;
-static bool isPmw3901TestPassed = false;
+#endif
 
 // Pre-calculated values for accelerometer alignment
 float cosPitch;
@@ -409,7 +414,9 @@ static void sensorsDeviceInit(void)
     if (mpu6050TestConnection() == true) {
         DEBUG_PRINTI("MPU6050 I2C connection [OK].\n");
     } else {
-        DEBUG_PRINTW("MPU6050 I2C connection [FAIL].\n");
+        DEBUG_PRINTE("MPU6050 I2C connection [FAIL].\n");
+        // Please check your hardware !
+        assert(0);
     }
 
     mpu6050Reset();
@@ -514,7 +521,6 @@ static void sensorsDeviceInit(void)
 #endif
 
 #ifdef SENSORS_ENABLE_FLOW_PMW3901
-
     flowdeck2Init();
 
     if (flowdeck2Test() == true) {
@@ -525,9 +531,6 @@ static void sensorsDeviceInit(void)
         //TODO: Should sensor test fail hard if no connection
         DEBUG_PRINTW("PMW3901 SPI connection [FAIL].\n");
     }
-
-
-
 #endif
 
     DEBUG_PRINTI("sensors init done");
@@ -635,17 +638,22 @@ static void sensorsInterruptInit(void)
 {
 
     DEBUG_PRINTD("sensorsInterruptInit \n");
-    gpio_config_t io_conf;
-    //interrupt of rising edge
-    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
-    //bit mask of the pins
-    io_conf.pin_bit_mask = (1ULL << GPIO_INTA_MPU6050_IO);
-    //set as input mode
-    io_conf.mode = GPIO_MODE_INPUT;
-    //disable pull-down mode
-    io_conf.pull_down_en = 0;
-    //enable pull-up mode
-    io_conf.pull_up_en = 1;
+    gpio_config_t io_conf = {
+        //interrupt of rising edge
+#if ESP_IDF_VERSION_MAJOR > 4
+        .intr_type = GPIO_INTR_POSEDGE,
+#else
+        .intr_type = GPIO_PIN_INTR_POSEDGE,
+#endif
+        //bit mask of the pins
+        .pin_bit_mask = (1ULL << GPIO_INTA_MPU6050_IO),
+        //set as input mode
+        .mode = GPIO_MODE_INPUT,
+        //disable pull-down mode
+        .pull_down_en = 0,
+        //enable pull-up mode
+        .pull_up_en = 1,
+    };
     sensorsDataReady = xSemaphoreCreateBinary();
     dataReady = xSemaphoreCreateBinary();
     gpio_config(&io_conf);
@@ -1047,5 +1055,6 @@ PARAM_GROUP_STOP(imu_sensors)
 PARAM_GROUP_START(imu_tests)
 PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, mpu6050, &isMpu6050TestPassed)
 PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, HMC5883L, &isMagnetometerPresent)
+PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, pmw3901, &isPmw3901Present)
 PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, MS5611, &isBarometerPresent) // TODO: Rename MS5611 to LPS25H. Client needs to be updated at the same time.
 PARAM_GROUP_STOP(imu_tests)

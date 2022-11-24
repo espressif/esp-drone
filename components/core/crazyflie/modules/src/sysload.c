@@ -28,6 +28,7 @@
 
 
 #include <stdbool.h>
+#include <inttypes.h>
 #include "FreeRTOS.h"
 #include "timers.h"
 #include "cfassert.h"
@@ -101,20 +102,20 @@ static void timerHandler(xTimerHandle timer) {
     // CPU usage is since last dump in % compared to total time spent in tasks. Note that time spent in interrupts will be included in measured time.
     // Stack usage is displayed as nr of unused bytes at peak stack usage.
 
-    DEBUG_PRINTI("Task dump\n");
-    DEBUG_PRINTI("Load\tStack left\tName\tPRI\n");
+    DEBUG_PRINTI("Task dump");
+    DEBUG_PRINTI("Load\tStack left\tName\tPRI");
     for (uint32_t i = 0; i < taskCount; i++) {
       TaskStatus_t* stats = &taskStats[i];
       taskData_t* previousTaskData = getPreviousTaskData(stats->xTaskNumber);
 
       uint32_t taskRunTime = stats->ulRunTimeCounter;
       float load = f * (taskRunTime - previousTaskData->ulRunTimeCounter);
-      DEBUG_PRINTI("%.2f \t%u \t%s \t%u\n", (double)load, stats->usStackHighWaterMark, stats->pcTaskName,stats->uxBasePriority);
+      DEBUG_PRINTI("%.2f \t%"PRIu32" \t%s \t%d", (double)load, stats->usStackHighWaterMark, stats->pcTaskName,stats->uxBasePriority);
 
       previousTaskData->ulRunTimeCounter = taskRunTime;
     }
 
-    DEBUG_PRINTI("Free heap: %d bytes\n", xPortGetFreeHeapSize());
+    DEBUG_PRINTI("Free heap: %"PRIu32" bytes", xPortGetFreeHeapSize());
     previousTotalRunTime = totalRunTime;
 
     triggerDump = 0;

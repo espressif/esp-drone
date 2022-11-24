@@ -82,7 +82,7 @@ void paramTOCProcess(int command);
 
 //These are set by the Linker
 extern struct param_s _param_start;
-extern struct param_s _param_stop;
+extern struct param_s _param_end;
 
 //The following two function SHALL NOT be called outside paramTask!
 static void paramWriteProcess();
@@ -115,7 +115,7 @@ void paramInit(void)
     return;
 
   params = &_param_start;
-  paramsLen = &_param_stop - &_param_start;
+  paramsLen = &_param_end - &_param_start;
 
   // Calculate a hash of the toc by chaining description of each elements
   // Using the CRTP packet as temporary buffer

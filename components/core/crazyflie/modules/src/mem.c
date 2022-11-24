@@ -28,7 +28,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-
+#include <inttypes.h>
 /* FreeRtos includes */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -341,7 +341,7 @@ static bool handleMemTesterWrite(const uint32_t memAddr, const uint8_t writeLen,
     if (actualData != expectedData) {
       // Log first error
       if (memTesterWriteErrorCount == 0) {
-        DEBUG_PRINT("Verification failed: expected: %d, actual: %d, addr: %u\n", expectedData, actualData, addr);
+        DEBUG_PRINT("Verification failed: expected: %d, actual: %d, addr: %"PRIu32"\n", expectedData, actualData, addr);
       }
 
       memTesterWriteErrorCount++;

@@ -116,7 +116,7 @@ void setCommandermode(FlightMode mode){
     registerRequiredEstimator(complementaryEstimator);   
     break;
   }
-  DEBUG_PRINTI("FlightMode = %u",mode);
+  DEBUG_PRINTI("FlightMode = %d",mode);
 #else
   DEBUG_PRINTI("set FlightMode disable");
 #endif

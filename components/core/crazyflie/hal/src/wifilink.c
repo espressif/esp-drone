@@ -63,9 +63,6 @@ static int wifilinkReceiveCRTPPacket(CRTPPacket *p);
 
 STATIC_MEM_TASK_ALLOC(wifilinkTask, USBLINK_TASK_STACKSIZE);
 
-static float rch, pch, ych;
-static uint16_t tch;
-
 static bool wifilinkIsConnected(void)
 {
     return (xTaskGetTickCount() - lastPacketTick) < M2T(WIFI_ACTIVITY_TIMEOUT_MS);
@@ -78,6 +75,7 @@ static struct crtpLinkOperations wifilinkOp = {
     .isConnected       = wifilinkIsConnected,
 };
 
+#ifdef CONFIG_ENABLE_LEGACY_APP
 static bool detectOldVersionApp(UDPPacket *in)
 {
 
@@ -89,6 +87,7 @@ static bool detectOldVersionApp(UDPPacket *in)
 
     return false;
 }
+#endif
 
 static void wifilinkTask(void *param)
 {
@@ -97,7 +96,8 @@ static void wifilinkTask(void *param)
         wifiGetDataBlocking(&wifiIn);
         lastPacketTick = xTaskGetTickCount();
 #ifdef CONFIG_ENABLE_LEGACY_APP
-
+        float rch, pch, ych;
+        uint16_t tch;
         if (detectOldVersionApp(&wifiIn)) {
             rch  = (1.0) * (float)(((((uint16_t)wifiIn.data[1] << 8) + (uint16_t)wifiIn.data[2]) - 296) * 15.0 / 150.0); //-15~+15
             pch  = (-1.0) * (float)(((((uint16_t)wifiIn.data[3] << 8) + (uint16_t)wifiIn.data[4]) - 296) * 15.0 / 150.0); //-15~+15

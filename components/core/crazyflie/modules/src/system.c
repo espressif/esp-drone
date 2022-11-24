@@ -26,7 +26,7 @@
  */
 
 #include <stdbool.h>
-
+#include <inttypes.h>
 /* FreeRtos includes */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -264,7 +264,7 @@ void systemTask(void *arg)
       ledSet(SYS_LED, true);
     }
   }
-  DEBUG_PRINT("Free heap: %d bytes\n", xPortGetFreeHeapSize());
+  DEBUG_PRINT("Free heap: %"PRIu32" bytes\n", xPortGetFreeHeapSize());
 
   workerLoop();
 

@@ -55,7 +55,7 @@
  * 2019.04.12, Kristoffer Richardsson: Refactored, separated kalman implementation from OS related functionality
  *
  */
-
+#include <inttypes.h>
 #include "kalman_core.h"
 #include "estimator_kalman.h"
 #include "kalman_supervisor.h"
@@ -332,7 +332,7 @@ static void kalmanTask(void* parameters) {
       nextPrediction = osTick + S2T(1.0f / PREDICT_RATE);
 
       if (!rateSupervisorValidate(&rateSupervisorContext, T2M(osTick))) {
-        DEBUG_PRINT("WARNING: Kalman prediction rate low (%u)\n", rateSupervisorLatestCount(&rateSupervisorContext));
+        DEBUG_PRINT("WARNING: Kalman prediction rate low (%"PRIu32")\n", rateSupervisorLatestCount(&rateSupervisorContext));
       }
     }
 
