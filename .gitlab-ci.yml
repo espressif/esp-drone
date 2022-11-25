@@ -48,8 +48,8 @@ build_docs:
             - docs/en/rst/sphinx-warning-log.txt
             - docs/en/rst/_build/html
             # Chinese version of documentation
-            - docs/zh_CN/md/sphinx-warning-log.txt
-            - docs/zh_CN/md/_build/html
+            - docs/zh_CN/rst/sphinx-warning-log.txt
+            - docs/zh_CN/rst/_build/html
         expire_in: 1 week
     before_script:
       - echo "skip default before_script"
@@ -62,7 +62,7 @@ build_docs:
       - cd ../../
       # make Chinese version of documentation
       - cd zh_CN/
-      - cd md/
+      - cd rst/
       - make clean && make html
       - cd ../../
 
