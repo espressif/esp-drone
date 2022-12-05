@@ -7,7 +7,7 @@
 项目简介
 ========
 
-ESP-Drone 是基于乐鑫 ESP32/ESP32-S2/S3 开发的小型无人机解决方案，可使用手机 APP 或游戏手柄通过 Wi-Fi
+ESP-Drone 是基于乐鑫 ESP32/ESP32-S2/ESP32-S3 开发的小型无人机解决方案，可使用手机 APP 或游戏手柄通过 Wi-Fi
 网络进行连接和控制。该方案硬件结构简单，代码架构清晰，支持功能扩展，可用于
 STEAM 教育等领域。项目部分代码来自 Crazyflie 开源工程，继承 GPL3.0
 开源协议。
@@ -55,9 +55,9 @@ ESP-Drone 2.0 使用模块化的设计思路，由主控板和扩展板组成。
 ESP-IDF 简介
 ================
 
-ESP-IDF 是乐鑫为 ESP32/ESP32-S2/S3 提供的物联网开发框架。
+ESP-IDF 是乐鑫为 ESP32/ESP32-S2/ESP32-S3 提供的物联网开发框架。
 
--  ESP-IDF 包含一系列库及头文件，提供了基于 ESP32/ESP32-S2/S3 构建软件项目所需的核心组件。
+-  ESP-IDF 包含一系列库及头文件，提供了基于 ESP32/ESP32-S2/ESP32-S3 构建软件项目所需的核心组件。
 -  ESP-IDF 还提供了开发和量产过程中最常用的工具及功能，例如：构建、烧录、调试和测量等。
 
 详情可查阅：`ESP-IDF 编程指南 <https://docs.espressif.com/projects/esp-idf/en/release-v4.4/esp32s2/get-started/index.html>`__。
