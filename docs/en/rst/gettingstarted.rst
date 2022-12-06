@@ -7,7 +7,7 @@ Get Started
 ESP-Drone Overview
 ======================
 
-ESP-Drone is an ESP32/ESP32-S2/S3 based flying development board provided by Espressif. ESP-Drone is equipped with Wi-Fi key features, which allows this drone to be connected to and controlled by an APP or a gamepad over a Wi-Fi network. This drone comes with simple-structured hardware, clear codes, and supports functional extension. Therefore, ESP-Drone can be used in STEAM education. Part of the codes is from Crazyflie open source project under GPL3.0
+ESP-Drone is an ESP32/ESP32-S2/ESP32-S3 based flying development board provided by Espressif. ESP-Drone is equipped with Wi-Fi key features, which allows this drone to be connected to and controlled by an APP or a gamepad over a Wi-Fi network. This drone comes with simple-structured hardware, clear codes, and supports functional extension. Therefore, ESP-Drone can be used in STEAM education. Part of the codes is from Crazyflie open source project under GPL3.0
 license.
 
 .. figure:: ../../_static/espdrone_s2_v1_2_2.png
@@ -79,7 +79,7 @@ For more information, please refer to `Hardware Reference <./hardware.rst>`__.
 ESP-IDF Overview
 ================
 
-ESP-IDF is the IoT Development Framework provided by Espressif for ESP32/ESP32-S2/S3.
+ESP-IDF is the IoT Development Framework provided by Espressif for ESP32/ESP32-S2/ESP32-S3.
 
 - ESP-IDF is a collection of libraries and header files that provides the core software components that are required to build any software projects on ESP32/ESP32-S2.
 

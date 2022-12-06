@@ -13,7 +13,7 @@ menu "ESPDrone Config"
             bool "esplane with esp32-s2 onboard"
 
         config TARGET_ESP32_S2_DRONE_V1_2
-            bool "esp-drone with esp32-s2/s3 onboard"
+            bool "esp-drone with ESP32-S2/ESP32-S3 onboard"
 
     endchoice
 
