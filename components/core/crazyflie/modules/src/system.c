@@ -200,7 +200,7 @@ void systemTask(void *arg)
   //  platformSetLowInterferenceRadioMode();
   //}
   soundInit();
-  //memInit();
+  memInit();
 
 #ifdef PROXIMITY_ENABLED
   proximityInit();
