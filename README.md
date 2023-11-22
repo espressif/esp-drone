@@ -24,6 +24,7 @@ For more information, please check the sections below:
 3. Position-hold Mode
 4. APP Control
 5. CFclient Supported
+6. ESP-BOX3 Joystick Control (through esp-now)
 
 Note: to implement Height-hold/Position-hold mode, extension boards are needed. For more information, see Hardware Reference. 
 

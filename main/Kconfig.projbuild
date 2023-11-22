@@ -49,7 +49,32 @@ menu "ESPDrone Config"
             help
                 This enables assit mode when use old version app.
     endmenu
-        
+
+    menu "wireless config"
+        config WIFI_BASE_SSID
+            string "Wi-Fi Base SSID"
+            default "ESP-DRONE"
+            help
+                Wi-Fi Base SSID, 1-16 characters. the final SSID will be BASE_SSID-MAC
+        config WIFI_PASSWORD
+            string "Wi-Fi Password"
+            default "12345678"
+            help
+                Wi-Fi Password, 8-64 characters
+        config WIFI_CHANNEL
+            int "Wi-Fi/ESP-Now Channel"
+            range 1 13
+            default 13
+            help
+                Wi-Fi/ESP-Now Channel, 1-13
+        config WIFI_MAX_STA_CONN
+            int "Wi-Fi Max Station Connection"
+            range 1 6
+            default 3
+            help
+                Wi-Fi Max Station Connection, 1-6
+    endmenu
+
     menu "calibration angle"
         config PITCH_CALIB
             int "PITCH_CALIB deg*100"
