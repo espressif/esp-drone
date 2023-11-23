@@ -82,7 +82,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *) event_data;
         DEBUG_PRINT_LOCAL("station" MACSTR "leave, AID=%d", MAC2STR(event->mac), event->aid);
-    } 
+    }
 }
 
 bool wifiTest(void)
@@ -110,11 +110,11 @@ bool wifiSendData(uint32_t size, uint8_t *data)
 };
 
 static esp_err_t udp_server_create(void *arg)
-{ 
+{
     if (isUDPInit){
         return ESP_OK;
     }
-    
+
     struct sockaddr_in *pdest_addr = &dest_addr;
     pdest_addr->sin_addr.s_addr = htonl(INADDR_ANY);
     pdest_addr->sin_family = AF_INET;
@@ -141,7 +141,7 @@ static void udp_server_rx_task(void *pvParameters)
 {
     uint8_t cksum = 0;
     socklen_t socklen = sizeof(source_addr);
-    
+
     while (true) {
         if(isUDPInit == false) {
             vTaskDelay(20);
@@ -186,8 +186,8 @@ static void udp_server_tx_task(void *pvParameters)
             vTaskDelay(20);
             continue;
         }
-        if ((xQueueReceive(udpDataTx, &outPacket, 5) == pdTRUE) && isUDPConnected) {           
-            memcpy(tx_buffer, outPacket.data, outPacket.size);       
+        if ((xQueueReceive(udpDataTx, &outPacket, 5) == pdTRUE) && isUDPConnected) {
+            memcpy(tx_buffer, outPacket.data, outPacket.size);
             tx_buffer[outPacket.size] =  calculate_cksum(tx_buffer, outPacket.size);
             tx_buffer[outPacket.size + 1] = 0;
 
@@ -202,7 +202,7 @@ static void udp_server_tx_task(void *pvParameters)
                 DEBUG_PRINT_LOCAL(" data_send[%d] = %02X ", i, tx_buffer[i]);
             }
 #endif
-        }    
+        }
     }
 }
 
@@ -213,7 +213,9 @@ static void espnow_ctrl_data_cb(espnow_attribute_t initiator_attribute,
                                        int lx_value,
                                        int ly_value,
                                        int rx_value,
-                                       int ry_value)
+                                       int ry_value,
+                                       int channel_one_value,
+                                       int channel_two_value)
 {
     UDPPacket inPacket;
     inPacket.size = 7;
@@ -320,7 +322,7 @@ void wifiInit(void)
         DEBUG_PRINT_LOCAL("UDP server create socket failed");
     } else {
         DEBUG_PRINT_LOCAL("UDP server create socket succeed");
-    } 
+    }
     xTaskCreate(udp_server_tx_task, UDP_TX_TASK_NAME, UDP_TX_TASK_STACKSIZE, NULL, UDP_TX_TASK_PRI, NULL);
     xTaskCreate(udp_server_rx_task, UDP_RX_TASK_NAME, UDP_RX_TASK_STACKSIZE, NULL, UDP_RX_TASK_PRI, NULL);
     isInit = true;

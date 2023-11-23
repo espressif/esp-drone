@@ -93,6 +93,8 @@ typedef struct {
             int left_y_value_f;
             int right_x_value_f;
             int right_y_value_f;
+            int channel_one_value_i;
+            int channel_two_value_i;
         };
 
         struct {
@@ -134,7 +136,9 @@ typedef void (* espnow_ctrl_data_cb_t)(espnow_attribute_t initiator_attribute,
                                        int lx_value,
                                        int ly_value,
                                        int rx_value,
-                                       int ry_value);
+                                       int ry_value,
+                                       int channel_one_value,
+                                       int channel_two_value);
 
 /**
  * @brief  The raw control data callback function
@@ -169,8 +173,8 @@ esp_err_t espnow_ctrl_initiator_bind(espnow_attribute_t initiator_attribute, boo
  *    - ESP_OK: succeed
  *    - others: fail
  */
-esp_err_t espnow_ctrl_initiator_send(espnow_attribute_t initiator_attribute, espnow_attribute_t responder_attribute, uint32_t responder_value, int status, int x_value, int y_value, int rx_value, int ry_value);
-
+esp_err_t espnow_ctrl_initiator_send(espnow_attribute_t initiator_attribute, espnow_attribute_t responder_attribute, uint32_t responder_value, int status,
+                                    int x_value, int y_value, int rx_value, int ry_value, int channel_one_value, int channel_two_value);
 /**
  * @brief  The responder creates a bind task to process the received bind frame
  *

@@ -274,9 +274,10 @@ static esp_err_t espnow_ctrl_responder_data_process(uint8_t *src_addr, void *dat
     ESP_PARAM_CHECK(rx_ctrl);
 
     espnow_ctrl_data_t *ctrl_data = (espnow_ctrl_data_t *)data;
-    ESP_LOGD(TAG, "src_addr: "MACSTR", espnow_ctrl_responder_recv, value: s1 = %d, s2 = %d, lx = %d, ly = %d, rx = %d, ry = %d",
+    ESP_LOGD(TAG, "src_addr: "MACSTR", espnow_ctrl_responder_recv, value: s1 = %d, s2 = %d, lx = %d, ly = %d, rx = %d, ry = %d, ch1 = %d, ch2 = %d",
                 MAC2STR(src_addr), ctrl_data->responder_value_i, ctrl_data->status_value_i, ctrl_data->left_x_value_f,
-                                   ctrl_data->left_y_value_f, ctrl_data->right_x_value_f, ctrl_data->right_y_value_f);
+                                   ctrl_data->left_y_value_f, ctrl_data->right_x_value_f, ctrl_data->right_y_value_f,
+                                   ctrl_data->channel_one_value_i, ctrl_data->channel_two_value_i);
 
 #ifdef CONFIG_ESPNOW_CONTROL_AUTO_CHANNEL_SENDING
     if (ctrl_data->frame_head.ack) {
@@ -289,7 +290,8 @@ static esp_err_t espnow_ctrl_responder_data_process(uint8_t *src_addr, void *dat
             g_bindlist.data_cb(ctrl_data->initiator_attribute, ctrl_data->responder_attribute, ctrl_data->responder_value_i,
                                ctrl_data->status_value_i,
                                ctrl_data->left_x_value_f, ctrl_data->left_y_value_f,
-                               ctrl_data->right_x_value_f, ctrl_data->right_y_value_f);
+                               ctrl_data->right_x_value_f, ctrl_data->right_y_value_f,
+                               ctrl_data->channel_one_value_i, ctrl_data->channel_two_value_i);
         }
 
         if (g_bindlist.data_raw_cb) {
@@ -449,7 +451,9 @@ esp_err_t espnow_ctrl_initiator_send(espnow_attribute_t initiator_attribute,
                                      int lx_value,
                                      int ly_value,
                                      int rx_value,
-                                     int ry_value)
+                                     int ry_value,
+                                     int channel_one_value,
+                                     int channel_two_value)
 {
     esp_err_t ret = ESP_OK;
     espnow_ctrl_data_t data = {
@@ -461,6 +465,8 @@ esp_err_t espnow_ctrl_initiator_send(espnow_attribute_t initiator_attribute,
         .left_y_value_f = ly_value,
         .right_x_value_f = rx_value,
         .right_y_value_f = ry_value,
+        .channel_one_value_i = channel_one_value,
+        .channel_two_value_i = channel_two_value,
     };
 
     ret = espnow_send(ESPNOW_DATA_TYPE_CONTROL_DATA, ESPNOW_ADDR_BROADCAST, &data,
