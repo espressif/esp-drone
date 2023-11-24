@@ -61,7 +61,7 @@ static int wifilinkSendPacket(CRTPPacket *p);
 static int wifilinkSetEnable(bool enable);
 static int wifilinkReceiveCRTPPacket(CRTPPacket *p);
 
-STATIC_MEM_TASK_ALLOC(wifilinkTask, USBLINK_TASK_STACKSIZE);
+STATIC_MEM_TASK_ALLOC(wifilinkTask, WIFILINK_TASK_STACKSIZE);
 
 static bool wifilinkIsConnected(void)
 {
@@ -89,6 +89,14 @@ static bool detectOldVersionApp(UDPPacket *in)
 }
 #endif
 
+static bool detectEspNow(UDPPacket *in)
+{
+    if (in->size == 7 && (in->data)[0] == 'n' && (in->data)[1] == 'o' && (in->data)[2] == 'w') {
+        return true;
+    }
+    return false;
+}
+
 static void wifilinkTask(void *param)
 {
     while (1) {
@@ -112,6 +120,27 @@ static void wifilinkTask(void *param)
             memcpy(&p.data[12], &tch, 2);
         } else
 #endif
+        if (detectEspNow(&wifiIn)) {
+            float rch, pch, ych;
+            uint16_t tch;
+            rch  = (float)((int8_t)wifiIn.data[6] * 15.0 / 128);; //-15~+15
+            pch  = (float)((int8_t)wifiIn.data[5] * 15.0 / -128);; //-15~+15
+            if ((int8_t)wifiIn.data[4] < 0) {
+                tch  = 0;
+            } else {
+                tch  = (int8_t)wifiIn.data[4] * 59000.0 / 128;
+            }
+            ych  = (float)((int8_t)wifiIn.data[3] * 15.0 / 128); //-15~+15
+            p.size = wifiIn.size + 1 ; //add cksum size
+            p.header = CRTP_HEADER(CRTP_PORT_SETPOINT, 0x00); //head redefine
+
+            //printf("rch: %.2f, pch: %.2f, tch: %d, ych: %.2f\n", rch, pch, tch, ych);
+
+            memcpy(&p.data[0], &rch, 4);
+            memcpy(&p.data[4], &pch, 4);
+            memcpy(&p.data[8], &ych, 4);
+            memcpy(&p.data[12], &tch, 2);
+        } else
         {
             /* command step - receive  04 copy CRTP part from packet, the size not contain head */
             p.size = wifiIn.size - 1;

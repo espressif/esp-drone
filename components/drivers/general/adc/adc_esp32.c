@@ -41,7 +41,7 @@ static const adc_channel_t channel = ADC_CHANNEL_1;     // GPIO2 if ADC1
 #endif
 
 static const adc_bits_width_t width = ADC_WIDTH_MAX-1;
-static const adc_atten_t atten = ADC_ATTEN_DB_11;   //11dB attenuation (ADC_ATTEN_DB_11) gives full-scale voltage 3.9V
+static const adc_atten_t atten = 3; // we directly set the attenuation to 3(11dB/12dB) to avoid the build warning
 static const adc_unit_t unit = ADC_UNIT_1;
 #define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES   30          //Multisampling
