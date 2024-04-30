@@ -45,28 +45,29 @@ static bool isInit;
 void commInit(void)
 {
   if (isInit) {
-    return;}
+    return;
+  }
 
-    /* These functions  are moved to be initialized early so
-     * that DEBUG_PRINTD can be used early */
-    //wifilinkInit();
-    //crtpInit();
-    //consoleInit();
+  /* These functions  are moved to be initialized early so
+    * that DEBUG_PRINTD can be used early */
+  //wifilinkInit();
+  //crtpInit();
+  //consoleInit();
 
-    crtpSetLink(wifilinkGetLink());
-    crtpserviceInit();
-    platformserviceInit();
-    logInit();
-    paramInit();
-    //locSrvInit();
+  crtpSetLink(wifilinkGetLink());
+  crtpserviceInit();
+  platformserviceInit();
+  logInit();
+  paramInit();
+  //locSrvInit();
 
-  //setup CRTP communication channel
   //TODO: check for USB first and prefer USB over radio
+  //setup CRTP communication channel
   //if (usbTest())
   //  crtpSetLink(usbGetLink);
   //else if(radiolinkTest())
   //  crtpSetLink(radiolinkGetLink());
-    isInit = true;
+  isInit = true;
 }
 
 bool commTest(void)
@@ -84,7 +85,6 @@ bool commTest(void)
 	DEBUG_PRINTI("consoleTest = %d ", pass);
 	pass &= paramTest();
 	DEBUG_PRINTI("paramTest = %d ", pass);
-
-    return pass;
+  return pass;
 }
 

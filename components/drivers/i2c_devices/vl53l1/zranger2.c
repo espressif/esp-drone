@@ -142,6 +142,10 @@ void zRanger2Task(void* arg)
   }
 }
 
+static uint8_t disable = 0;
+
 PARAM_GROUP_START(deck)
 PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, bcZRanger2, &isInit)
+PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, bcZRanger, &disable)
+PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, deck, &disable)
 PARAM_GROUP_STOP(deck)

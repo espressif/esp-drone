@@ -125,7 +125,9 @@ bool memTest(void) {
   }
 
   if (owMemHandler == 0) {
-    return false;
+    printf("No one-wire memory handler registered\n");
+    //TODO:
+    return true;
   }
 
   return true;
@@ -218,7 +220,7 @@ static void createInfoResponse(CRTPPacket* p, uint8_t memId) {
     uint8_t serialNr[MEMORY_SERIAL_LENGTH];
 
     // No error code if we fail, just send an empty packet back
-    if (owMemHandler->getSerialNr(selectedMem, serialNr)) {
+    if (owMemHandler->getSerialNr && owMemHandler->getSerialNr(selectedMem, serialNr)) {
       createInfoResponseBody(p, MEM_TYPE_OW, owMemHandler->size, serialNr);
     }
   }

@@ -27,9 +27,9 @@
 #include "espnow_utils.h"
 
 #define UDP_SERVER_PORT         2390
-#define UDP_SERVER_BUFSIZE      128
+#define UDP_SERVER_BUFSIZE      64
 
-static struct sockaddr_in6 source_addr;
+static struct sockaddr_storage source_addr;
 
 static char WIFI_SSID[32] = "";
 static char WIFI_PWD[64] = CONFIG_WIFI_PASSWORD;
@@ -41,17 +41,9 @@ static uint8_t WIFI_CH = CONFIG_WIFI_CHANNEL;
 #define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
 #endif
 
-static char rx_buffer[UDP_SERVER_BUFSIZE];
-static char tx_buffer[UDP_SERVER_BUFSIZE];
-const int addr_family = (int)AF_INET;
-const int ip_protocol = IPPROTO_IP;
-static struct sockaddr_in dest_addr;
 static int sock;
-
 static xQueueHandle udpDataRx;
 static xQueueHandle udpDataTx;
-static UDPPacket inPacket;
-static UDPPacket outPacket;
 
 static bool isInit = false;
 static bool isUDPInit = false;
@@ -94,7 +86,7 @@ bool wifiGetDataBlocking(UDPPacket *in)
 {
     /* command step - receive  02  from udp rx queue */
     while (xQueueReceive(udpDataRx, in, portMAX_DELAY) != pdTRUE) {
-        vTaskDelay(1);
+        vTaskDelay(M2T(10));
     }; // Don't return until we get some data on the UDP
 
     return true;
@@ -102,7 +94,7 @@ bool wifiGetDataBlocking(UDPPacket *in)
 
 bool wifiSendData(uint32_t size, uint8_t *data)
 {
-    static UDPPacket outStage;
+    UDPPacket outStage = {0};
     outStage.size = size;
     memcpy(outStage.data, data, size);
     // Dont' block when sending
@@ -115,12 +107,12 @@ static esp_err_t udp_server_create(void *arg)
         return ESP_OK;
     }
 
-    struct sockaddr_in *pdest_addr = &dest_addr;
-    pdest_addr->sin_addr.s_addr = htonl(INADDR_ANY);
-    pdest_addr->sin_family = AF_INET;
-    pdest_addr->sin_port = htons(UDP_SERVER_PORT);
+    static struct sockaddr_in dest_addr = {0};
+    dest_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_port = htons(UDP_SERVER_PORT);
 
-    sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
+    sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     if (sock < 0) {
         DEBUG_PRINT_LOCAL("Unable to create socket: errno %d", errno);
         return ESP_FAIL;
@@ -139,41 +131,43 @@ static esp_err_t udp_server_create(void *arg)
 
 static void udp_server_rx_task(void *pvParameters)
 {
-    uint8_t cksum = 0;
     socklen_t socklen = sizeof(source_addr);
+    char rx_buffer[UDP_SERVER_BUFSIZE];
+    UDPPacket inPacket = {0};
 
     while (true) {
         if(isUDPInit == false) {
             vTaskDelay(20);
             continue;
         }
-        int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
+        int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer), 0, (struct sockaddr *)&source_addr, &socklen);
         /* command step - receive  01 from Wi-Fi UDP */
         if (len < 0) {
             DEBUG_PRINT_LOCAL("recvfrom failed: errno %d", errno);
-            break;
-        } else if(len > WIFI_RX_TX_PACKET_SIZE - 4) {
-            DEBUG_PRINT_LOCAL("Received data length = %d > 64", len);
+            continue;
+        } else if(len > WIFI_RX_TX_PACKET_SIZE) {
+            DEBUG_PRINT_LOCAL("Received data length = %d > %d", len, WIFI_RX_TX_PACKET_SIZE);
+            continue;
         } else {
-            //copy part of the UDP packet
-            rx_buffer[len] = 0;// Null-terminate whatever we received and treat like a string...
-            memcpy(inPacket.data, rx_buffer, len);
-            cksum = inPacket.data[len - 1];
+            uint8_t cksum = rx_buffer[len - 1];
             //remove cksum, do not belong to CRTP
-            inPacket.size = len - 1;
             //check packet
-            if (cksum == calculate_cksum(inPacket.data, len - 1) && inPacket.size < 64){
-                xQueueSend(udpDataRx, &inPacket, M2T(2));
+            if (cksum == calculate_cksum(rx_buffer, len - 1)) {
+                //copy part of the UDP packet, the size not include cksum
+                inPacket.size = len - 1;
+                memcpy(inPacket.data, rx_buffer, inPacket.size);
+                xQueueSend(udpDataRx, &inPacket, M2T(10));
                 if(!isUDPConnected) isUDPConnected = true;
             }else{
                 DEBUG_PRINT_LOCAL("udp packet cksum unmatched");
             }
 
 #ifdef DEBUG_UDP
-            DEBUG_PRINT_LOCAL("1.Received data size = %d  %02X \n cksum = %02X", len, inPacket.data[0], cksum);
-            for (size_t i = 0; i < len; i++) {
-                DEBUG_PRINT_LOCAL(" data[%d] = %02X ", i, inPacket.data[i]);
+            printf("\nReceived size = %d cksum = %02X\n", inPacket.size, cksum);
+            for (size_t i = 0; i < inPacket.size; i++) {
+                printf("%02X ", inPacket.data[i]);
             }
+            printf("\n");
 #endif
         }
     }
@@ -181,26 +175,28 @@ static void udp_server_rx_task(void *pvParameters)
 
 static void udp_server_tx_task(void *pvParameters)
 {
+    UDPPacket outPacket = {0};
     while (TRUE) {
         if(isUDPInit == false) {
             vTaskDelay(20);
             continue;
         }
-        if ((xQueueReceive(udpDataTx, &outPacket, 5) == pdTRUE) && isUDPConnected) {
-            memcpy(tx_buffer, outPacket.data, outPacket.size);
-            tx_buffer[outPacket.size] =  calculate_cksum(tx_buffer, outPacket.size);
-            tx_buffer[outPacket.size + 1] = 0;
+        if ((xQueueReceive(udpDataTx, &outPacket, portMAX_DELAY) == pdTRUE) && isUDPConnected) {
+            // append cksum to the packet
+            outPacket.data[outPacket.size] = calculate_cksum(outPacket.data, outPacket.size);
+            outPacket.size += 1;
 
-            int err = sendto(sock, tx_buffer, outPacket.size + 1, 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
+            int err = sendto(sock, outPacket.data, outPacket.size, 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
             if (err < 0) {
                 DEBUG_PRINT_LOCAL("Error occurred during sending: errno %d", errno);
                 continue;
             }
 #ifdef DEBUG_UDP
-            DEBUG_PRINT_LOCAL("Send data to");
-            for (size_t i = 0; i < outPacket.size + 1; i++) {
-                DEBUG_PRINT_LOCAL(" data_send[%d] = %02X ", i, tx_buffer[i]);
+            printf("\nSend size = %d checksum = %02X\n", outPacket.size, outPacket.data[outPacket.size - 1]);
+            for (size_t i = 0; i < outPacket.size; i++) {
+                printf("%02X ", outPacket.data[i]);
             }
+            printf("\n");
 #endif
         }
     }
@@ -259,9 +255,9 @@ void wifiInit(void)
         return;
     }
     // This should probably be reduced to a CRTP packet size
-    udpDataRx = xQueueCreate(5, sizeof(UDPPacket)); /* Buffer packets (max 64 bytes) */
+    udpDataRx = xQueueCreate(16, sizeof(UDPPacket));
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataRx);
-    udpDataTx = xQueueCreate(5, sizeof(UDPPacket)); /* Buffer packets (max 64 bytes) */
+    udpDataTx = xQueueCreate(16, sizeof(UDPPacket));
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataTx);
 
     espnow_storage_init();

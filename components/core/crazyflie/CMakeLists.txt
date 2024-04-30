@@ -79,4 +79,5 @@ target_compile_options(${COMPONENT_LIB} PRIVATE "-fno-strict-aliasing"
                                                 "-Wno-error=stringop-truncation"
                                                 "-Wno-absolute-value"
                                                 "-Wno-address-of-packed-member"
-                                                "-Wno-stringop-truncation")
+                                                "-Wno-stringop-truncation"
+                                                "-Wno-format")

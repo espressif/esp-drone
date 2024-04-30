@@ -86,9 +86,9 @@ static void flowdeckTask(void *param)
 
     while (1) {
 // if task watchdog triggered,flow frequency should set lower
-#ifdef CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_FREERTOS_UNICORE
         vTaskDelay(10);
-#elif defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32)
+#else
         vTaskDelay(5);
 #endif
 
@@ -122,9 +122,9 @@ static void flowdeckTask(void *param)
             flowData.stdDevY = stdFlow;    // [pixels] should perhaps be made larger?
 
 // if task watchdog triggered,flow frequency should set lower
-#ifdef CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_FREERTOS_UNICORE
             flowData.dt = 0.01;
-#elif defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32)
+#else
             flowData.dt = 0.005;
 #endif
 

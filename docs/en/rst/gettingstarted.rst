@@ -156,53 +156,28 @@ This step is optional, only for advanced debugging.
 
    cfclient Interface
 
-**1. Install CRTP protocol package**
+**1. Install cfclient**
 
 1.1 Download the source code
 
 .. code:: text
 
-   git clone -b esp-drone  https://github.com/qljz1993/crazyflie-lib-python.git
+   git clone https://github.com/qljz1993/crazyflie-clients-python.git
 
-1.2 Navigate to the source code directory, and install the requirements
 
-.. code:: text
-
-   pip3 install -r requirements.txt
-
-1.3 Install CRTP package
+1.2 Install cfclient
 
 .. code:: text
 
    pip3 install -e .
 
-**2. Install cfclient**
-
-2.1 Download the source code
-
-.. code:: text
-
-   git clone -b esp-drone https://github.com/qljz1993/crazyflie-clients-python.git
-
-2.2 Navigate to the source code directory, and install the requirements
-
-.. code:: text
-
-   sudo apt-get install python3 python3-pip python3-pyqt5 python3-pyqt5.qtsvg
-
-2.3 Install cfclient
-
-.. code:: text
-
-   pip3 install -e .
-
-2.4 Start cfclient
+1.3 Start cfclient
 
 .. code:: text
 
    python3 ./bin/cfclient
 
-**3. Configure the controllers**
+**2. Configure the controllers**
 
 .. figure:: ../../_static/gamepad_settings.png
    :align: center
@@ -211,9 +186,9 @@ This step is optional, only for advanced debugging.
 
    Controller Configuration
 
-3.1 Configure the four main dimensions of controls: ``Roll, Pitch, Yaw, Thrust``.
+2.1 Configure the four main dimensions of controls: ``Roll, Pitch, Yaw, Thrust``.
 
-3.2 Configure button ``Assisted control`` for flight mode switching.
+2.2 Configure button ``Assisted control`` for flight mode switching.
 
 ESP-Drone APP Guide
 =====================
