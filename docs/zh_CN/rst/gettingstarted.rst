@@ -142,17 +142,23 @@ ESP-Drone APP 同时支持 Android 系统和 iOS 系统。
 
    git clone https://github.com/qljz1993/crazyflie-clients-python.git
 
-1.2 安装 cfclient 客户端
+1.2 进入下载目录
+
+.. code:: text
+
+   cd crazyflie-clients-python
+
+1.3 安装 cfclient 客户端
 
 .. code:: text
 
    pip3 install -e .
 
-1.3 启动客户端
+1.4 启动客户端
 
 .. code:: text
 
-   python3 ./bin/cfclient
+   cfclient
 
 **2. 配置遥控器**
 

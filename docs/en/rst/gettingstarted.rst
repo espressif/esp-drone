@@ -164,18 +164,23 @@ This step is optional, only for advanced debugging.
 
    git clone https://github.com/qljz1993/crazyflie-clients-python.git
 
+1.2 Check into the directory
 
-1.2 Install cfclient
+.. code:: text
+
+   cd crazyflie-clients-python
+
+1.3 Install cfclient
 
 .. code:: text
 
    pip3 install -e .
 
-1.3 Start cfclient
+1.4 Start cfclient
 
 .. code:: text
 
-   python3 ./bin/cfclient
+   cfclient
 
 **2. Configure the controllers**
 
@@ -228,12 +233,12 @@ In this step, you can customize the flight settings according to your applicatio
            4. min thrust: 25
            5. X-Mode: true
    Controller settings 
-       1. use full travel for thrust: false
-       2. virtual joystick size: 100
+       7. use full travel for thrust: false
+       8. virtual joystick size: 100
    App settings
-       1. Screen rotation lock: true
-       2. full screen mode:true
-       3. show console: true   
+       9. Screen rotation lock: true
+       10. full screen mode:true
+       11. show console: true   
    ```
 
 Flight Control
