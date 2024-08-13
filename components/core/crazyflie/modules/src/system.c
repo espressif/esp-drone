@@ -223,8 +223,9 @@ void systemTask(void *arg)
   pass &= estimatorKalmanTaskTest();
   DEBUG_PRINTI("estimatorKalmanTaskTest = %d ", pass);
   //pass &= deckTest();
-  //pass &= soundTest();
-  //pass &= memTest();
+  pass &= soundTest();
+  DEBUG_PRINTI("soundTest = %d ", pass);
+  pass &= memTest();
   DEBUG_PRINTI("memTest = %d ", pass);
   //pass &= watchdogNormalStartTest();
   pass &= cfAssertNormalStartTest();
@@ -272,7 +273,6 @@ void systemTask(void *arg)
   while(1)
     vTaskDelay(portMAX_DELAY);
 }
-
 
 /* Global system variables */
 void systemStart()

@@ -22,7 +22,7 @@ ESP-Drone 是基于乐鑫 ESP32/ESP32-S2/ESP32-S3 开发的小型无人机解决
 2. 定高模式
 3. 定点模式
 4. APP 控制
-5. 适配 cfclient 上位机 
+5. 适配 cfclient 上位机，参考 https://github.com/leeebo/crazyflie-clients-python
 
 注意，定高模式及定点模式需外接扩展板，详情见硬件参考。
 
@@ -36,7 +36,7 @@ ESP-Drone 是基于乐鑫 ESP32/ESP32-S2/ESP32-S3 开发的小型无人机解决
 
 | 组件 | License | 源代码 |Commit ID |
 | :---:  | :---: | :---: |:---: |
-| core/crazyflie | GPL-3.0 |[Crazyflie](https://github.com/bitcraze/crazyflie-firmware) |tag_2021_01 b448553|
+| core/crazyflie | GPL-3.0 |[Crazyflie](https://github.com/bitcraze/crazyflie-firmware/tree/2021.01) |tag_2021_01 b448553|
 | lib/dsp_lib |  | [esp32-lin](https://github.com/whyengineer/esp32-lin/tree/master/components/dsp_lib) |6fa39f4c|
 
 ### 致谢

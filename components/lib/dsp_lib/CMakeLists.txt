@@ -10,4 +10,4 @@ idf_component_register(SRC_DIRS "BasicMathFunctions"
                         INCLUDE_DIRS "include"
                     )
 
-target_compile_options(${COMPONENT_LIB} PUBLIC "-fno-strict-aliasing")
+target_compile_options(${COMPONENT_LIB} PUBLIC "-fno-strict-aliasing" "-Wno-format")

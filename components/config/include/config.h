@@ -41,7 +41,7 @@
 
 //#include "trace.h"
 #include "usec_time.h"
-
+#include "sdkconfig.h"
 
 #define PROTOCOL_VERSION 4
 #define QUAD_FORMATION_X
@@ -61,7 +61,6 @@
 #endif
 
 #ifdef STM32F4XX 
-
   #define CONFIG_BLOCK_ADDRESS    (2048 * (64-1))
   #define MCU_ID_ADDRESS          0x1FFF7A10
   #define MCU_FLASH_SIZE_ADDRESS  0x1FFF7A22
@@ -81,147 +80,94 @@
 //#define DEBUG_EP2
 
 // Task priorities. Higher number higher priority
-#define STABILIZER_TASK_PRI     5
-#define SENSORS_TASK_PRI        4
-#define ADC_TASK_PRI            3
-#define FLOW_TASK_PRI           3
-#define MULTIRANGER_TASK_PRI    3
-#define SYSTEM_TASK_PRI         2
-#define CRTP_TX_TASK_PRI        2
-#define CRTP_RX_TASK_PRI        2
-#define EXTRX_TASK_PRI          2
-#define ZRANGER_TASK_PRI        2
-#define ZRANGER2_TASK_PRI       2
-#define PROXIMITY_TASK_PRI      0
-#define PM_TASK_PRI             0
-#define USDLOG_TASK_PRI         1
-#define USDWRITE_TASK_PRI       0
-#define PCA9685_TASK_PRI        2
-#define CMD_HIGH_LEVEL_TASK_PRI 2
-#define BQ_OSD_TASK_PRI         1
-#define GTGPS_DECK_TASK_PRI     1
-#define LIGHTHOUSE_TASK_PRI     3
-#define LPS_DECK_TASK_PRI       5
-#define OA_DECK_TASK_PRI        3
-#define UART1_TEST_TASK_PRI     1
-#define UART2_TEST_TASK_PRI     1
+// system state tasks
+#define SYSTEM_TASK_PRI         1
+#define PM_TASK_PRI             1
 #define LEDSEQCMD_TASK_PRI      1
-//if task watchdog triggered,KALMAN_TASK_PRI should set lower or set lower flow frequency
-#ifdef TARGET_MCU_ESP32
-  #define KALMAN_TASK_PRI         2
-  #define LOG_TASK_PRI            1
-  #define MEM_TASK_PRI            1
-  #define PARAM_TASK_PRI          1
-#else
-  #define KALMAN_TASK_PRI         1
-  #define LOG_TASK_PRI            2
-  #define MEM_TASK_PRI            2
-  #define PARAM_TASK_PRI          2
-#endif
-
-#define SYSLINK_TASK_PRI        3
-#define USBLINK_TASK_PRI        3
-#define ACTIVE_MARKER_TASK_PRI  3
-#define AI_DECK_TASK_PRI        3
-#define UART2_TASK_PRI          3
-#define WIFILINK_TASK_PRI       3
-#define UDP_TX_TASK_PRI         3
+// communication TX tasks
+#define UDP_TX_TASK_PRI         2
+#define CRTP_TX_TASK_PRI        2
+// communication RX tasks
 #define UDP_RX_TASK_PRI         2
+#define EXTRX_TASK_PRI          2
+#define UART2_TASK_PRI          2
+#define SYSLINK_TASK_PRI        2
+#define USBLINK_TASK_PRI        2
+#define WIFILINK_TASK_PRI       2
+#define CRTP_RX_TASK_PRI        2
+#define CMD_HIGH_LEVEL_TASK_PRI 3
+#define INFO_TASK_PRI           2
+#define LOG_TASK_PRI            2
+#define MEM_TASK_PRI            2
+#define PARAM_TASK_PRI          2
+// sensors and stabilize related tasks
+#define PROXIMITY_TASK_PRI      5
+#define FLOW_TASK_PRI           5
+#define ZRANGER2_TASK_PRI       5
+#define ZRANGER_TASK_PRI        5
+#define SENSORS_TASK_PRI        6
+#define STABILIZER_TASK_PRI     7
+#define KALMAN_TASK_PRI         4
 
-// Not compiled
-#if 0
-  #define INFO_TASK_PRI           2
-  #define PID_CTRL_TASK_PRI       2
+// the kalman filter consumes a lot of CPU
+// for single core systems, we need to lower the priority
+#if CONFIG_FREERTOS_UNICORE
+  #undef KALMAN_TASK_PRI
+  #define KALMAN_TASK_PRI         1
 #endif
-
 
 // Task names
-#define SYSTEM_TASK_NAME        "SYSTEM"
-#define LEDSEQCMD_TASK_NAME     "LEDSEQCMD"
-#define ADC_TASK_NAME           "ADC"
-#define PM_TASK_NAME            "PWRMGNT"
-#define CRTP_TX_TASK_NAME       "CRTP-TX"
+#define CMD_HIGH_LEVEL_TASK_NAME "CMDHL"
 #define CRTP_RX_TASK_NAME       "CRTP-RX"
-#define CRTP_RXTX_TASK_NAME     "CRTP-RXTX"
+#define CRTP_TX_TASK_NAME       "CRTP-TX"
+#define EXTRX_TASK_NAME         "EXTRX"
+#define FLOW_TASK_NAME          "FLOW"
+#define KALMAN_TASK_NAME        "KALMAN"
+#define LEDSEQCMD_TASK_NAME     "LEDSEQCMD"
 #define LOG_TASK_NAME           "LOG"
 #define MEM_TASK_NAME           "MEM"
 #define PARAM_TASK_NAME         "PARAM"
+#define PM_TASK_NAME            "PWRMGNT"
+#define PROXIMITY_TASK_NAME     "PROXIMITY"
 #define SENSORS_TASK_NAME       "SENSORS"
 #define STABILIZER_TASK_NAME    "STABILIZER"
-#define NRF24LINK_TASK_NAME     "NRF24LINK"
-#define ESKYLINK_TASK_NAME      "ESKYLINK"
 #define SYSLINK_TASK_NAME       "SYSLINK"
+#define SYSTEM_TASK_NAME        "SYSTEM"
+#define UART2_TASK_NAME         "UART2"
+#define UDP_RX_TASK_NAME        "UDP_RX"
+#define UDP_TX_TASK_NAME        "UDP_TX"
 #define USBLINK_TASK_NAME       "USBLINK"
 #define WIFILINK_TASK_NAME      "WIFILINK"
-#define UDP_TX_TASK_NAME        "UDP_TX"
-#define UDP_RX_TASK_NAME        "UDP_RX"
-#define UDP_RX2_TASK_NAME       "UDP_RX2"
-#define PROXIMITY_TASK_NAME     "PROXIMITY"
-#define EXTRX_TASK_NAME         "EXTRX"
-#define UART_RX_TASK_NAME       "UART"
-#define ZRANGER_TASK_NAME       "ZRANGER"
 #define ZRANGER2_TASK_NAME      "ZRANGER2"
-#define FLOW_TASK_NAME          "FLOW"
-#define USDLOG_TASK_NAME        "USDLOG"
-#define USDWRITE_TASK_NAME      "USDWRITE"
-#define PCA9685_TASK_NAME       "PCA9685"
-#define CMD_HIGH_LEVEL_TASK_NAME "CMDHL"
-#define MULTIRANGER_TASK_NAME   "MR"
-#define BQ_OSD_TASK_NAME        "BQ_OSDTASK"
-#define GTGPS_DECK_TASK_NAME    "GTGPS"
-#define LIGHTHOUSE_TASK_NAME    "LH"
-#define LPS_DECK_TASK_NAME      "LPS"
-#define OA_DECK_TASK_NAME       "OA"
-#define UART1_TEST_TASK_NAME    "UART1TEST"
-#define UART2_TEST_TASK_NAME    "UART2TEST"
-#define KALMAN_TASK_NAME        "KALMAN"
-#define ACTIVE_MARKER_TASK_NAME "ACTIVEMARKER-DECK"
-#define AI_DECK_GAP_TASK_NAME   "AI-DECK-GAP"
-#define AI_DECK_NINA_TASK_NAME  "AI-DECK-NINA"
-#define UART2_TASK_NAME         "UART2"
-
-#define configBASE_STACK_SIZE CONFIG_BASE_STACK_SIZE
+#define ZRANGER_TASK_NAME       "ZRANGER"
 
 //Task stack sizes
-#define SYSTEM_TASK_STACKSIZE         (6 * configBASE_STACK_SIZE)
+#define configBASE_STACK_SIZE CONFIG_BASE_STACK_SIZE
+#define CMD_HIGH_LEVEL_TASK_STACKSIZE (2 * configBASE_STACK_SIZE)
+#define CRTP_RX_TASK_STACKSIZE        (3 * configBASE_STACK_SIZE)
+#define CRTP_TX_TASK_STACKSIZE        (3 * configBASE_STACK_SIZE)
+#define EXTRX_TASK_STACKSIZE          (1 * configBASE_STACK_SIZE)
+#define FLOW_TASK_STACKSIZE           (3 * configBASE_STACK_SIZE)
+#define KALMAN_TASK_STACKSIZE         (3 * configBASE_STACK_SIZE)
 #define LEDSEQCMD_TASK_STACKSIZE      (2 * configBASE_STACK_SIZE)
-#define ADC_TASK_STACKSIZE            (1 * configBASE_STACK_SIZE)
-#define PM_TASK_STACKSIZE             (4 * configBASE_STACK_SIZE)
-#define CRTP_TX_TASK_STACKSIZE        (2 * configBASE_STACK_SIZE)
-#define CRTP_RX_TASK_STACKSIZE        (6 * configBASE_STACK_SIZE)
-#define CRTP_RXTX_TASK_STACKSIZE      (1 * configBASE_STACK_SIZE)
 #define LOG_TASK_STACKSIZE            (3 * configBASE_STACK_SIZE)
 #define MEM_TASK_STACKSIZE            (2 * configBASE_STACK_SIZE)
 #define PARAM_TASK_STACKSIZE          (2 * configBASE_STACK_SIZE)
+#define PM_TASK_STACKSIZE             (4 * configBASE_STACK_SIZE)
 #define SENSORS_TASK_STACKSIZE        (5 * configBASE_STACK_SIZE)
 #define STABILIZER_TASK_STACKSIZE     (5 * configBASE_STACK_SIZE)
-#define NRF24LINK_TASK_STACKSIZE      (1 * configBASE_STACK_SIZE)
-#define ESKYLINK_TASK_STACKSIZE       (1 * configBASE_STACK_SIZE)
 #define SYSLINK_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
+#define SYSTEM_TASK_STACKSIZE         (6 * configBASE_STACK_SIZE)
+#define UART2_TASK_STACKSIZE          (1 * configBASE_STACK_SIZE)
+#define UDP_RX_TASK_STACKSIZE         (4 * configBASE_STACK_SIZE)
+#define UDP_TX_TASK_STACKSIZE         (4 * configBASE_STACK_SIZE)
 #define USBLINK_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
 #define WIFILINK_TASK_STACKSIZE       (4 * configBASE_STACK_SIZE)
-#define UDP_TX_TASK_STACKSIZE         (2 * configBASE_STACK_SIZE)
-#define UDP_RX_TASK_STACKSIZE         (4 * configBASE_STACK_SIZE)
-#define UDP_RX2_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
-#define PROXIMITY_TASK_STACKSIZE      (1 * configBASE_STACK_SIZE)
-#define EXTRX_TASK_STACKSIZE          (1 * configBASE_STACK_SIZE)
-#define UART_RX_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
-#define ZRANGER_TASK_STACKSIZE        (2 * configBASE_STACK_SIZE)
 #define ZRANGER2_TASK_STACKSIZE       (4 * configBASE_STACK_SIZE)
-#define FLOW_TASK_STACKSIZE           (3 * configBASE_STACK_SIZE)
-#define USDLOG_TASK_STACKSIZE         (2 * configBASE_STACK_SIZE)
-#define USDWRITE_TASK_STACKSIZE       (2 * configBASE_STACK_SIZE)
-#define PCA9685_TASK_STACKSIZE        (2 * configBASE_STACK_SIZE)
-#define CMD_HIGH_LEVEL_TASK_STACKSIZE (2 * configBASE_STACK_SIZE)
-#define MULTIRANGER_TASK_STACKSIZE    (2 * configBASE_STACK_SIZE)
-#define ACTIVEMARKER_TASK_STACKSIZE   (1 * configBASE_STACK_SIZE)
-#define AI_DECK_TASK_STACKSIZE        (1 * configBASE_STACK_SIZE)
-#define UART2_TASK_STACKSIZE          (1 * configBASE_STACK_SIZE)
+#define ZRANGER_TASK_STACKSIZE        (2 * configBASE_STACK_SIZE)
 
 //The radio channel. From 0 to 125
-//TODO:
 #define RADIO_RATE_2M 2
-
 #define RADIO_CHANNEL 80
 #define RADIO_DATARATE RADIO_RATE_2M
 #define RADIO_ADDRESS 0xE7E7E7E7E7ULL

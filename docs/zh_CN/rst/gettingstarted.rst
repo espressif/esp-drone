@@ -134,53 +134,27 @@ ESP-Drone APP 同时支持 Android 系统和 iOS 系统。
    cfclient 上位机界面
 
 
-**1. 安装 CRTP 协议支持包**
+**1. 安装 cfclient**
 
 1.1 下载源代码
 
 .. code:: text
 
-   git clone -b esp-drone  https://github.com/qljz1993/crazyflie-lib-python.git
+   git clone https://github.com/qljz1993/crazyflie-clients-python.git
 
-1.2 进入源码目录，安装依赖
-
-.. code:: text
-
-   pip3 install -r requirements.txt
-
-1.3 安装 CRTP 包
+1.2 安装 cfclient 客户端
 
 .. code:: text
 
    pip3 install -e .
 
-**2. 安装 cfclient**
-
-2.1 下载源代码
-
-.. code:: text
-
-   git clone -b esp-drone https://github.com/qljz1993/crazyflie-clients-python.git
-
-2.2 进入源码目录，安装依赖
-
-.. code:: text
-
-   sudo apt-get install python3 python3-pip python3-pyqt5 python3-pyqt5.qtsvg
-
-2.3 安装 cfclient 客户端
-
-.. code:: text
-
-   pip3 install -e .
-
-2.4 启动客户端
+1.3 启动客户端
 
 .. code:: text
 
    python3 ./bin/cfclient
 
-**3. 配置遥控器**
+**2. 配置遥控器**
 
 .. figure:: ../../_static/gamepad_settings.png
    :align: center
@@ -189,9 +163,9 @@ ESP-Drone APP 同时支持 Android 系统和 iOS 系统。
 
    遥控器配置
 
-3.1 配置 4 个控制轴：``Roll 、Pitch、Yaw、Thrust``。
+2.1 配置 4 个控制轴：``Roll 、Pitch、Yaw、Thrust``。
 
-3.2 配置一个按键为 ``Assisted control``，用于飞行模式切换。
+2.2 配置一个按键为 ``Assisted control``，用于飞行模式切换。
 
 手机 APP 使用指南
 ========================

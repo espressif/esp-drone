@@ -3,7 +3,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define WIFI_RX_TX_PACKET_SIZE   (64)
+// 32 bytes is enough for CRTP packets (30+1) + checksum 1
+#define WIFI_RX_TX_PACKET_SIZE   (32)
 
 /* Structure used for in/out data via USB */
 typedef struct

@@ -64,7 +64,7 @@ menu "ESPDrone Config"
         config WIFI_CHANNEL
             int "Wi-Fi/ESP-Now Channel"
             range 1 13
-            default 13
+            default 6
             help
                 Wi-Fi/ESP-Now Channel, 1-13
         config WIFI_MAX_STA_CONN

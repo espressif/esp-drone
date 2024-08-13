@@ -23,7 +23,7 @@ For more information, please check the sections below:
 2. Height-hold Mode
 3. Position-hold Mode
 4. APP Control
-5. CFclient Supported
+5. cfclient Supported, refer https://github.com/leeebo/crazyflie-clients-python
 6. ESP-BOX3 Joystick Control (through esp-now)
 
 Note: to implement Height-hold/Position-hold mode, extension boards are needed. For more information, see Hardware Reference. 
@@ -34,7 +34,7 @@ Additional third party copyrighted code is included under the following licenses
 
 | Component | License | Origin |Commit ID |
 | :---:  | :---: | :---: |:---: |
-| core/crazyflie | GPL3.0  |[Crazyflie](https://github.com/bitcraze/crazyflie-firmware) |tag_2021_01 b448553|
+| core/crazyflie | GPL3.0  |[Crazyflie](https://github.com/bitcraze/crazyflie-firmware/tree/2021.01) |tag_2021_01 b448553|
 | lib/dsp_lib |  | [esp32-lin](https://github.com/whyengineer/esp32-lin/tree/master/components/dsp_lib) |6fa39f4c|
 
 ### Support Policy

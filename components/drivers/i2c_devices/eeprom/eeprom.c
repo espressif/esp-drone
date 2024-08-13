@@ -101,7 +101,8 @@ bool eepromTestConnection(void)
 bool eepromReadBuffer(uint8_t *buffer, size_t readAddr, size_t len)
 {
     bool status = false;
-    esp_err_t err = ESP_OK; //TODO spi_flash_read(readAddr, buffer, len);
+    esp_err_t err = ESP_OK; 
+    //TODO spi_flash_read(readAddr, buffer, len);
 
     if (err == ESP_OK) {
 
@@ -119,7 +120,6 @@ bool eepromWriteBuffer(uint8_t *buffer, size_t writeAddr, size_t len)
 {
     bool status = false;
     writeAddr += EEPROM_IN_FLASH_ADDR;
-
     //TODO if (spi_flash_write(writeAddr, buffer, len) == ESP_OK) {
     if (1) {
 
