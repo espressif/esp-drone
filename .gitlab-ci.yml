@@ -3,9 +3,7 @@ stages:
   - deploy
 
 variables:
-  BATCH_BUILD: "1"
-  V: "0"
-  IDF_CI_BUILD: "1"
+  ESP_DRONE_PATH: "$CI_PROJECT_DIR"
 
 before_script:
   # add gitlab ssh key
@@ -70,27 +68,28 @@ push_master_to_github:
   stage: deploy
   only:
     - master
-    - /^release\/v/
 #  when: on_success
-  image: $CI_DOCKER_REGISTRY/esp32-ci-env
+  image: $CI_SPHINX_DOCKER:latest
+  tags:
+    - github_sync
   variables:
     GIT_STRATEGY: clone
-    GITHUB_PUSH_REFS: refs/remotes/origin/release refs/remotes/origin/master
+    SUBMODULES_TO_FETCH: "none"
+  dependencies: []
   before_script:
     - echo "skip default before_script"
   script:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - echo -n $GH_PUSH_KEY >> ~/.ssh/id_rsa_base64
+    - echo -n $GH_PUSH_KEY > ~/.ssh/id_rsa_base64
     - base64 --decode --ignore-garbage ~/.ssh/id_rsa_base64 > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+    - git remote remove github &>/dev/null || true
     - git remote add github git@github.com:espressif/esp-drone.git
-    # What the next line of script does: goes through the list of refs for all branches we push to github,
-    # generates a snippet of shell which is evaluated. The snippet checks CI_BUILD_REF against the SHA
-    # (aka objectname) at tip of each branch, and if any SHAs match then it checks out the local branch
-    # and then pushes that ref to a corresponding github branch
-    #
-    # NB: In gitlab 9.x, CI_BUILD_REF was deprecated. New name is CI_COMMIT_SHA. If below command suddenly
-    # generates bash syntax errors, this is probably why.
-    - eval $(git for-each-ref --shell bash --format 'if [ $CI_COMMIT_SHA == %(objectname) ]; then git checkout -B %(refname:strip=3); git push --follow-tags github %(refname:strip=3); fi;' $GITHUB_PUSH_REFS)
+    - |
+      if [ -n "${CI_COMMIT_TAG}" ]; then
+        git push github "${CI_COMMIT_TAG}"
+      else
+        git push github "${CI_COMMIT_SHA}:refs/heads/${CI_COMMIT_REF_NAME}"
+      fi
