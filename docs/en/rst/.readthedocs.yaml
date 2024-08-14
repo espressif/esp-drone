@@ -19,3 +19,6 @@ formats:
 python:
   install:
     - requirements: docs/requirements.txt
+
+sphinx:
+  configuration: docs/en/rst/conf.py
