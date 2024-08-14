@@ -13,4 +13,6 @@ idf_component_register(SRCS "vl53l1x.c"
                     "core/src/vl53l1_silicon_core.c"
                     "core/src/vl53l1_wait.c"
                        INCLUDE_DIRS "." "include" "core/inc"
-                     REQUIRES i2c_bus crazyflie platform config) 
+                     REQUIRES i2c_bus crazyflie platform config)
+
+target_compile_options(${COMPONENT_LIB} PRIVATE "-Wno-overflow")
