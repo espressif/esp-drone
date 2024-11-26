@@ -305,18 +305,21 @@ void sensorsMpu6050Hmc5883lMs5611WaitDataReady(void)
 
 void processBarometerMeasurements(const uint8_t *buffer)
 {
-    //TODO: replace it to MS5611
-    DEBUG_PRINTW("processBarometerMeasurements NEED TODO");
-//   static uint32_t rawPressure = 0;
-//   static int16_t rawTemp = 0;
+    static uint32_t rawPressure = 0;
+    static int16_t rawTemp = 0;
 
-// Check if there is a new pressure update
+    // Check if there is a new pressure update
+    if (buffer[0] & 0x02) {
+        rawPressure = ((uint32_t) buffer[3] << 16) | ((uint32_t) buffer[2] << 8) | buffer[1];
+    }
+    // Check if there is a new temp update
+    if (buffer[0] & 0x01) {
+        rawTemp = ((int16_t) buffer[5] << 8) | buffer[4];
+    }
 
-// Check if there is a new temp update
-
-//   sensorData.baro.pressure = (float) rawPressure / LPS25H_LSB_PER_MBAR;
-//   sensorData.baro.temperature = LPS25H_TEMP_OFFSET + ((float) rawTemp / LPS25H_LSB_PER_CELSIUS);
-//   sensorData.baro.asl = lps25hPressureToAltitude(&sensorData.baro.pressure);
+    sensorData.baro.pressure = (float) rawPressure / MS5611_LSB_PER_MBAR;
+    sensorData.baro.temperature = MS5611_TEMP_OFFSET + ((float) rawTemp / MS5611_LSB_PER_CELSIUS);
+    sensorData.baro.asl = ms5611PressureToAltitude(&sensorData.baro.pressure);
 }
 
 void processMagnetometerMeasurements(const uint8_t *buffer)
