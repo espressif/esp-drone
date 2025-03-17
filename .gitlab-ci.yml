@@ -21,7 +21,7 @@ before_script:
   tags:
     - build
 
-build_demo_cmake_idf44:
+build_project_idf44:
   <<: *build_examples_template
   image: espressif/idf:release-v4.4
   script:
@@ -34,7 +34,7 @@ build_demo_cmake_idf44:
     - idf.py set-target esp32s3
     - idf.py build
 
-build_demo_cmake_idf50:
+build_project_idf50:
   <<: *build_examples_template
   image: espressif/idf:release-v5.0
   script:
