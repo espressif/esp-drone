@@ -3,11 +3,13 @@
 
 * [中文](./README_cn.md)
 
+[![Build project](https://github.com/espressif/esp-drone/actions/workflows/build_project.yml/badge.svg)](https://github.com/espressif/esp-drone/actions/workflows/build_project.yml)
+
 ### Introduction
 
 **ESP-Drone** is an open source solution based on Espressif ESP32/ESP32-S2/ESP32-S3 Wi-Fi chip, which can be controlled by a mobile APP or gamepad over **Wi-Fi** connection. ESP-Drone comes with **simple hardware**, **clear and extensible code architecture**, and therefore this project can be used in **STEAM education** and other fields. The main code is ported from **Crazyflie** open source project with **GPL3.0** protocol.
 
-> Currently support ESP32、ESP32S2、ESP32S3, please using ESP-IDF [release/v4.4](https://docs.espressif.com/projects/esp-idf/en/release-v4.4/esp32s2/get-started/index.html) branch as your develop environment
+> Currently support ESP32、ESP32S2、ESP32S3, please using ESP-IDF [release/v5.0](https://docs.espressif.com/projects/esp-idf/en/release-v5.0/esp32s2/get-started/index.html)  branch as your develop environment
 
 ![ESP-Drone](./docs/_static/espdrone_s2_v1_2_2.png)
 

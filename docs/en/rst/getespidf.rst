@@ -5,11 +5,11 @@ Set up Development Environment
 Set up ESP-IDF Environment 
 ---------------------------------
 
-Please refer to `ESP-IDF Programming Guide <https://docs.espressif.com/projects/esp-idf/en/release-v4.4/esp32s2/get-started/index.html>`__\  and set up ESP-IDF environmnet step by step.
+Please refer to `ESP-IDF Programming Guide <https://docs.espressif.com/projects/esp-idf/en/release-v5.0/esp32s2/get-started/index.html>`__\  and set up ESP-IDF environmnet step by step.
 
 .. note::
 
--  ESP-IDF branch ``release /v4.4`` is suggested.
+-  ESP-IDF branch ``release/v5.0`` is suggested.
 -  Please follow and complete all setup steps.
 -  Build a example of ESP-IDF to make sure the setup is successful.
 

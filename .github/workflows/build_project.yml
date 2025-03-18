@@ -17,6 +17,6 @@ jobs:
         shell: bash
         run: |
           . ${IDF_PATH}/export.sh
-          pip install idf-component-manager idf-build-apps --upgrade
+          pip install idf-component-manager idf-build-apps
           idf-build-apps find
           idf-build-apps build

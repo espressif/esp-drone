@@ -5,11 +5,11 @@
 ESP-IDF 环境搭建
 ----------------
 
-请参照 `ESP-IDF 编程指南 <https://docs.espressif.com/projects/esp-idf/en/release-v4.4/esp32s2/get-started/index.html>`__\ ，按照步骤设置 ESP-IDF。
+请参照 `ESP-IDF 编程指南 <https://docs.espressif.com/projects/esp-idf/en/release-v5.0/esp32s2/get-started/index.html>`__\ ，按照步骤设置 ESP-IDF。
 
 注意事项：
 
--  推荐安装 ESP-IDF `release/v4.4` 分支；
+-  推荐安装 ESP-IDF `release/v5.0` 分支；
 -  请完成 ESP-IDF 所有安装步骤;
 -  建议首先编译一个 ESP-IDF 示例程序，用以检查安装的完整性。
 

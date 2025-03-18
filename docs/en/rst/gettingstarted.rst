@@ -87,7 +87,7 @@ ESP-IDF is the IoT Development Framework provided by Espressif for ESP32/ESP32-S
 
 
 For more information, please check `ESP-IDF
-Programming Guide <https://docs.espressif.com/projects/esp-idf/en/release-v4.4/esp32s2/get-started/index.html>`__.
+Programming Guide <https://docs.espressif.com/projects/esp-idf/en/release-v5.0/esp32s2/get-started/index.html>`__.
 
 Crazyflie Overview
 =======================

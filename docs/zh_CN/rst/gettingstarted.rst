@@ -60,7 +60,7 @@ ESP-IDF 是乐鑫为 ESP32/ESP32-S2/ESP32-S3 提供的物联网开发框架。
 -  ESP-IDF 包含一系列库及头文件，提供了基于 ESP32/ESP32-S2/ESP32-S3 构建软件项目所需的核心组件。
 -  ESP-IDF 还提供了开发和量产过程中最常用的工具及功能，例如：构建、烧录、调试和测量等。
 
-详情可查阅：`ESP-IDF 编程指南 <https://docs.espressif.com/projects/esp-idf/en/release-v4.4/esp32s2/get-started/index.html>`__。
+详情可查阅：`ESP-IDF 编程指南 <https://docs.espressif.com/projects/esp-idf/en/release-v5.0/esp32s2/get-started/index.html>`__。
 
 Crazyflie 简介
 ================
