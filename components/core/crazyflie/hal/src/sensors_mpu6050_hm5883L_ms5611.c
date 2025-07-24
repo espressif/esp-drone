@@ -415,7 +415,7 @@ static void sensorsDeviceInit(void)
         DEBUG_PRINTI("MPU6050 I2C connection [OK].\n");
     } else {
         DEBUG_PRINTE("MPU6050 I2C connection [FAIL].\n");
-        DEBUG_PRINTE("please power-off power-on.\n");
+        DEBUG_PRINTE("Please power off and power on the device.\n");
         while (1) 
         {
             vTaskDelay(M2T(100));
