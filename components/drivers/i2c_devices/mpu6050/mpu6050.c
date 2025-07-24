@@ -77,6 +77,7 @@ bool mpu6050Test(void)
  */
 bool mpu6050TestConnection()
 {
+    vTaskDelay(M2T(100));
     return mpu6050GetDeviceID() == 0b110100;
 }
 
