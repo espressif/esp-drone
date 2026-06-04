@@ -65,23 +65,16 @@ typedef struct vec3_s acc_t;
 
 /* Orientation as a quaternion */
 typedef struct quaternion_s {
-  uint32_t timestamp;
+    uint32_t timestamp;
 
-  union {
-    struct {
-      float q0;
-      float q1;
-      float q2;
-      float q3;
+    union {
+        float q[4];              // Continuous memory block of 4 floats
+        struct {
+            float x, y, z, w;    // Named accessors mapping to q[0..3]
+        };
     };
-    struct {
-      float x;
-      float y;
-      float z;
-      float w;
-    };
-  };
 } quaternion_t;
+
 
 typedef struct tdoaMeasurement_s {
   point_t anchorPosition[2];
