@@ -43,7 +43,7 @@ typedef enum {
     SensorImplementation_mpu9250_lps25h,
 #endif
 
-#ifdef SENSOR_INCLUDED_MPU6050_HMC5883L_MS5611
+//#ifdef SENSOR_INCLUDED_MPU6050_HMC5883L_MS5611
     SensorImplementation_mpu6050_HMC5883L_MS5611,
 #endif
 
@@ -87,3 +87,4 @@ bool platformConfigPhysicalLayoutAntennasAreClose();
 const MotorPerifDef **platformConfigGetMotorMapping();
 
 #endif /* PLATFORM_H_ */
+
