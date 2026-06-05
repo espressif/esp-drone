@@ -44,6 +44,7 @@ struct selfState_s {
   float vAccDeadband; // Vertical acceleration deadband
   float velZAlpha;   // Blending factor to avoid vertical speed to accumulate error
   float estimatedVZ;
+  float baroAlpha;   // Blending factor for barometer data
 };
 
 static struct selfState_s state = {
@@ -55,6 +56,7 @@ static struct selfState_s state = {
   .vAccDeadband = 0.04f,
   .velZAlpha = 0.995f,
   .estimatedVZ = 0.0f,
+  .baroAlpha = 0.9f,
 };
 
 static void positionEstimateInternal(state_t* estimate, const sensorData_t* sensorData, const tofMeasurement_t* tofMeasurement, float dt, uint32_t tick, struct selfState_s* state);
@@ -103,6 +105,9 @@ static void positionEstimateInternal(state_t* estimate, const sensorData_t* sens
     state->estimatedZ = filteredZ + (state->velocityFactor * state->velocityZ * dt);
   }
 
+  // Incorporate barometer data for altitude estimation
+  state->estimatedZ = (state->baroAlpha * state->estimatedZ) + ((1.0f - state->baroAlpha) * sensorData->baro.asl);
+
   estimate->position.x = 0.0f;
   estimate->position.y = 0.0f;
   estimate->position.z = state->estimatedZ;
@@ -114,6 +119,8 @@ static void positionEstimateInternal(state_t* estimate, const sensorData_t* sens
 static void positionUpdateVelocityInternal(float accWZ, float dt, struct selfState_s* state) {
   state->velocityZ += deadband(accWZ, state->vAccDeadband) * dt * G;
   state->velocityZ *= state->velZAlpha;
+  // Update vertical velocity using barometer data
+  state->velocityZ = (state->baroAlpha * state->velocityZ) + ((1.0f - state->baroAlpha) * state->estimatedVZ);
 }
 
 LOG_GROUP_START(posEstAlt)
@@ -128,4 +135,5 @@ PARAM_ADD(PARAM_FLOAT, estAlphaZr, &state.estAlphaZrange)
 PARAM_ADD(PARAM_FLOAT, velFactor, &state.velocityFactor)
 PARAM_ADD(PARAM_FLOAT, velZAlpha, &state.velZAlpha)
 PARAM_ADD(PARAM_FLOAT, vAccDeadband, &state.vAccDeadband)
+PARAM_ADD(PARAM_FLOAT, baroAlpha, &state.baroAlpha)
 PARAM_GROUP_STOP(posEstAlt)
