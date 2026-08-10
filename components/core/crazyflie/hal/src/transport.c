@@ -11,6 +11,7 @@
 
 static bool isInit;
 
+#ifdef CONFIG_TRANSPORT_NONE
 static int noneSetEnable(bool enable)
 {
     (void)enable;
@@ -41,6 +42,7 @@ static struct crtpLinkOperations noneLink = {
     .receivePacket = noneReceivePacket,
     .isConnected = noneIsConnected,
 };
+#endif
 
 void transportInit(void)
 {

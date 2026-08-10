@@ -24,7 +24,7 @@
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 0)
 #include "esp_mac.h"
 #endif
-#ifdef CONFIG_TRANSPORT_NATIVE_WIFI
+#ifdef CONFIG_ESPNOW_CONTROL
 #include "espnow.h"
 #include "espnow_ctrl.h"
 #include "espnow_utils.h"
@@ -221,7 +221,7 @@ static void udp_server_tx_task(void *pvParameters)
     }
 }
 
-#ifdef CONFIG_TRANSPORT_NATIVE_WIFI
+#ifdef CONFIG_ESPNOW_CONTROL
 static void espnow_ctrl_data_cb(espnow_attribute_t initiator_attribute,
                                        espnow_attribute_t responder_attribute,
                                        uint32_t status1,
@@ -304,7 +304,7 @@ void wifiInit(void)
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataRx);
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataTx);
 
-#ifdef CONFIG_TRANSPORT_NATIVE_WIFI
+#ifdef CONFIG_ESPNOW_CONTROL
     espnow_storage_init();
 #endif
     esp_netif_t *ap_netif = NULL;
@@ -350,7 +350,7 @@ void wifiInit(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
     esp_wifi_set_channel(WIFI_CH, WIFI_SECOND_CHAN_NONE);
-#ifdef CONFIG_TRANSPORT_NATIVE_WIFI
+#ifdef CONFIG_ESPNOW_CONTROL
     espnow_config_t espnow_config = ESPNOW_INIT_CONFIG_DEFAULT();
     espnow_init(&espnow_config);
     esp_event_handler_register(ESP_EVENT_ESPNOW, ESP_EVENT_ANY_ID, app_espnow_event_handler, NULL);

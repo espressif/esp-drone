@@ -48,8 +48,8 @@
 
 #if defined(USE_MA_SMOOTHING)
 static struct {
-    float32_t averageX[AVERAGE_HISTORY_LENGTH];
-    float32_t averageY[AVERAGE_HISTORY_LENGTH];
+    float averageX[AVERAGE_HISTORY_LENGTH];
+    float averageY[AVERAGE_HISTORY_LENGTH];
     size_t ptr;
 } pixelAverages;
 #endif
@@ -130,14 +130,14 @@ static void flowdeckTask(void *param)
 
 #if defined(USE_MA_SMOOTHING)
             // Use MA Smoothing
-            pixelAverages.averageX[pixelAverages.ptr] = (float32_t)accpx;
-            pixelAverages.averageY[pixelAverages.ptr] = (float32_t)accpy;
+            pixelAverages.averageX[pixelAverages.ptr] = (float)accpx;
+            pixelAverages.averageY[pixelAverages.ptr] = (float)accpy;
 
-            float32_t meanX;
-            float32_t meanY;
+            float meanX;
+            float meanY;
 
-            xtensa_mean_f32(pixelAverages.averageX, AVERAGE_HISTORY_LENGTH, &meanX);
-            xtensa_mean_f32(pixelAverages.averageY, AVERAGE_HISTORY_LENGTH, &meanY);
+            dsp_mean_f32(pixelAverages.averageX, AVERAGE_HISTORY_LENGTH, &meanX);
+            dsp_mean_f32(pixelAverages.averageY, AVERAGE_HISTORY_LENGTH, &meanY);
 
             pixelAverages.ptr = (pixelAverages.ptr + 1) % AVERAGE_HISTORY_LENGTH;
 

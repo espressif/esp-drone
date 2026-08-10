@@ -3,23 +3,25 @@ set(crazyflie_transport_requires)
 
 idf_build_get_property(crazyflie_idf_target IDF_TARGET)
 
-# ESP32-P4 has no integrated Wi-Fi radio.  Keep the no-radio build free of the
-# native Wi-Fi and ESP-NOW components; remote Wi-Fi support will supply its own
-# transport-facing component when that profile is completed.
-if(crazyflie_idf_target STREQUAL "esp32p4")
-  if(CONFIG_TRANSPORT_REMOTE_WIFI)
-    list(APPEND crazyflie_transport_requires wifi esp_wifi)
-  endif()
-else()
-  list(APPEND crazyflie_transport_requires wifi esp_wifi espressif__esp-now)
+# Component requirements are resolved before project Kconfig values are fully
+# available.  Use fixed SoC capabilities here and Kconfig only for sources.
+if(NOT crazyflie_idf_target STREQUAL "esp32p4")
+  list(APPEND crazyflie_transport_requires wifi esp_wifi)
+endif()
+
+if(NOT crazyflie_idf_target STREQUAL "esp32p4" AND
+   NOT crazyflie_idf_target STREQUAL "esp32s31")
+  list(APPEND crazyflie_transport_requires espressif__esp-now)
 endif()
 
 if(CONFIG_TRANSPORT_NATIVE_WIFI)
-  list(APPEND crazyflie_transport_sources
-       "./hal/src/wifilink.c"
-       "./hal/src/espnow_ctrl.c")
+  list(APPEND crazyflie_transport_sources "./hal/src/wifilink.c")
 elseif(CONFIG_TRANSPORT_REMOTE_WIFI)
   list(APPEND crazyflie_transport_sources "./hal/src/wifilink.c")
+endif()
+
+if(CONFIG_ESPNOW_CONTROL)
+  list(APPEND crazyflie_transport_sources "./hal/src/espnow_ctrl.c")
 endif()
 
 idf_component_register(SRCS "./hal/src/buzzer.c" 

@@ -31,7 +31,7 @@ menu "ESPDrone Config"
         default TRANSPORT_NONE
 
         config TRANSPORT_NATIVE_WIFI
-            bool "native Wi-Fi / ESP-NOW"
+            bool "native Wi-Fi"
             depends on SOC_WIFI_SUPPORTED
 
         config TRANSPORT_NONE
@@ -84,6 +84,17 @@ menu "ESPDrone Config"
     endmenu
 
     menu "wireless config"
+        config ESPNOW_CONTROL
+            bool "Enhanced ESP-NOW control channel"
+            depends on TRANSPORT_NATIVE_WIFI
+            default n if IDF_TARGET_ESP32S31
+            default y
+            help
+                Enable the controller protocol implemented with Espressif's
+                enhanced esp-now component.  ESP32-S31 preview headers are
+                not yet compatible with esp-now 2.5.3, so its native Wi-Fi
+                and UDP transport remain enabled while this channel is gated.
+
         config WIFI_BASE_SSID
             string "Wi-Fi Base SSID"
             default "ESP-DRONE"

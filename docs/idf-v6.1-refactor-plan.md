@@ -9,7 +9,7 @@
 本轮重构目标：
 
 1. ESP32-S2 在 ESP-IDF `release/v6.1` 上可构建、可烧录、默认安全且能完成现有硬件自检。
-2. ESP32-S31 形成原生 Wi-Fi/ESP-NOW 构建，复用飞控核心和 transport 接口。
+2. ESP32-S31 形成原生 Wi-Fi/UDP 构建，复用飞控核心和 transport 接口；增强 ESP-NOW 在组件支持到位后独立启用。
 3. ESP32-P4 形成可构建的无无线安全配置，并预留官方 Wi-Fi Expansion 后端；只有配置外置无线芯片后才启用 UDP/ESP-NOW。
 4. 板型、SoC 能力和 transport 分离，不再通过 `CONFIG_IDF_TARGET_*` 隐式选择引脚。
 5. 删除 IDF 6.1 已移除的 ADC API，并停止新增对 EOL legacy I2C API 的依赖。
@@ -36,7 +36,7 @@
 | LEDC | 8 通道 | 8 通道 | 8 通道 | 可作为四路 brushed motor PWM 后端 |
 | 片上 Wi-Fi | 支持 | 不支持 | 支持（Wi-Fi 6） | native Wi-Fi 只在 `SOC_WIFI_SUPPORTED` 时编译 |
 | P4 Wi-Fi | 不适用 | 需外置 Wi-Fi 芯片 | 不适用 | 使用官方 `esp_wifi_remote`/Wi-Fi Expansion；默认关闭 |
-| ESP-NOW | 原生 | 取决于外置 Wi-Fi 后端 | 原生/preview | transport 必须可选，不能作为系统启动硬依赖 |
+| ESP-NOW | 原生 | 取决于外置 Wi-Fi 后端 | 芯片原生能力/IDF preview | 增强组件必须可选，不能作为 Wi-Fi 或系统启动硬依赖 |
 
 ### 2.3 ESP-IDF 6.x 迁移约束
 
@@ -134,6 +134,8 @@ main
 - 将数学库接口改为架构无关命名；先复用纯 C 实现，后续再按芯片选择优化实现。
 - S31 以 preview target 构建，记录 IDF revision；P4 以 no-radio 构建，remote Wi-Fi 作为可选扩展。
 
+实施校正（2026-08-10）：三目标实编译发现 `espressif/esp-now 2.5.3` 在 S31 上访问 `wifi_pkt_rx_ctrl_t.secondary_channel`，而当前 S31 preview 头文件没有该成员。工程不修改 managed component，改为把增强 ESP-NOW 控制通道从原生 Wi-Fi/UDP 能力中拆出；S31 暂时关闭前者，S2 保持启用。恢复条件是上游组件明确兼容 S31 后重新完成三目标构建和通信回归。
+
 验收：`idf.py --preview set-target esp32s31`、`idf.py set-target esp32p4` 和 S2 三目标完整构建。S31 生产状态仍为“等待 v6.1.1 和硬件验证”。
 
 提交建议：`build: add ESP32-P4 and ESP32-S31 targets`
@@ -160,7 +162,7 @@ main
 | esp32s2 | ESP32-S2 Drone v1.2 | native Wi-Fi | 必须 | 必须 | build + flash + boot + safe idle + UDP 边界 |
 | esp32p4 | portable safe | none | 必须 | 无硬件 | 完整链接且不引用 native Wi-Fi；默认 disarmed |
 | esp32p4 | 待定制板 | remote Wi-Fi | 配置骨架 | 无协处理器 | 文档化依赖和接口，不计入本轮运行验收 |
-| esp32s31 | portable safe | native Wi-Fi | 必须（preview） | 无硬件 | preview 完整链接；标注 v6.1.1/硬件验证门槛 |
+| esp32s31 | portable safe | native Wi-Fi/UDP | 必须（preview） | 无硬件 | preview 完整链接；增强 ESP-NOW 等待上游兼容；标注 v6.1.1/硬件验证门槛 |
 
 本轮“支持 P4/S31”的定义是：公共飞控代码和 IDF 适配可为两目标完整编译，缺失硬件信息时默认输出安全关闭；不是宣称 S2 PCB 可直接替换芯片，也不是未经硬件测试的适航声明。
 

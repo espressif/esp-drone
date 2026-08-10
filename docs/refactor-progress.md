@@ -160,3 +160,46 @@ idf.py -B /tmp/esp-drone-v61-p4-r3b \
 
 - NVS config block 首次写入及复位后读取。
 - S2 四路 PWM 上电保持低 duty；本轮不会主动执行旋转测试。
+
+## R5：ESP32-P4 / ESP32-S31 构建与架构中立数学接口
+
+状态：完成（S31 为 preview，增强 ESP-NOW 有明确上游阻塞）
+
+实施内容：
+
+- 新增 `sdkconfig.defaults.esp32s31`：使用 `TARGET_PORTABLE_SAFE`，保留 S31 原生 Wi-Fi/UDP，partition table 移到 `0x10000` 以容纳 IDF 6.1 bootloader。
+- 将飞控侧矩阵、三角、平方根和均值调用收口到架构中立的 `dsp_*` facade；现有 `xtensa_*` 纯 C 实现只作为内部兼容 backend。Kalman 和 flow deck 活跃代码不再暴露 CPU 架构命名，并同时通过 Xtensa S2 与 RISC-V P4/S31 编译。
+- 原生 Wi-Fi、UDP 和增强 ESP-NOW 控制通道变为独立能力。S2 继续启用 `espressif/esp-now 2.5.3`；S31 保留原生 Wi-Fi/UDP，但不把增强组件作为启动依赖。
+- 组件依赖图按 SoC 固定能力解析，Kconfig 负责选择 transport 源码；P4 no-radio 仍不引入项目 Wi-Fi/ESP-NOW 实现。
+- `transport_none` 实现只在 no-radio 配置编译，消除 native Wi-Fi 构建中的无效对象。
+
+S31 preview 兼容性证据：
+
+- `espressif/esp-now 2.5.3` 在 `src/espnow/src/espnow.c:286` 访问 `wifi_pkt_rx_ctrl_t.secondary_channel`。
+- 当前 `release/v6.1` S31 preview 的 `esp_wifi_rxctrl_t` 没有该字段，因此增强组件会编译失败。工程没有修改或固化 managed component 补丁，而是通过 `CONFIG_ESPNOW_CONTROL` 和 manifest target rule 隔离该功能。
+- 这不表示 S31 芯片没有 ESP-NOW 能力；结论仅限当前固定 IDF revision 与增强组件版本的组合。恢复前需要上游组件兼容和通信实测。
+
+验证命令：
+
+```sh
+. /home/libo/esp/release_v6_1/esp-idf/export.sh
+idf.py -B /tmp/esp-drone-v61-s2-r2 -D IDF_TARGET=esp32s2 \
+  -D SDKCONFIG=/tmp/esp-drone-v61-s2-r2/sdkconfig reconfigure build
+idf.py -B /tmp/esp-drone-v61-p4-r3b -D IDF_TARGET=esp32p4 \
+  -D SDKCONFIG=/tmp/esp-drone-v61-p4-r3b/sdkconfig reconfigure build
+idf.py --preview -B /tmp/esp-drone-v61-s31-r5 -D IDF_TARGET=esp32s31 \
+  -D SDKCONFIG=/tmp/esp-drone-v61-s31-r5/sdkconfig reconfigure build
+```
+
+验证结果：
+
+- ESP32-S2/native Wi-Fi + enhanced ESP-NOW：`ESPDrone.bin` 为 `0xe9510` 字节，app 分区剩余 9%。
+- ESP32-P4/portable safe + no-radio：`ESPDrone.bin` 为 `0x3b160` 字节，app 分区剩余 77%。
+- ESP32-S31/portable safe + native Wi-Fi/UDP：`ESPDrone.bin` 为 `0xddfb0` 字节，app 分区剩余 13%。
+- S31 sdkconfig 确认为 `IDF_TARGET=esp32s31`、`TARGET_PORTABLE_SAFE=y`、`TRANSPORT_NATIVE_WIFI=y`，且 `ESPNOW_CONTROL` 未启用。
+- 三目标均使用 IDF `6a9c44fe7e725af45cb99293ae38afd7d481f1e3`，完整编译、链接和镜像生成通过。
+
+生产门槛：
+
+- S31 仍需 ESP-IDF `v6.1.1+` 状态复核、增强 ESP-NOW 上游兼容和真实板卡 pin map/硬件验证。
+- P4 remote Wi-Fi 仍需选定 companion、`esp-extconn` transport 和真实板卡连接，不计入本阶段验收。
