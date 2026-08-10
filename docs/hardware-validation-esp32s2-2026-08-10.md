@@ -1,8 +1,10 @@
 # ESP32-S2 / ESP-IDF 6.1 硬件验证记录
 
-日期：2026-08-10  
-设备：`/dev/ttyUSB0`  
-固件提交：`acc3d61`  
+日期：2026-08-10
+
+设备：`/dev/ttyUSB0`
+
+固件提交：`acc3d61`
 ESP-IDF：`release/v6.1`，`6a9c44fe7e725af45cb99293ae38afd7d481f1e3`（`v6.1-beta1-685-g6a9c44fe7e7`）
 
 ## 1. 设备与镜像
