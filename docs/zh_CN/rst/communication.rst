@@ -32,7 +32,7 @@ Wi-Fi 性能
 传输速率    20 Mbit/s TCP 吞吐量、30 Mbit/s UDP
 ======== =======================================================================
 
-其它参数见 `ESP32 Wi-Fi 特性列表 <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/wifi.html#esp32-wi-fi-feature-list>`__\ 。
+当前功能和限制见 `ESP32 Wi-Fi 编程指南 <https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32/api-guides/wifi.html>`__\ 。
 
 **ESP32-S2 Wi-Fi 性能**
 
@@ -47,7 +47,7 @@ Wi-Fi 性能
 传输速率 20 Mbit/s TCP 吞吐量、30 Mbit/s UDP
 ======== =====================================================
 
-其他参数见 `ESP32-S2 Wi-Fi 特性列表 <https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-guides/wifi.html#esp32-s2-wi-fi-feature-list>`__\ 。
+当前功能和限制见 `ESP32-S2 Wi-Fi 编程指南 <https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32s2/api-guides/wifi.html>`__\ 。
 
 Wi-Fi 编程框架
 ~~~~~~~~~~~~~~
@@ -188,7 +188,7 @@ CRTP 协议支持包
 cflib 是 CRTP 协议的 Python 支持包，提供了通信协议的应用层接口，可用于构建上位机，与 Crazyflie 和 Crazyflie 2.0 四轴飞行器通信并控制飞行器。固件中每一个使用 CRTP 协议的组件，在 cflib 中都有一个脚本与其对应。
 
 -  源工程仓库地址：`crazyflie-lib-python <https://github.com/bitcraze/crazyflie-lib-python>`__。
--  适配 ESP-Drone 的 cflib 工程仓库地址：`qljz1993/crazyflie-lib-python <https://github.com/qljz1993/crazyflie-lib-python.git>`__。需要切换到 ``esplane`` 分支。
+-  适配 ESP-Drone 的 cflib 工程仓库地址：`leeebo/crazyflie-lib-python <https://github.com/leeebo/crazyflie-lib-python>`__。需要切换到 ``esplane`` 分支。
 
 基于 CRTP 协议的应用开发
 ------------------------
@@ -209,7 +209,7 @@ cflib 是 CRTP 协议的 Python 支持包，提供了通信协议的应用层接
 cfclient
 ~~~~~~~~
 
-cfclient 是 ``Crazeflie`` 源工程的上位机，完全实现了 ``CRTP`` 协议中定义的功能，可以加快飞机的调试过程。ESP-Drone 项目对该上位机进行裁剪和调整，满足功能设计需求。
+cfclient 是 ``Crazyflie`` 工程的桌面客户端，实现了 ``CRTP`` 协议定义的功能，可用于加快飞行器调试。ESP-Drone 使用了针对本项目调整的版本。
 
 .. figure:: ../../_static/cfclient.png
    :align: center
@@ -218,4 +218,4 @@ cfclient 是 ``Crazeflie`` 源工程的上位机，完全实现了 ``CRTP`` 协�
 
    cfclient控制台界面
 
-cfclient 具体使用说明可查阅：`cfclient <gettingstarted.html#pc-cfclient>`__。
+cfclient 具体使用说明见 :doc:`快速入门 <gettingstarted>`。

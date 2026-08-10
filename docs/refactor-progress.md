@@ -244,3 +244,32 @@ R6b 验证清单（执行前）：
 - MPU6050 在 SDA 11/SCL 10/400 kHz 上仍超时。修复固件连续观察 130 秒仅启动一次，无 panic、assert 或额外复位；飞行系统自检失败且不发布启动信号。
 - 主机没有 Wi-Fi 接口，无法加入 SoftAP，因而没有执行外部 UDP 边界帧注入。没有示波器/逻辑分析仪，PWM 只完成软件安全路径验证，未做波形和旋转验证。
 - 完整证据、镜像 hash 与未覆盖项见 `hardware-validation-esp32s2-2026-08-10.md`。
+
+## R7：收敛 IDF 支持矩阵与在线文档审校
+
+状态：完成
+
+支持策略：
+
+- 放弃 ESP-IDF 4.4、5.0 及其他未列出的版本，只支持 `release/v5.5` 和 `release/v6.1`。
+- 顶层 CMake 对 major/minor 做 fail-fast 检查；组件 manifest 表达 Component Manager 可解析的版本范围，精确分支仍由顶层检查约束。
+- GitHub/GitLab CI 覆盖 5.5 的 ESP32/S2/S3/P4，以及 6.1 的 ESP32/S2/S3/P4/S31；S31 继续使用 preview 模式。
+- 官方能力边界与该矩阵一致：[新 I2C master API 自 IDF 5.2 提供](https://github.com/espressif/esp-idf/releases/tag/v5.2-beta1)，[P4 自 5.3 支持](https://github.com/espressif/esp-idf/blob/master/COMPATIBILITY.md)，[S31 preview 在 6.1 引入](https://github.com/espressif/esp-idf/releases/tag/v6.1-beta1)。
+- 固件只暴露 IPv4 SoftAP/UDP，关闭未使用的 LwIP IPv6 表；这解决了 IDF 5.5/S2 的内部 DRAM 链接余量问题，不改变现有传输协议。
+
+构建验证：
+
+| ESP-IDF | revision | ESP32 | ESP32-S2 | ESP32-S3 | ESP32-P4 | ESP32-S31 |
+|---|---|---:|---:|---:|---:|---:|
+| 5.5.5 | `1a1a5aa6513592623d6b841ab8c9f3ef61eb9dfd` | `0xe1b30`（12% free） | `0xdc120`（14% free） | `0xe2410`（12% free） | `0x3e490`（76% free） | 不支持 |
+| 6.1 branch | `6a9c44fe7e725af45cb99293ae38afd7d481f1e3` | `0xe8840`（9% free） | `0xe39a0`（11% free） | `0xe93c0`（9% free） | `0x3b160`（77% free） | `0xd7660`（16% free） |
+
+以上九个组合均完成编译、链接、分区大小检查和镜像生成。并行本地构建不同 target 时，IDF Component Manager 会同时增删共享的 `managed_components`；失败目标已在隔离状态下顺序重跑通过，CI job 各自使用独立工作区。
+
+文档审校：
+
+- 实际打开并核对了线上英文和中文 Read the Docs 页面，将 README、首页、环境搭建和入门指南统一到 5.5/6.1 支持策略。
+- 修正导航卡片指向、SSID 格式、默认电机启动测试说明、刷写安全说明、已迁移仓库地址、ESP-IDF Wi-Fi 锚点、硬件 PDF 路径以及若干失效参考链接。
+- 文档依赖升级到当前 Sphinx/RTD theme API，移除未使用的旧扩展，并修复自定义翻译链接扩展与新版 docutils 的兼容问题。
+- 英文和中文分别通过 Sphinx 8.2.3 `-W --keep-going` HTML 构建与 `linkcheck`。跨语言链接依赖线上兄弟构建，ST 官方产品页拒绝自动探测，二者在 linkcheck 中有注释明确的忽略规则；其余受检链接通过。
+- `pre-commit run --all-files`、YAML 解析和 `git diff --check` 通过。

@@ -5,11 +5,13 @@
 ESP-IDF 环境搭建
 ----------------
 
-请参照 `ESP-IDF 编程指南 <https://docs.espressif.com/projects/esp-idf/en/release-v5.0/esp32s2/get-started/index.html>`__\ ，按照步骤设置 ESP-IDF。
+请参照 `ESP-IDF v5.5 编程指南 <https://docs.espressif.com/projects/esp-idf/zh_CN/release-v5.5/esp32s2/get-started/index.html>`__\ ，按照步骤安装工具并设置 ESP-IDF 环境。
 
 注意事项：
 
--  推荐安装 ESP-IDF `release/v5.0` 分支；
+-  本项目仅支持 ``release/v5.5`` 和 ``release/v6.1``；
+-  ESP32、ESP32-S2、ESP32-S3 和 ESP32-P4 的稳定构建基线使用 ``release/v5.5``；
+-  构建 ESP32-S31 preview target 时使用 ``release/v6.1``；
 -  请完成 ESP-IDF 所有安装步骤;
 -  建议首先编译一个 ESP-IDF 示例程序，用以检查安装的完整性。
 
@@ -74,7 +76,7 @@ ESP-IDF 环境搭建
    ├── README.md                        | 项目说明
    └── sdkconfig.defaults            | 默认参数
 
-**详情可查阅**\ ：\ `espdrone_file_structure <./_static/espdrone_file_structure.pdf>`__\ 
+**详情可查阅**\ ：\ `espdrone_file_structure <../../_static/espdrone_file_structure.pdf>`__
 
 源代码风格
 ----------

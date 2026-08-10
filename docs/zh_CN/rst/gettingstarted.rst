@@ -7,10 +7,7 @@
 项目简介
 ========
 
-ESP-Drone 是基于乐鑫 ESP32/ESP32-S2/ESP32-S3 开发的小型无人机解决方案，可使用手机 APP 或游戏手柄通过 Wi-Fi
-网络进行连接和控制。该方案硬件结构简单，代码架构清晰，支持功能扩展，可用于
-STEAM 教育等领域。项目部分代码来自 Crazyflie 开源工程，继承 GPL3.0
-开源协议。
+ESP-Drone 是面向乐鑫 SoC 的开源飞行开发平台。通过实物验证的飞行硬件可使用手机 app 或游戏手柄经 Wi-Fi 控制。模块化硬件和可扩展固件适合 STEAM 教育与原型开发。飞行控制核心来自 Crazyflie 开源工程，使用 GPL-3.0 许可证。
 
 .. figure:: ../../_static/espdrone_s2_v1_2_2.png
    :align: center
@@ -60,7 +57,7 @@ ESP-IDF 是乐鑫为 ESP32/ESP32-S2/ESP32-S3 提供的物联网开发框架。
 -  ESP-IDF 包含一系列库及头文件，提供了基于 ESP32/ESP32-S2/ESP32-S3 构建软件项目所需的核心组件。
 -  ESP-IDF 还提供了开发和量产过程中最常用的工具及功能，例如：构建、烧录、调试和测量等。
 
-详情可查阅：`ESP-IDF 编程指南 <https://docs.espressif.com/projects/esp-idf/en/release-v5.0/esp32s2/get-started/index.html>`__。
+详情可查阅：`ESP-IDF v5.5 编程指南 <https://docs.espressif.com/projects/esp-idf/zh_CN/release-v5.5/esp32s2/get-started/index.html>`__。
 
 Crazyflie 简介
 ================
@@ -182,7 +179,8 @@ Wi-Fi 连接
 
 ::
 
-   SSID：ESP-DRONE_XXXX（XXXX 根据 MAC 设置）PASSWORD：12345678
+   SSID：ESP-DRONE_XXXXXXXXXXXX（后缀由 MAC 地址生成）
+   密码：12345678
 
 * 点击该 AP，手机与 ESP-Drone 设备建立 Wi-Fi 连接。
 
@@ -193,7 +191,6 @@ Wi-Fi 连接
 
 ::
 
-   ```
    默认配置：
 
    Flight control settings 
@@ -215,7 +212,6 @@ Wi-Fi 连接
        1. Screen rotation lock: true
        2. full screen mode:true
        3. show console: true   
-   ```
 
 控制飞行
 --------
@@ -366,8 +362,8 @@ File <https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/
 螺旋桨方向
 ================
 
--  按照下图所示位置，安装 A、B 螺旋桨。
--  飞行器上电自检时，检查螺旋桨转向是否正确。
+-  先在拆除全部螺旋桨的条件下完成电机检查，再按照下图位置安装 A、B 螺旋桨。
+-  默认上电自检会保持全部电机为零占空比。维护时如需电机测试，必须先拆桨，并显式启用 ``CONFIG_MOTORS_STARTUP_TEST``。
 
 .. figure:: ../../_static/espdrone_s2_v1_2_diretion2.png
    :align: center
@@ -384,6 +380,6 @@ File <https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/
 -  观察上位机水平面是否置平；
 -  观察通信建立以后，小飞机尾部绿灯是否快速闪烁；
 -  观察小飞机头部红灯是否熄灭，亮起代表电量不足；
--  轻推左手小油门，检查飞机是否能快速响应；
--  轻推右手方向，检查方向控制是否正确；
+-  保持电机未解锁，在客户端确认油门、横滚、俯仰和偏航输入方向正确；
+-  仅在传感器自检通过、控制方向正确且飞行区域安全时解锁起飞；
 -  起飞吧！

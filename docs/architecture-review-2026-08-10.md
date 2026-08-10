@@ -76,7 +76,7 @@ app_main
 | TGT-01 | `config.h:49-61`、`Kconfig.projbuild` | 板型与 SoC 耦合；新 target 会落入错误 choice 或没有引脚默认值 | 板型定义 pin map；SoC 只表达能力，二者在配置期校验兼容性 |
 | TGT-02 | `adc_esp32.c` | ADC 通道仅定义 ESP32/S2/S3；使用 legacy ADC API | 迁移到 oneshot + calibration scheme，并从板级配置注入通道 |
 | TGT-03 | `wifi_esp32.c` | 假定 SoC 有片上 Wi-Fi | 以 `SOC_WIFI_SUPPORTED`/构建能力选择 native、hosted 或 disabled 后端 |
-| CI-01 | `.github/workflows/build_project.yml` | 只在 push 上构建 IDF 4.4/5.0，没有测试和新目标 | 增加 6.1 的 S2/P4/S31 构建矩阵、格式/静态检查和最小主机测试 |
+| CI-01 | `.github/workflows/build_project.yml` | 审计时旧 CI 只在 push 上构建 IDF 4.4/5.0，没有测试和新目标；R7 已替换为 5.5/6.1 矩阵 | 增加 5.5/6.1 的 ESP32/S2/S3/P4 与 6.1 S31 构建矩阵、格式/静态检查和最小主机测试 |
 
 ## 4. 构建审查记录
 
