@@ -24,9 +24,11 @@
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 0)
 #include "esp_mac.h"
 #endif
+#ifdef CONFIG_TRANSPORT_NATIVE_WIFI
 #include "espnow.h"
 #include "espnow_ctrl.h"
 #include "espnow_utils.h"
+#endif
 
 #define UDP_SERVER_PORT         2390
 #define UDP_SERVER_BUFSIZE      64
@@ -219,6 +221,7 @@ static void udp_server_tx_task(void *pvParameters)
     }
 }
 
+#ifdef CONFIG_TRANSPORT_NATIVE_WIFI
 static void espnow_ctrl_data_cb(espnow_attribute_t initiator_attribute,
                                        espnow_attribute_t responder_attribute,
                                        uint32_t status1,
@@ -265,6 +268,7 @@ static void app_espnow_event_handler(void *handler_args, esp_event_base_t base, 
         break;
     }
 }
+#endif
 
 void wifiInit(void)
 {
@@ -300,7 +304,9 @@ void wifiInit(void)
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataRx);
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataTx);
 
+#ifdef CONFIG_TRANSPORT_NATIVE_WIFI
     espnow_storage_init();
+#endif
     esp_netif_t *ap_netif = NULL;
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -344,11 +350,13 @@ void wifiInit(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
     esp_wifi_set_channel(WIFI_CH, WIFI_SECOND_CHAN_NONE);
+#ifdef CONFIG_TRANSPORT_NATIVE_WIFI
     espnow_config_t espnow_config = ESPNOW_INIT_CONFIG_DEFAULT();
     espnow_init(&espnow_config);
     esp_event_handler_register(ESP_EVENT_ESPNOW, ESP_EVENT_ANY_ID, app_espnow_event_handler, NULL);
     ESP_ERROR_CHECK(espnow_ctrl_responder_bind(30 * 1000, -55, NULL));
     espnow_ctrl_responder_data(espnow_ctrl_data_cb);
+#endif
     esp_netif_ip_info_t ip_info = {
         .ip.addr = ipaddr_addr("192.168.43.42"),
         .netmask.addr = ipaddr_addr("255.255.255.0"),

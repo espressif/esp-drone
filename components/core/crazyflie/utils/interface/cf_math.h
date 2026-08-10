@@ -45,8 +45,12 @@
 #define DEG_TO_RAD (PI/180.0f)
 #define RAD_TO_DEG (180.0f/PI)
 
+#ifndef MIN
 #define MIN(a, b) ((b) < (a) ? (b) : (a))
+#endif
+#ifndef MAX
 #define MAX(a, b) ((b) > (a) ? (b) : (a))
+#endif
 
 // Matrix data must be aligned on 4 byte bundaries
 static inline void assert_aligned_4_bytes(const xtensa_matrix_instance_f32 *matrix)

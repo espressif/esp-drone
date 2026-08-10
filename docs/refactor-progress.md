@@ -71,6 +71,40 @@ idf.py -B /tmp/esp-drone-v61-s2-r2 size
 
 后续项：
 
-- 旧 I2C driver 在 IDF 6.1 仍可构建但已 EOL，安排在 R3 迁移到 `driver/i2c_master.h`。
+- 旧 I2C driver 在 IDF 6.1 仍可构建但已 EOL，安排在 R4 迁移到 `driver/i2c_master.h`。
 - IDF 当前分支自身仍会输出 NimBLE/FatFS Kconfig 提示和 Wi-Fi 私有 include 校验提示；均不来自本项目，未阻断构建。
 - 本阶段仅建立可复现的软件构建基线；串口刷写和运行时验证安排在硬件验证阶段。
+
+## R3：板型、SoC 能力与 transport 解耦
+
+状态：完成
+
+实施内容：
+
+- 新增统一 `transport` 接口，CRTP 和系统启动不再直接依赖 `wifilink`；native Wi-Fi、remote Wi-Fi 骨架和阻塞式 `none` link 由 Kconfig 选择。
+- ESP32-S2/S3 默认使用 native Wi-Fi；ESP32-P4 默认使用 `TARGET_PORTABLE_SAFE + TRANSPORT_NONE`，不再伪装成 S2 板型。
+- P4/no-radio 构建从项目 Wi-Fi 源文件和 ESP-NOW managed component 中隔离；`transport_none` 的接收端带 100 ms 阻塞，避免空闲 CRTP task 忙轮询。
+- portable safe 启动路径不会初始化 LED、ADC、I2C、传感器、LEDC 电机、蜂鸣器、估算器和 stabilizer，也不会运行板级 app；只启动核心诊断、CRTP/comm 和 worker，保证未知 P4/S31 板卡不会因占位引脚产生输出。
+- P4 的 IDF 6.1 bootloader 大于旧布局在 `0x8000` 前的可用空间，目标默认值将 partition table 移到 `0x10000`，app 相应从 `0x20000` 开始。
+- 为 IDF 公共 `MIN`/`MAX` 宏增加保护，解除 RISC-V/P4 的宏重定义 `-Werror`。
+- remote Wi-Fi 目前只保留显式集成入口；仍需具体 `esp-extconn` transport、无线 companion 固件和板级连接配置，不计入本阶段运行验收。
+
+验证命令：
+
+```sh
+. /home/libo/esp/release_v6_1/esp-idf/export.sh
+idf.py -B /tmp/esp-drone-v61-s2-r2 \
+  -D IDF_TARGET=esp32s2 \
+  -D SDKCONFIG=/tmp/esp-drone-v61-s2-r2/sdkconfig build
+idf.py -B /tmp/esp-drone-v61-p4-r3b \
+  -D IDF_TARGET=esp32p4 \
+  -D SDKCONFIG=/tmp/esp-drone-v61-p4-r3b/sdkconfig build
+```
+
+验证结果：
+
+- ESP32-S2/native Wi-Fi 完整编译、链接和镜像生成通过；`ESPDrone.bin` 为 `0xe8bc0` 字节，app 分区剩余 9%。
+- ESP32-P4/no-radio 完整 RISC-V 编译、链接和镜像生成通过；`ESPDrone.bin` 为 `0x3b210` 字节，app 分区剩余 77%。
+- P4 的 `build.ninja` 不含 `wifi_esp32.c`、`wifilink.c` 或 `espnow_ctrl.c`；ELF 符号表不含 `wifiInit`、`wifilink*` 或 `espnow_ctrl*`。
+- P4 sdkconfig 确认为 `IDF_TARGET=esp32p4`、`TARGET_PORTABLE_SAFE=y`、`TRANSPORT_NONE=y`。
+- `git diff --check` 通过。

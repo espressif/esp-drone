@@ -1,4 +1,7 @@
 dependencies:
-  espressif/esp-now: "^2.5.3"
+  espressif/esp-now:
+    version: "^2.5.3"
+    rules:
+      - if: "target != esp32p4"
   idf:
-    version: ">=4.1.0"
+    version: ">=6.1,<7"
