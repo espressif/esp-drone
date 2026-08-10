@@ -28,3 +28,49 @@
 
 - 合法 UDP CRTP 帧格式未变化。
 - ESP-NOW `bindlist_v2` 不读取旧版将回调指针一并落盘的 blob，升级后控制器需要重新绑定。
+
+## R2：ESP-IDF 6.1 / ESP32-S2 构建基线
+
+状态：完成
+
+基线：
+
+- ESP-IDF 分支：`release/v6.1`
+- ESP-IDF 提交：`6a9c44fe7e725af45cb99293ae38afd7d481f1e3`
+- ESP-IDF 版本：`v6.1-beta1-685-g6a9c44fe7e7`（`6.1.0`）
+- 目标：`esp32s2`
+- ESP-NOW：`2.5.3`
+
+实施内容：
+
+- 将 `EXTRA_COMPONENT_DIRS` 改为 CMake 列表并显式列出叶子组件，消除空格拼接和路径歧义。
+- 为 LEDC、GPIO 和 SPI 用户补齐 IDF 6.x 要求的直接组件依赖。
+- ADC 从已移除的 `driver/adc.h` / `esp_adc_cal.h` 迁移到 oneshot 与 calibration API；初始化失败不再把驱动标记为可用。
+- 移除 `pm_esplane.h` 对旧 ADC 头文件的无效依赖。
+- Wi-Fi interface 常量迁移为 `WIFI_IF_AP`。
+- 四元数解压先写入本地四元素数组，再逐成员赋值，避免越过单个成员对象边界。
+- 更新 IDF 6.1 的 sdkconfig 名称，显式启用 ESP-NOW 所需的 Protocomm Security v1。
+- S2 的 IRAM/DRAM 共用 SRAM；关闭可选的 Wi-Fi IRAM/RX IRAM 加速以给飞控状态和任务栈保留内部 RAM。协议功能不变，代价是 Wi-Fi 热路径吞吐性能下降。
+
+验证命令：
+
+```sh
+. /home/libo/esp/release_v6_1/esp-idf/export.sh
+idf.py -B /tmp/esp-drone-v61-s2-r2 \
+  -D SDKCONFIG=/tmp/esp-drone-v61-s2-r2/sdkconfig \
+  -D IDF_TARGET=esp32s2 build
+idf.py -B /tmp/esp-drone-v61-s2-r2 size
+```
+
+验证结果：
+
+- 完整编译、链接和镜像生成通过。
+- `ESPDrone.bin`：`0xe8b10` 字节，1 MiB app 分区剩余 `0x174f0` 字节（9%）。
+- DIRAM：使用 162,741 / 172,032 字节（94.6%），剩余 9,291 字节。
+- `git diff --check` 通过。
+
+后续项：
+
+- 旧 I2C driver 在 IDF 6.1 仍可构建但已 EOL，安排在 R3 迁移到 `driver/i2c_master.h`。
+- IDF 当前分支自身仍会输出 NimBLE/FatFS Kconfig 提示和 Wi-Fi 私有 include 校验提示；均不来自本项目，未阻断构建。
+- 本阶段仅建立可复现的软件构建基线；串口刷写和运行时验证安排在硬件验证阶段。

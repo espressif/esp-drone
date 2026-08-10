@@ -334,7 +334,12 @@ static void fullStateDecoder(setpoint_t *setpoint, uint8_t type, const void *dat
   setpoint->attitudeRate.pitch = millirad2deg * values->ratePitch;
   setpoint->attitudeRate.yaw = millirad2deg * values->rateYaw;
 
-  quatdecompress(values->quat, (float *)&setpoint->attitudeQuaternion.q0);
+  float quaternion[4];
+  quatdecompress(values->quat, quaternion);
+  setpoint->attitudeQuaternion.q0 = quaternion[0];
+  setpoint->attitudeQuaternion.q1 = quaternion[1];
+  setpoint->attitudeQuaternion.q2 = quaternion[2];
+  setpoint->attitudeQuaternion.q3 = quaternion[3];
   setpoint->mode.quat = modeAbs;
   setpoint->mode.roll = modeDisable;
   setpoint->mode.pitch = modeDisable;

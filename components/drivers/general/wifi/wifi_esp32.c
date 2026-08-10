@@ -316,7 +316,7 @@ void wifiInit(void)
                     NULL,
                     NULL));
 
-    ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, mac));
+    ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_AP, mac));
     int ssid_len = snprintf(WIFI_SSID, sizeof(WIFI_SSID), "%s_%02X%02X%02X%02X%02X%02X",
                             CONFIG_WIFI_BASE_SSID, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     if (ssid_len < 1 || (size_t)ssid_len >= sizeof(WIFI_SSID)) {
@@ -341,7 +341,7 @@ void wifiInit(void)
     }
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
     esp_wifi_set_channel(WIFI_CH, WIFI_SECOND_CHAN_NONE);
     espnow_config_t espnow_config = ESPNOW_INIT_CONFIG_DEFAULT();
