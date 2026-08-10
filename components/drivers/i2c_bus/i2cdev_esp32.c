@@ -56,11 +56,17 @@ bool i2cdevReadByte(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
 bool i2cdevReadBit(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
                    uint8_t bitNum, uint8_t *data)
 {
-    uint8_t byte;
+    if (data == NULL || bitNum > 7) {
+        return false;
+    }
+
+    uint8_t byte = 0;
     bool status;
 
     status = i2cdevReadReg8(dev, devAddress, memAddress, 1, &byte);
-    *data = byte & (1 << bitNum);
+    if (status) {
+        *data = byte & (1U << bitNum);
+    }
 
     return status;
 }
@@ -205,9 +211,15 @@ bool i2cdevWriteByte(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
 bool i2cdevWriteBit(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
                     uint8_t bitNum, uint8_t data)
 {
-    uint8_t byte;
-    i2cdevReadByte(dev, devAddress, memAddress, &byte);
-    byte = (data != 0) ? (byte | (1 << bitNum)) : (byte & ~(1 << bitNum));
+    if (bitNum > 7) {
+        return false;
+    }
+
+    uint8_t byte = 0;
+    if (!i2cdevReadByte(dev, devAddress, memAddress, &byte)) {
+        return false;
+    }
+    byte = (data != 0) ? (byte | (1U << bitNum)) : (byte & ~(1U << bitNum));
     return i2cdevWriteByte(dev, devAddress, memAddress, byte);
 }
 

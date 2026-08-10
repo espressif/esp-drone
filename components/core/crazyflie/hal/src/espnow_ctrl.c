@@ -46,8 +46,36 @@ typedef struct {
     espnow_ctrl_bind_info_t data[ESPNOW_BIND_LIST_MAX_SIZE];
 } espnow_bindlist_t;
 
+typedef struct {
+    size_t size;
+    espnow_ctrl_bind_info_t data[ESPNOW_BIND_LIST_MAX_SIZE];
+} espnow_persisted_bindlist_t;
+
 static const char *TAG = "espnow_ctrl";
 static espnow_bindlist_t g_bindlist = {0};
+
+static void espnow_ctrl_store_bindlist(void)
+{
+    espnow_persisted_bindlist_t persisted = {
+        .size = g_bindlist.size,
+    };
+    memcpy(persisted.data, g_bindlist.data, g_bindlist.size * sizeof(persisted.data[0]));
+    espnow_storage_set("bindlist_v2", &persisted, sizeof(persisted));
+}
+
+static void espnow_ctrl_load_bindlist(void)
+{
+    espnow_persisted_bindlist_t persisted = {0};
+    if (espnow_storage_get("bindlist_v2", &persisted, sizeof(persisted)) == ESP_OK &&
+            persisted.size <= ESPNOW_BIND_LIST_MAX_SIZE) {
+        g_bindlist.size = persisted.size;
+        memcpy(g_bindlist.data, persisted.data,
+               persisted.size * sizeof(persisted.data[0]));
+    } else {
+        g_bindlist.size = 0;
+        memset(g_bindlist.data, 0, sizeof(g_bindlist.data));
+    }
+}
 
 #ifdef CONFIG_ESPNOW_ALL_SECURITY
 #define CONFIG_ESPNOW_CONTROL_SECURITY 1
@@ -104,6 +132,10 @@ static bool espnow_ctrl_responder_is_bindlist(const uint8_t *mac, espnow_attribu
 
 esp_err_t espnow_ctrl_responder_get_bindlist(espnow_ctrl_bind_info_t *list, size_t *size)
 {
+    if (!size) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
     if (!list) {
         *size = g_bindlist.size;
     } else {
@@ -116,10 +148,17 @@ esp_err_t espnow_ctrl_responder_get_bindlist(espnow_ctrl_bind_info_t *list, size
 
 esp_err_t espnow_ctrl_responder_set_bindlist(const espnow_ctrl_bind_info_t *info)
 {
+    if (!info) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
     if (!espnow_ctrl_responder_is_bindlist(info->mac, info->initiator_attribute)) {
+        if (g_bindlist.size >= ESPNOW_BIND_LIST_MAX_SIZE) {
+            return ESP_ERR_NO_MEM;
+        }
         memcpy(g_bindlist.data + g_bindlist.size, info, sizeof(espnow_ctrl_bind_info_t));
         g_bindlist.size++;
-        espnow_storage_set("bindlist", &g_bindlist, sizeof(g_bindlist));
+        espnow_ctrl_store_bindlist();
     }
 
     return ESP_OK;
@@ -127,16 +166,21 @@ esp_err_t espnow_ctrl_responder_set_bindlist(const espnow_ctrl_bind_info_t *info
 
 esp_err_t espnow_ctrl_responder_remove_bindlist(const espnow_ctrl_bind_info_t *info)
 {
+    if (!info) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
     for (int i = 0; i < g_bindlist.size; ++i) {
         if (!memcmp(g_bindlist.data + i, info, sizeof(espnow_ctrl_bind_info_t))) {
             g_bindlist.size--;
 
-            if (g_bindlist.size > 0) {
-                g_bindlist.data[g_bindlist.size].initiator_attribute = info->initiator_attribute;
-                memcpy(g_bindlist.data[g_bindlist.size].mac, info->mac, 6);
+            if ((size_t)i < g_bindlist.size) {
+                memcpy(&g_bindlist.data[i], &g_bindlist.data[g_bindlist.size],
+                       sizeof(espnow_ctrl_bind_info_t));
             }
+            memset(&g_bindlist.data[g_bindlist.size], 0, sizeof(espnow_ctrl_bind_info_t));
 
-            espnow_storage_set("bindlist", &g_bindlist, sizeof(g_bindlist));
+            espnow_ctrl_store_bindlist();
             break;
         }
     }
@@ -181,6 +225,10 @@ static esp_err_t espnow_ctrl_responder_bind_process(uint8_t *src_addr, void *dat
     ESP_PARAM_CHECK(size);
     ESP_PARAM_CHECK(rx_ctrl);
 
+    if (size < sizeof(espnow_ctrl_data_t)) {
+        return ESP_ERR_INVALID_SIZE;
+    }
+
     espnow_ctrl_data_t *ctrl_data = (espnow_ctrl_data_t *)data;
 
 #ifdef CONFIG_ESPNOW_CONTROL_AUTO_CHANNEL_SENDING
@@ -208,6 +256,9 @@ static esp_err_t espnow_ctrl_responder_bind_process(uint8_t *src_addr, void *dat
                         MAC2STR(src_addr), ctrl_data->initiator_attribute >> 8, ctrl_data->initiator_attribute & 0xff);
 
             if (!espnow_ctrl_responder_is_bindlist(src_addr, ctrl_data->initiator_attribute)) {
+                if (g_bindlist.size >= ESPNOW_BIND_LIST_MAX_SIZE) {
+                    return ESP_ERR_NO_MEM;
+                }
                 g_bindlist.data[g_bindlist.size].initiator_attribute = ctrl_data->initiator_attribute;
                 memcpy(g_bindlist.data[g_bindlist.size].mac, src_addr, 6);
 
@@ -217,7 +268,7 @@ static esp_err_t espnow_ctrl_responder_bind_process(uint8_t *src_addr, void *dat
                 vTaskDelay(pdMS_TO_TICKS(100));
 #endif
                 g_bindlist.size++;
-                espnow_storage_set("bindlist", &g_bindlist, sizeof(g_bindlist));
+                espnow_ctrl_store_bindlist();
             }
         }
     } else {
@@ -239,7 +290,7 @@ static esp_err_t espnow_ctrl_responder_bind_process(uint8_t *src_addr, void *dat
                 g_bindlist.data[g_bindlist.size].initiator_attribute = 0;
                 memset(g_bindlist.data[g_bindlist.size].mac, 0, 6);
 
-                espnow_storage_set("bindlist", &g_bindlist, sizeof(g_bindlist));
+                espnow_ctrl_store_bindlist();
                 break;
             }
         }
@@ -254,7 +305,7 @@ static esp_err_t espnow_ctrl_responder_bind_process(uint8_t *src_addr, void *dat
 
 esp_err_t espnow_ctrl_responder_bind(uint32_t wait_ms, int8_t rssi, espnow_ctrl_bind_cb_t cb)
 {
-    espnow_storage_get("bindlist", &g_bindlist, sizeof(g_bindlist));
+    espnow_ctrl_load_bindlist();
 
     g_bindlist.cb        = cb;
     g_bindlist.timestamp = esp_log_timestamp() + wait_ms;
@@ -272,6 +323,10 @@ static esp_err_t espnow_ctrl_responder_data_process(uint8_t *src_addr, void *dat
     ESP_PARAM_CHECK(data);
     ESP_PARAM_CHECK(size);
     ESP_PARAM_CHECK(rx_ctrl);
+
+    if (size < sizeof(espnow_ctrl_data_t)) {
+        return ESP_ERR_INVALID_SIZE;
+    }
 
     espnow_ctrl_data_t *ctrl_data = (espnow_ctrl_data_t *)data;
     ESP_LOGD(TAG, "src_addr: "MACSTR", espnow_ctrl_responder_recv, value: s1 = %d, s2 = %d, lx = %d, ly = %d, rx = %d, ry = %d, ch1 = %d, ch2 = %d",
@@ -485,7 +540,7 @@ esp_err_t espnow_ctrl_send(const espnow_addr_t dest_addr, const espnow_ctrl_data
 
     uint8_t size = (!data->responder_value_s_flag && data->responder_value_s_size) ? data->responder_value_s_size : 0;
 
-    esp_err_t ret = espnow_send(ESPNOW_DATA_TYPE_CONTROL_DATA, ESPNOW_ADDR_BROADCAST, data,
+    esp_err_t ret = espnow_send(ESPNOW_DATA_TYPE_CONTROL_DATA, dest_addr, data,
                       sizeof(espnow_ctrl_data_t) + size, frame_head, wait_ticks);
     ESP_ERROR_RETURN(ret != ESP_OK, ret,  "espnow_broadcast, ret: %d", ret);
 

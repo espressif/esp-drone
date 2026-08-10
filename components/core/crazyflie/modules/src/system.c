@@ -73,16 +73,11 @@
 //#include "peer_localization.h"
 #include "cfassert.h"
 
-#ifndef START_DISARMED
-#define ARM_INIT true
-#else
-#define ARM_INIT false
-#endif
-
 /* Private variable */
 static bool selftestPassed;
 static bool canFly;
-static bool armed = ARM_INIT;
+/* Motors must remain inhibited until an explicit runtime arm command. */
+static bool armed = false;
 static bool forceArm;
 static bool isInit;
 
