@@ -24,3 +24,10 @@ list(APPEND EXTRA_COMPONENT_DIRS
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(ESPDrone)
+
+if(NOT ((IDF_VERSION_MAJOR EQUAL 5 AND IDF_VERSION_MINOR EQUAL 5) OR
+        (IDF_VERSION_MAJOR EQUAL 6 AND IDF_VERSION_MINOR EQUAL 1)))
+    message(FATAL_ERROR
+        "ESP-Drone supports ESP-IDF release/v5.5 and release/v6.1 only; "
+        "detected ${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
+endif()

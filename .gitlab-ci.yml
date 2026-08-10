@@ -21,31 +21,18 @@ before_script:
   tags:
     - build
 
-build_project_idf44:
+build_project_idf55:
   <<: *build_examples_template
-  image: espressif/idf:release-v4.4
+  image: espressif/idf:release-v5.5
   script:
-    - idf.py fullclean
-    - idf.py build
-    - idf.py fullclean
-    - idf.py set-target esp32s2
-    - idf.py build
-    - idf.py fullclean
-    - idf.py set-target esp32s3
-    - idf.py build
+    - for target in esp32 esp32s2 esp32s3 esp32p4; do idf.py -B "build-${target}" -D "IDF_TARGET=${target}" build || exit 1; done
 
-build_project_idf50:
+build_project_idf61:
   <<: *build_examples_template
-  image: espressif/idf:release-v5.0
+  image: espressif/idf:release-v6.1
   script:
-    - idf.py fullclean
-    - idf.py build
-    - idf.py fullclean
-    - idf.py set-target esp32s2
-    - idf.py build
-    - idf.py fullclean
-    - idf.py set-target esp32s3
-    - idf.py build
+    - for target in esp32 esp32s2 esp32s3 esp32p4; do idf.py -B "build-${target}" -D "IDF_TARGET=${target}" build || exit 1; done
+    - idf.py --preview -B build-esp32s31 -D IDF_TARGET=esp32s31 build
 
 build_docs:
     stage: build
