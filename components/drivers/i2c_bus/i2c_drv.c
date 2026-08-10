@@ -29,7 +29,7 @@
  * at once with I2C_SENSORS->CR1 = (I2C_CR1_START | I2C_CR1_ACK | I2C_CR1_PE) and the
  * problem is gone. Go figure...
  */
-
+#include <inttypes.h>
 
 #include "esp_err.h"
 #include "i2c_drv.h"
@@ -101,6 +101,8 @@ bool i2cdrvInit(I2cDrv *i2c)
     }
 
     i2c->isInitialized = true;
-    DEBUG_PRINTI("I2C %d master bus initialized", i2c->def->i2cPort);
+    DEBUG_PRINTI("I2C %d master bus initialized (SDA=%d, SCL=%d, %" PRIu32 " Hz)",
+                 i2c->def->i2cPort, i2c->def->gpioSDAPin,
+                 i2c->def->gpioSCLPin, i2c->def->i2cClockSpeed);
     return true;
 }

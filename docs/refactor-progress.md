@@ -203,3 +203,31 @@ idf.py --preview -B /tmp/esp-drone-v61-s31-r5 -D IDF_TARGET=esp32s31 \
 
 - S31 仍需 ESP-IDF `v6.1.1+` 状态复核、增强 ESP-NOW 上游兼容和真实板卡 pin map/硬件验证。
 - P4 remote Wi-Fi 仍需选定 companion、`esp-extconn` transport 和真实板卡连接，不计入本阶段验收。
+
+## R6a：S2 硬件首轮启动与关键传感器失效闭环
+
+状态：完成（硬件回归记录见 R6b）
+
+首轮硬件证据：
+
+- `/dev/ttyUSB0` 可识别为 ESP32-S2 rev v0.0，MAC 为 `7c:df:a1:00:40:08`，外部 flash 为 4 MiB。
+- IDF 6.1 固件完成刷写和镜像 hash 校验；原生 Wi-Fi、UDP 与增强 ESP-NOW 正常启动，AP 为 `ESP-DRONE_7CDFA1021008`。
+- I2C0 在 SDA 11、SCL 10 上初始化，但 MPU6050 事务超时。原实现随后执行 `assert(0)`，设备约每 2.5 秒复位一次。
+- 当前连接平台未能确认 MPU6050 在线，因此该结果不能用于传感器采样或飞行闭环验收；但它暴露了任何关键 IMU 缺失时都会发生的确定性故障路径。
+
+修复内容：
+
+- I2C 初始化日志包含总线、SDA/SCL 和时钟，便于区分 pin map、连线和器件故障。
+- 传感器总线或 MPU6050 初始化失败不再触发断言，也不会创建中断与采样任务；失败会传播到系统自检。
+- 稳定器任务在关键传感器自检失败后显式停止电机并停留在低频诊断循环，避免复位风暴，也防止远程强制启动绕过传感器条件。
+
+构建验证：
+
+- ESP32-S2/native Wi-Fi + enhanced ESP-NOW 完整编译、链接和镜像生成通过；`ESPDrone.bin` 为 `0xe95b0` 字节，app 分区剩余 9%。
+- `git diff --check` 通过。
+
+R6b 待验证：
+
+- 刷入修复后的提交，连续观察复位稳定性和电机安全状态。
+- 对 UDP 空包、短包、超长包及合法校验帧执行边界输入测试。
+- 复位后复核 NVS config block 初始化路径。

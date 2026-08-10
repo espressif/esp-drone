@@ -398,7 +398,7 @@ void processAccGyroMeasurements(const uint8_t *buffer)
     sensorsAccAlignToGravity(&accScaled, &sensorData.acc);
     applyAxis3fLpf((lpf2pData *)(&accLpf), &sensorData.acc);
 }
-static void sensorsDeviceInit(void)
+static bool sensorsDeviceInit(void)
 {
     isMagnetometerPresent = false;
     isBarometerPresent = false;
@@ -408,15 +408,18 @@ static void sensorsDeviceInit(void)
         vTaskDelay(M2T(50));
     };
 
-    i2cdevInit(I2C0_DEV);
+    if (!i2cdevInit(I2C0_DEV)) {
+        DEBUG_PRINTE("Sensor I2C bus initialization [FAIL].\n");
+        return false;
+    }
     mpu6050Init(I2C0_DEV);
 
     if (mpu6050TestConnection() == true) {
         DEBUG_PRINTI("MPU6050 I2C connection [OK].\n");
     } else {
         DEBUG_PRINTE("MPU6050 I2C connection [FAIL].\n");
-        // Please check your hardware !
-        assert(0);
+        DEBUG_PRINTE("Critical IMU unavailable; stabilization remains disabled.\n");
+        return false;
     }
 
     mpu6050Reset();
@@ -546,6 +549,7 @@ static void sensorsDeviceInit(void)
     cosRoll = cosf(ROLL_CALIB * (float)M_PI / 180);
     sinRoll = sinf(ROLL_CALIB * (float)M_PI / 180);
     DEBUG_PRINTI("pitch_calib = %f,roll_calib = %f",PITCH_CALIB,ROLL_CALIB);
+    return true;
 }
 
 static void sensorsSetupSlaveRead(void)
@@ -677,7 +681,9 @@ void sensorsMpu6050Hmc5883lMs5611Init(void)
     }
 
     sensorsBiasObjInit(&gyroBiasRunning);
-    sensorsDeviceInit();
+    if (!sensorsDeviceInit()) {
+        return;
+    }
     sensorsInterruptInit();
     sensorsTaskInit();
     isInit = true;
@@ -690,7 +696,7 @@ bool sensorsMpu6050Hmc5883lMs5611Test(void)
 
     if (!isInit) {
         DEBUG_PRINTE("Error while initializing sensor task\r\n");
-        testStatus = false;
+        return false;
     }
 
     // Try for 3 seconds so the quad has stabilized enough to pass the test

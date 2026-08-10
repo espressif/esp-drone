@@ -57,6 +57,7 @@
 
 static bool isInit;
 static bool emergencyStop = false;
+static bool sensorsSelfTestPassed = false;
 static int emergencyStopTimeout = EMERGENCY_STOP_TIMEOUT_DISABLED;
 
 static bool checkStops;
@@ -212,7 +213,8 @@ bool stabilizerTest(void)
 {
   bool pass = true;
 
-  pass &= sensorsTest();
+  sensorsSelfTestPassed = sensorsTest();
+  pass &= sensorsSelfTestPassed;
   pass &= stateEstimatorTest();
   pass &= controllerTest();
   pass &= powerDistributionTest();
@@ -250,6 +252,14 @@ static void stabilizerTask(void* param)
 
   //Wait for the system to be fully started to start stabilization loop
   systemWaitStart();
+
+  if (!sensorsSelfTestPassed) {
+    powerStop();
+    DEBUG_PRINT("Critical sensor self-test failed; stabilization task halted.\n");
+    while (true) {
+      vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+  }
 
   DEBUG_PRINTI("Wait for sensor calibration...\n");
 
