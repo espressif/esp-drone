@@ -226,8 +226,21 @@ idf.py --preview -B /tmp/esp-drone-v61-s31-r5 -D IDF_TARGET=esp32s31 \
 - ESP32-S2/native Wi-Fi + enhanced ESP-NOW 完整编译、链接和镜像生成通过；`ESPDrone.bin` 为 `0xe95b0` 字节，app 分区剩余 9%。
 - `git diff --check` 通过。
 
-R6b 待验证：
+R6b 验证清单（执行前）：
 
 - 刷入修复后的提交，连续观察复位稳定性和电机安全状态。
 - 对 UDP 空包、短包、超长包及合法校验帧执行边界输入测试。
 - 复位后复核 NVS config block 初始化路径。
+
+## R6b：ESP32-S2 硬件回归
+
+状态：完成（受已记录的硬件环境限制）
+
+验证结果：
+
+- 提交 `acc3d61` 的 S2 镜像完成三段写入和写后 hash 校验；启动日志报告预期提交及 IDF revision。
+- native Wi-Fi SoftAP、UDP/2390、增强 ESP-NOW 2.5.3 和 CRTP transport 均成功初始化。
+- 保留 NVS 刷写后 `configblockTest = 1`；再次硬复位仍为 1。
+- MPU6050 在 SDA 11/SCL 10/400 kHz 上仍超时。修复固件连续观察 130 秒仅启动一次，无 panic、assert 或额外复位；飞行系统自检失败且不发布启动信号。
+- 主机没有 Wi-Fi 接口，无法加入 SoftAP，因而没有执行外部 UDP 边界帧注入。没有示波器/逻辑分析仪，PWM 只完成软件安全路径验证，未做波形和旋转验证。
+- 完整证据、镜像 hash 与未覆盖项见 `hardware-validation-esp32s2-2026-08-10.md`。
