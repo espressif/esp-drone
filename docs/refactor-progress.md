@@ -273,3 +273,4 @@ R6b 验证清单（执行前）：
 - 文档依赖升级到当前 Sphinx/RTD theme API，移除未使用的旧扩展，并修复自定义翻译链接扩展与新版 docutils 的兼容问题。
 - 英文和中文分别通过 Sphinx 8.2.3 `-W --keep-going` HTML 构建与 `linkcheck`。跨语言链接依赖线上兄弟构建，ST 官方产品页拒绝自动探测，二者在 linkcheck 中有注释明确的忽略规则；其余受检链接通过。
 - `pre-commit run --all-files`、YAML 解析和 `git diff --check` 通过。
+- 提交 `5d664f8` 的 IDF 6.1/S2 镜像已刷入 `/dev/ttyUSB0` 并通过写后校验；IPv4 SoftAP、ESP-NOW、UDP/2390、CRTP 与 NVS config block 均正常，约 45 秒内无 panic、assert 或额外复位。完整证据见 `hardware-validation-esp32s2-2026-08-10.md` 第 5 节。

@@ -60,3 +60,26 @@ I2C0 初始化为 SDA 11、SCL 10、400 kHz，但 MPU6050 事务超时。当前�
 本轮 S2 硬件验证通过以下验收：IDF 6.1 镜像可刷写和校验、Wi-Fi/ESP-NOW/UDP 服务可启动、NVS config block 可跨复位读取、关键 IMU 缺失时不会形成复位风暴且飞行输出保持受抑制。
 
 完整飞行硬件验收仍阻塞于 MPU6050 不在线；UDP 数据面端到端验收仍需要一块带 Wi-Fi 的测试主机。两项均作为硬件环境限制保留，不能用本次结果替代。
+
+## 5. IDF 支持矩阵变更回归（2026-08-11）
+
+验证提交：`5d664f8`（包含仅支持 IDF 5.5/6.1 的构建约束和文档修订）
+
+配置与镜像：
+
+- ESP-IDF：`release/v6.1`，`6a9c44fe7e725af45cb99293ae38afd7d481f1e3`。
+- `CONFIG_LWIP_IPV6` 未启用；现有 IPv4 SoftAP/UDP transport 保持不变。
+- `CONFIG_MOTORS_STARTUP_TEST` 未启用。
+- `ESPDrone.bin` 大小：`0xe39a0` 字节，1 MiB app 分区剩余 `0x1c660` 字节（11%）。
+- `ESPDrone.bin` SHA-256：`86df9a3b74c4237b754dbc42d07db0738912ba98cb8fda647350e758504368b7`。
+- bootloader 与 app 写入均通过 esptool hash 校验；partition table 内容未变化并跳过写入，NVS 未擦除。
+
+串口回归结果：
+
+- 固件报告 app version `5d664f8` 和预期 IDF revision。
+- SoftAP `ESP-DRONE_7CDFA1021008`、DHCP、ESP-NOW 2.5.3、UDP/2390 和 native Wi-Fi CRTP transport 均成功启动。
+- `transportTest`、`configblockTest`、`commTest` 和 `commanderTest` 均为 1；空闲时 free heap 为 64,828 字节。
+- MPU6050 仍在 SDA 11/SCL 10/400 kHz 上超时；固件报告关键 IMU 不可用，`stabilizerTest = 0`，飞行输出保持受抑制。
+- 约 45 秒串口观察内只有一次预期启动，无 panic、assert 或额外复位。
+
+该回归确认关闭未使用的 IPv6 表没有破坏现有 IPv4 控制服务，也没有改变已验证的传感器失效安全行为。受硬件环境限制，端到端 UDP 注入、传感器采样、PWM 波形和实际飞行仍未覆盖。
