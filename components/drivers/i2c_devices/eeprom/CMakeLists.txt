@@ -1,3 +1,4 @@
 idf_component_register(SRCS "eeprom.c"
                        INCLUDE_DIRS "." "include"
-                       REQUIRES crazyflie spi_flash)
+                       REQUIRES i2c_bus
+                       PRIV_REQUIRES nvs_flash)

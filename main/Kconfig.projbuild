@@ -356,6 +356,13 @@ menu "ESPDrone Config"
                 bool "brushed 720 motor"
         endchoice
 
+        config MOTORS_STARTUP_TEST
+            bool "Spin motors during startup self-test"
+            default n
+            help
+                Briefly drives each motor during boot. Keep disabled for safe
+                bench testing; enable only when propellers have been removed.
+
         config MOTOR01_PIN
             int "MOTOR01_PIN GPIO number"
             range 0 34 if TARGET_ESPLANE_V1

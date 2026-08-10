@@ -134,3 +134,29 @@ idf.py -B /tmp/esp-drone-v61-p4-r3b \
 
 - I2C 设备在线读写与采样周期需要在 S2 硬件阶段验证。
 - EEPROM/NVS 和 motor LEDC 错误传播属于 R4b。
+
+## R4b：NVS 配置存储与电机输出失败闭环
+
+状态：完成
+
+实施内容：
+
+- 将原来所有读写都返回成功、但实际不保存数据的 EEPROM 桩替换为 NVS blob；保留 8 KiB 地址空间兼容 API，未写区域按真实擦除 EEPROM 返回 `0xff`。
+- NVS 读写增加地址/长度溢出检查、mutex、分配失败处理、`nvs_commit` 和错误返回；partial write 会保留 blob 中其他地址的数据。
+- config block 不再为了 flash 存储初始化无关的 I2C1/deck bus；NVS 打开失败会使 config block 初始化失败，而不是伪报成功。
+- motor timer、四个 LEDC channel、初始 0 duty、运行时 duty 更新均检查返回值。任一 channel 初始化失败会停止已配置 channel；运行时失败会尝试把对应输出拉回 0 并把驱动标记为 unhealthy。
+- `motorsInit` 和 `motorsSetRatio` 返回真实结果，power distribution self-test 会传播初始化失败；非法 motor id 不再依赖断言后继续访问数组。
+- 新增 `MOTORS_STARTUP_TEST`，默认关闭。固件自检默认只验证四路 PWM 保持 0 duty，不再在每次上电时自动转动电机；需要实物旋转测试时必须显式启用并先拆桨。
+- 电池补偿路径拒绝无效供电电压，避免除零后把异常值送入 PWM。
+
+验证结果：
+
+- S2 与 P4 sdkconfig 均确认为 `CONFIG_MOTORS_STARTUP_TEST is not set`。
+- ESP32-S2/native Wi-Fi 完整编译、链接和镜像生成通过；`ESPDrone.bin` 为 `0xe9510` 字节，app 分区剩余 9%。
+- ESP32-P4/no-radio 完整编译、链接和镜像生成通过；`ESPDrone.bin` 为 `0x3b160` 字节，app 分区剩余 77%。
+- `git diff --check` 通过。
+
+硬件阶段待验证：
+
+- NVS config block 首次写入及复位后读取。
+- S2 四路 PWM 上电保持低 duty；本轮不会主动执行旋转测试。
