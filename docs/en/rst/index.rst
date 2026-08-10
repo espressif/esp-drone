@@ -3,7 +3,7 @@ ESP-Drone
 ===========
 :link_to_translation:`zh_CN:[中文]`
 
-**ESP-Drone** is an open source **drone solution** based on Espressif **ESP32/ESP32-S2/ESP32-S3** Wi-Fi chip, which can be controlled over a **Wi-Fi** network using a mobile APP or gamepad. ESP-Drone supports multiple flight modes, including `Stabilize mode`, `Height-hold mode`, and `Position-hold mode`. With **simple hardware**, **clear and extensible code architecture**, ESP-Drone can be used in **STEAM education** and other fields. The main code is ported from **Crazyflie** open source project with **GPL3.0** protocol.
+**ESP-Drone** is an open-source drone solution for Espressif SoCs. It can be controlled over **Wi-Fi** using a mobile app or gamepad. The project supports stabilized, height-hold, and position-hold flight modes on validated flight hardware. Its flight-control core is derived from **Crazyflie** and licensed under GPL-3.0.
 
 This document describes the development guide for ESP-Drone project.
 
@@ -12,32 +12,42 @@ ESP-Drone Support Policy
 
 From December 2022, we will offer limited support on this project, but Pull Request is still welcomed!
 
-Supported versions and chips
------------------------------
+Supported versions and targets
+------------------------------
 
-+-----------+-----------------------------+---------------------+-----------------+
-| ESP-Drone |      Dependent ESP-IDF      |       Target        |  Support State  |
-+===========+=============================+=====================+=================+
-| master    | release/v4.4 , release/v5.0 | ESP32-S2 / ESP32-S3 | Limited Support |
-+-----------+-----------------------------+---------------------+-----------------+
+Only ESP-IDF ``release/v5.5`` and ``release/v6.1`` are supported.
+
+.. list-table::
+   :header-rows: 1
+
+   * - ESP-IDF
+     - Targets
+     - Status
+   * - ``release/v5.5``
+     - ESP32, ESP32-S2, ESP32-S3, ESP32-P4
+     - CI build support; P4 uses the no-radio diagnostic profile
+   * - ``release/v6.1``
+     - ESP32, ESP32-S2, ESP32-S3, ESP32-P4, ESP32-S31
+     - CI build support; S31 is a preview target and P4/S31 flight hardware is not yet validated
 
 Get Started
 ------------
 
-==================  ==================  ==================
-|Get Started|_      |Develop Guide|_    |H/W Reference|_
-------------------  ------------------  ------------------
-`Get Started`_      `Develop Guide`_    `H/W Reference`_
-==================  ==================  ==================
+.. list-table::
+   :widths: 1 1 1
+
+   * - |Get Started|
+     - |Develop Guide|
+     - |H/W Reference|
+   * - :doc:`Get Started <gettingstarted>`
+     - :doc:`Develop Guide <developerguide>`
+     - :doc:`H/W Reference <hardware>`
 
 .. |Get Started| image:: ../../_static/get-started.png
-.. _Get Started: gettingstarted.html
 
 .. |Develop Guide| image:: ../../_static/api-reference.png
-.. _Develop Guide: gettingstarted.html
 
 .. |H/W Reference| image:: ../../_static/hw-reference.png
-.. _H/W Reference: gettingstarted.html
 
 .. toctree::
    :hidden:

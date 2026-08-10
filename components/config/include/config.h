@@ -55,8 +55,8 @@
 #error "ESPLANE_V1 hardware with ESP32 onboard"
 #endif
 #elif defined(CONFIG_TARGET_ESP32_S2_DRONE_V1_2)
-#ifdef CONFIG_IDF_TARGET_ESP32
-#error "ESP32_S2_DRONE_V1_2 hardware with ESP32S2/S3 onboard"
+#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32S3)
+#error "ESP32_S2_DRONE_V1_2 hardware requires ESP32-S2 or ESP32-S3"
 #endif
 #endif
 

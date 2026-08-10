@@ -11,7 +11,7 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **Version (please complete the following information):**
- - IDF Version: [e.g. v4.4.3, commit id]
+ - IDF Version: [e.g. v5.5.x or v6.1.x, commit id]
  - SoC Chip: [e.g. ESP32-S2]
  - Hardware: [e.g. ESP32_S2_Drone_V1_2]
 

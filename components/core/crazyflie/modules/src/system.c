@@ -49,12 +49,11 @@
 //#include "uart_syslink.h"
 //#include "uart1.h"
 //#include "uart2.h"
-#include "wifi_esp32.h"
 #include "comm.h"
 #include "stabilizer.h"
 #include "commander.h"
 #include "console.h"
-#include "wifilink.h"
+#include "transport.h"
 #include "mem.h"
 //#include "proximity.h"
 //#include "watchdog.h"
@@ -73,16 +72,11 @@
 //#include "peer_localization.h"
 #include "cfassert.h"
 
-#ifndef START_DISARMED
-#define ARM_INIT true
-#else
-#define ARM_INIT false
-#endif
-
 /* Private variable */
 static bool selftestPassed;
 static bool canFly;
-static bool armed = ARM_INIT;
+/* Motors must remain inhibited until an explicit runtime arm command. */
+static bool armed = false;
 static bool forceArm;
 static bool isInit;
 
@@ -113,7 +107,6 @@ void systemInit(void)
   canStartMutex = xSemaphoreCreateMutexStatic(&canStartMutexBuffer);
   xSemaphoreTake(canStartMutex, portMAX_DELAY);
 
-  wifilinkInit();
   sysLoadInit();
 
   /* Initialized here so that DEBUG_PRINT (buffered) can be used early */
@@ -134,9 +127,11 @@ void systemInit(void)
               *((int*)(MCU_ID_ADDRESS+8)), *((int*)(MCU_ID_ADDRESS+4)),
               *((int*)(MCU_ID_ADDRESS+0)), *((short*)(MCU_FLASH_SIZE_ADDRESS)));*/
 
+  workerInit();
+
+#ifndef CONFIG_TARGET_PORTABLE_SAFE
   configblockInit();
   //storageInit();
-  workerInit();
   adcInit();
   ledseqInit();
   pmInit();
@@ -146,6 +141,7 @@ void systemInit(void)
 #ifdef APP_ENABLED
   appInit();
 #endif
+#endif
 
   isInit = true;
 }
@@ -154,12 +150,16 @@ bool systemTest()
 {
   bool pass=isInit;
 
+#ifndef CONFIG_TARGET_PORTABLE_SAFE
   pass &= ledseqTest();
   pass &= pmTest();
   DEBUG_PRINTI("pmTest = %d", pass);
+#endif
   pass &= workerTest();
   DEBUG_PRINTI("workerTest = %d", pass);
+#ifndef CONFIG_TARGET_PORTABLE_SAFE
   pass &= buzzerTest();
+#endif
   return pass;
 }
 
@@ -169,9 +169,12 @@ void systemTask(void *arg)
 {
   bool pass = true;
 
+#ifndef CONFIG_TARGET_PORTABLE_SAFE
   ledInit();
   ledSet(CHG_LED, 1);
-  wifiInit();
+#endif
+  transportInit();
+  DEBUG_PRINT_LOCAL("CRTP transport: %s\n", transportGetName());
   vTaskDelay(M2T(500));
 
 #ifdef DEBUG_QUEUE_MONITOR
@@ -190,6 +193,24 @@ void systemTask(void *arg)
   commInit();
   commanderInit();
 
+#ifdef CONFIG_TARGET_PORTABLE_SAFE
+  pass &= transportTest();
+  pass &= systemTest();
+  pass &= commTest();
+  pass &= commanderTest();
+  pass &= cfAssertNormalStartTest();
+
+  if (pass) {
+    selftestPassed = 1;
+    systemStart();
+    DEBUG_PRINT("Portable diagnostic profile started; board outputs are disabled.\n");
+  } else {
+    selftestPassed = 0;
+    DEBUG_PRINT("Portable diagnostic profile self-test failed.\n");
+  }
+
+  workerLoop();
+#else
   StateEstimatorType estimator = anyEstimator;
   estimatorKalmanTaskInit();
   //deckInit();
@@ -207,8 +228,8 @@ void systemTask(void *arg)
 #endif
 
 	/* Test each modules */
-  pass &= wifiTest();
-  DEBUG_PRINTI("wifilinkTest = %d ", pass);
+  pass &= transportTest();
+  DEBUG_PRINTI("transportTest = %d ", pass);
   pass &= systemTest();
   DEBUG_PRINTI("systemTest = %d ", pass);
   pass &= configblockTest();
@@ -268,6 +289,7 @@ void systemTask(void *arg)
   DEBUG_PRINT("Free heap: %"PRIu32" bytes\n", xPortGetFreeHeapSize());
 
   workerLoop();
+#endif
 
   //Should never reach this point!
   while(1)

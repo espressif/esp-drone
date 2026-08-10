@@ -7,7 +7,7 @@ from local_util import run_cmd_get_output
 
 def get_github_rev():
     path = run_cmd_get_output('git rev-parse --short HEAD')
-    tag = run_cmd_get_output('git describe --exact-match')
+    tag = run_cmd_get_output('git describe --tags --exact-match 2>/dev/null')
     print ('Git commit ID: ', path)
     if len(tag):
         print ('Git tag: ', tag)
@@ -41,10 +41,11 @@ def setup(app):
         tag_rev = run_cmd_get_output('git describe --always')
 
     app.add_role('link_to_translation', crosslink('%s../../%s/{}/%s.html'.format(tag_rev)))
+    return {'version': '1.0', 'parallel_read_safe': True}
 
 def autolink(pattern):
     def role(name, rawtext, text, lineno, inliner, options={}, content=[]):
-        m = re.search('(.*)\s*<(.*)>', text)
+        m = re.search(r'(.*)\s*<(.*)>', text)
         if m:
             link_text = m.group(1)
             link = m.group(2)
@@ -60,7 +61,7 @@ def crosslink(pattern):
     def role(name, rawtext, text, lineno, inliner, options={}, content=[]):
         (language, link_text) = text.split(':')
         docname = inliner.document.settings.env.docname
-        doc_path = inliner.document.settings.env.doc2path(docname, None, None)
+        doc_path = os.fspath(inliner.document.settings.env.doc2path(docname, False))
         return_path = '../' * doc_path.count('/') 
         url = pattern % (return_path, language, docname)
         node = nodes.reference(rawtext, link_text, refuri=url, **options)

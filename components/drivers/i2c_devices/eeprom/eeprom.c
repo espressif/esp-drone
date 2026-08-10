@@ -1,137 +1,158 @@
 /**
  * ESP-Drone Firmware
- * Copyright 2019-2020  Espressif Systems (Shanghai)
- * Copyright (C) 2011 Fabio Varesano <fvaresano@yahoo.it>
- * Copyright (C) 2011-2012 Bitcraze AB
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, in version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * @file eeprom.c
- * 使用 flash 分区代替 eeprom 保存数据，该部分需要检验，或替换成  NVS
- *
+ * EEPROM compatibility API backed by one NVS blob. Unwritten bytes read as
+ * 0xff, matching an erased serial EEPROM.
  */
 #define DEBUG_MODULE "EEPROM"
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "eeprom.h"
-#include "debug_cf.h"
-#include "eprintf.h"
+#include "freertos/semphr.h"
+#include "nvs.h"
 
-#ifdef EEPROM_RUN_WRITE_READ_TEST
-#include "esp_spi_flash.h"
-static bool eepromTestWriteRead(void);
-#endif
+#include "debug_cf.h"
+#include "eeprom.h"
+
+#define EEPROM_NVS_NAMESPACE "espdrone"
+#define EEPROM_NVS_KEY "eeprom"
 
 static bool isInit;
+static nvs_handle_t nvsHandle;
+static SemaphoreHandle_t storageMutex;
+
+static bool rangeIsValid(size_t address, size_t length)
+{
+    return address <= EEPROM_SIZE_BYTES && length <= EEPROM_SIZE_BYTES - address;
+}
 
 bool eepromInit(I2C_Dev *i2cPort)
 {
+    (void)i2cPort;
+
     if (isInit) {
         return true;
     }
 
-    //TODOspi_flash_init();
-    DEBUG_PRINTI("spi_flash_init ... !");
+    storageMutex = xSemaphoreCreateMutex();
+    if (storageMutex == NULL) {
+        return false;
+    }
+
+    const esp_err_t err = nvs_open(EEPROM_NVS_NAMESPACE, NVS_READWRITE, &nvsHandle);
+    if (err != ESP_OK) {
+        vSemaphoreDelete(storageMutex);
+        storageMutex = NULL;
+        DEBUG_PRINTW("NVS open failed: %s", esp_err_to_name(err));
+        return false;
+    }
 
     isInit = true;
-
     return true;
 }
 
 bool eepromTest(void)
 {
-    bool status;
-
-    status = true;
-    return status;
+    return isInit;
 }
-
-#ifdef EEPROM_RUN_WRITE_READ_TEST
-static bool eepromTestWriteRead(void)
-{
-    bool status = true;
-    int i;
-    const uint8_t testData[20] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
-    uint8_t readData[20];
-
-    for (i = 0; i < sizeof(testData) && status; i++) {
-        // Write one byte with increasing addresses.
-        eepromWriteBuffer(&testData[i], i, 1);
-        // Read it all back and check
-        eepromReadBuffer(readData, 0, i + 1);
-        status = (memcmp(testData, readData, i + 1) == 0);
-    }
-
-    // Write it all.
-    eepromWriteBuffer(testData, 0, sizeof(testData));
-
-    for (i = 0; i < sizeof(testData) && status; i++) {
-        // Read one byte with increasing addresses and check
-        eepromReadBuffer(&readData[i], i, 1);
-        status = (memcmp(testData, readData, i + 1) == 0);
-    }
-
-    return status;
-}
-#endif
 
 bool eepromTestConnection(void)
 {
-    //uint8_t tmp;
-    bool status;
-
-    status = true;
-    return status;
+    return isInit;
 }
 
 bool eepromReadBuffer(uint8_t *buffer, size_t readAddr, size_t len)
 {
-    bool status = false;
-    esp_err_t err = ESP_OK; 
-    //TODO spi_flash_read(readAddr, buffer, len);
+    if (!isInit || !rangeIsValid(readAddr, len) || (buffer == NULL && len != 0)) {
+        return false;
+    }
+    if (len == 0) {
+        return true;
+    }
+    if (xSemaphoreTake(storageMutex, portMAX_DELAY) != pdTRUE) {
+        return false;
+    }
 
+    memset(buffer, 0xff, len);
+    size_t storedLength = 0;
+    esp_err_t err = nvs_get_blob(nvsHandle, EEPROM_NVS_KEY, NULL, &storedLength);
+    if (err == ESP_ERR_NVS_NOT_FOUND || readAddr >= storedLength) {
+        xSemaphoreGive(storageMutex);
+        return true;
+    }
+    if (err != ESP_OK || storedLength > EEPROM_SIZE_BYTES) {
+        xSemaphoreGive(storageMutex);
+        return false;
+    }
+
+    uint8_t *storedData = malloc(storedLength);
+    if (storedData == NULL) {
+        xSemaphoreGive(storageMutex);
+        return false;
+    }
+    err = nvs_get_blob(nvsHandle, EEPROM_NVS_KEY, storedData, &storedLength);
     if (err == ESP_OK) {
-
-        status = true;
-        DEBUG_PRINTI("spi_flash_read ok !");
-
-    } else {
-        DEBUG_PRINTW("spi_flash_read err = %d", err);
+        const size_t available = storedLength - readAddr;
+        const size_t copyLength = len < available ? len : available;
+        memcpy(buffer, storedData + readAddr, copyLength);
     }
 
-    return status;
+    free(storedData);
+    xSemaphoreGive(storageMutex);
+    return err == ESP_OK;
 }
 
-bool eepromWriteBuffer(uint8_t *buffer, size_t writeAddr, size_t len)
+bool eepromWriteBuffer(const uint8_t *buffer, size_t writeAddr, size_t len)
 {
-    bool status = false;
-    writeAddr += EEPROM_IN_FLASH_ADDR;
-    //TODO if (spi_flash_write(writeAddr, buffer, len) == ESP_OK) {
-    if (1) {
-
-        status = true;
-
+    if (!isInit || !rangeIsValid(writeAddr, len) || (buffer == NULL && len != 0)) {
+        return false;
+    }
+    if (len == 0) {
+        return true;
+    }
+    if (xSemaphoreTake(storageMutex, portMAX_DELAY) != pdTRUE) {
+        return false;
     }
 
-    return status;
+    size_t storedLength = 0;
+    esp_err_t err = nvs_get_blob(nvsHandle, EEPROM_NVS_KEY, NULL, &storedLength);
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        storedLength = 0;
+    } else if (err != ESP_OK || storedLength > EEPROM_SIZE_BYTES) {
+        xSemaphoreGive(storageMutex);
+        return false;
+    }
+
+    const size_t requiredLength = writeAddr + len;
+    const size_t updatedLength = storedLength > requiredLength ? storedLength : requiredLength;
+    uint8_t *updatedData = malloc(updatedLength);
+    if (updatedData == NULL) {
+        xSemaphoreGive(storageMutex);
+        return false;
+    }
+    memset(updatedData, 0xff, updatedLength);
+
+    if (storedLength != 0) {
+        size_t readLength = storedLength;
+        err = nvs_get_blob(nvsHandle, EEPROM_NVS_KEY, updatedData, &readLength);
+    }
+    if (err == ESP_OK || storedLength == 0) {
+        memcpy(updatedData + writeAddr, buffer, len);
+        err = nvs_set_blob(nvsHandle, EEPROM_NVS_KEY, updatedData, updatedLength);
+        if (err == ESP_OK) {
+            err = nvs_commit(nvsHandle);
+        }
+    }
+
+    free(updatedData);
+    xSemaphoreGive(storageMutex);
+    return err == ESP_OK;
 }
 
-bool eepromWritePage(uint8_t *buffer, uint16_t writeAddr)
+bool eepromWritePage(const uint8_t *buffer, uint16_t writeAddr)
 {
-//TODO: implement
-    return false;
+    return eepromWriteBuffer(buffer, writeAddr, EEPROM_PAGE_SIZE);
 }

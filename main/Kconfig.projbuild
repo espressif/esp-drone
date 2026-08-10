@@ -5,6 +5,7 @@ menu "ESPDrone Config"
         default TARGET_ESP32_S2_DRONE_V1_2 if IDF_TARGET_ESP32S3
         default TARGET_ESP32_S2_DRONE_V1_2 if IDF_TARGET_ESP32S2
         default TARGET_ESPLANE_V1 if IDF_TARGET_ESP32
+        default TARGET_PORTABLE_SAFE if IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32S31
 
         config TARGET_ESPLANE_V1
             bool "esplane with esp32 onboard(old version )"
@@ -15,6 +16,38 @@ menu "ESPDrone Config"
         config TARGET_ESP32_S2_DRONE_V1_2
             bool "esp-drone with ESP32-S2/ESP32-S3 onboard"
 
+        config TARGET_PORTABLE_SAFE
+            bool "portable safe profile (outputs disabled)"
+            help
+                Build the portable flight-control core without assuming an
+                existing ESP-Drone PCB pinout. Motor and board peripherals
+                remain disabled until a real board profile is supplied.
+
+    endchoice
+
+    choice TRANSPORT
+        prompt "CRTP transport"
+        default TRANSPORT_NATIVE_WIFI if SOC_WIFI_SUPPORTED
+        default TRANSPORT_NONE
+
+        config TRANSPORT_NATIVE_WIFI
+            bool "native Wi-Fi"
+            depends on SOC_WIFI_SUPPORTED
+
+        config TRANSPORT_NONE
+            bool "no radio (diagnostic/safe mode)"
+            help
+                Start the firmware with a blocking no-op CRTP link. This is
+                the default for targets such as ESP32-P4 without a radio
+                companion chip.
+
+        config TRANSPORT_REMOTE_WIFI
+            bool "remote Wi-Fi (integration skeleton)"
+            depends on IDF_TARGET_ESP32P4 && ESP_WIFI_REMOTE_ENABLED
+            help
+                Compile against IDF Wi-Fi Remote. A matching esp-extconn
+                transport and companion firmware are still required and are
+                board-specific; this option is not part of hardware sign-off.
     endchoice
 
     choice
@@ -51,6 +84,17 @@ menu "ESPDrone Config"
     endmenu
 
     menu "wireless config"
+        config ESPNOW_CONTROL
+            bool "Enhanced ESP-NOW control channel"
+            depends on TRANSPORT_NATIVE_WIFI
+            default n if IDF_TARGET_ESP32S31
+            default y
+            help
+                Enable the controller protocol implemented with Espressif's
+                enhanced esp-now component.  ESP32-S31 preview headers are
+                not yet compatible with esp-now 2.5.3, so its native Wi-Fi
+                and UDP transport remain enabled while this channel is gated.
+
         config WIFI_BASE_SSID
             string "Wi-Fi Base SSID"
             default "ESP-DRONE"
@@ -60,7 +104,7 @@ menu "ESPDrone Config"
             string "Wi-Fi Password"
             default "12345678"
             help
-                Wi-Fi Password, 8-64 characters
+                Wi-Fi Password, empty for an open AP or 8-63 characters
         config WIFI_CHANNEL
             int "Wi-Fi/ESP-Now Channel"
             range 1 13
@@ -99,6 +143,7 @@ menu "ESPDrone Config"
             default 1024 if IDF_TARGET_ESP32
             default 512 if IDF_TARGET_ESP32S2
             default 1024 if IDF_TARGET_ESP32S3
+            default 1024 if TARGET_PORTABLE_SAFE
 
     endmenu
 
@@ -106,6 +151,7 @@ menu "ESPDrone Config"
 
         config BUZZER_ON
             bool "enable buzzer to play sound"
+            default n if TARGET_PORTABLE_SAFE
             default y
 
         config BUZ1_PIN_POS
@@ -116,6 +162,7 @@ menu "ESPDrone Config"
             default 39 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 39 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) BUZ1_PIN_POS
 
@@ -127,6 +174,7 @@ menu "ESPDrone Config"
             default 38 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 38 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) BUZ2_PIN_NEG
 
@@ -141,6 +189,7 @@ menu "ESPDrone Config"
             default 11 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 11 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) I2C0_PIN_SDA
 
@@ -152,6 +201,7 @@ menu "ESPDrone Config"
             default 10 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 10 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) I2C0_PIN_SCL
 
@@ -163,6 +213,7 @@ menu "ESPDrone Config"
             default 40 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 40 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) I2C1_PIN_SDA
 
@@ -174,6 +225,7 @@ menu "ESPDrone Config"
             default 41 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 41 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) I2C1_PIN_SCL
 
@@ -185,6 +237,7 @@ menu "ESPDrone Config"
             default 37 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 37 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) SPI_PIN_MISO
 
@@ -196,6 +249,7 @@ menu "ESPDrone Config"
             default 35 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 35 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) SPI_PIN_MOSI
 
@@ -207,6 +261,7 @@ menu "ESPDrone Config"
             default 36 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 36 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) SPI_PIN_CLK
 
@@ -218,6 +273,7 @@ menu "ESPDrone Config"
             default 34 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 34 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) SPI_PIN_CS0
 
@@ -229,6 +285,7 @@ menu "ESPDrone Config"
             default 12 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 12 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) MPU_PIN_INT
 
@@ -240,6 +297,7 @@ menu "ESPDrone Config"
             default 2 if TARGET_ESPLANE_V2_S2
             range 1 10 if TARGET_ESP32_S2_DRONE_V1_2
             default 2 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) ADC1_PIN
 
@@ -251,6 +309,7 @@ menu "ESPDrone Config"
             default 1 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 1 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) EXT01_PIN
     endmenu
@@ -264,6 +323,7 @@ menu "ESPDrone Config"
             default 7 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 7 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) LED_PIN_BLUE
 
@@ -275,6 +335,7 @@ menu "ESPDrone Config"
             default 9 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 9 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) LED_PIN_GREEN
 
@@ -286,6 +347,7 @@ menu "ESPDrone Config"
             default 8 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 8 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) LED_PIN_RED
 
@@ -296,6 +358,7 @@ menu "ESPDrone Config"
             prompt "Motor type"
             default MOTOR_BRUSHED_715 if TARGET_ESPLANE_V1 || TARGET_ESPLANE_V2_S2
             default MOTOR_BRUSHED_720 if TARGET_ESP32_S2_DRONE_V1_2
+            default MOTOR_BRUSHED_720 if TARGET_PORTABLE_SAFE
             
             config MOTOR_BRUSHED_715
                 bool "brushed 715 motor"
@@ -303,6 +366,13 @@ menu "ESPDrone Config"
             config MOTOR_BRUSHED_720
                 bool "brushed 720 motor"
         endchoice
+
+        config MOTORS_STARTUP_TEST
+            bool "Spin motors during startup self-test"
+            default n
+            help
+                Briefly drives each motor during boot. Keep disabled for safe
+                bench testing; enable only when propellers have been removed.
 
         config MOTOR01_PIN
             int "MOTOR01_PIN GPIO number"
@@ -312,6 +382,7 @@ menu "ESPDrone Config"
             default 3 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 5 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) MOTOR01_PIN
 
@@ -323,6 +394,7 @@ menu "ESPDrone Config"
             default 4 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 6 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) MOTOR02_PIN
 
@@ -334,6 +406,7 @@ menu "ESPDrone Config"
             default 5 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 3 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) MOTOR03_PIN
 
@@ -345,6 +418,7 @@ menu "ESPDrone Config"
             default 6 if TARGET_ESPLANE_V2_S2
             range 0 43 if TARGET_ESP32_S2_DRONE_V1_2
             default 4 if TARGET_ESP32_S2_DRONE_V1_2
+            default 0 if TARGET_PORTABLE_SAFE
             help
                 GPIO number (IOxx) MOTOR04_PIN
     endmenu

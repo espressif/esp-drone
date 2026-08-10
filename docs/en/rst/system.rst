@@ -10,7 +10,7 @@ Startup Process
    :alt: start_from_app_main
    :figclass: align-center
 
-For source file, please check `start_from_app_main <./_static/start_from_app_main.pdf>`__.
+For the source flow, see `start_from_app_main <../../_static/start_from_app_main.pdf>`__.
 
 Task Management
 ----------------
@@ -168,7 +168,7 @@ Except the system default enabled tasks, such as Wi-Fi TASK, the task with the h
 Sensor Driver
 --------------
 
-The sensor driver code can be found in ``components\drivers``. ``drivers`` applies a file structure similar to that used in `esp-iot-solution <https://github.com/espressif/esp-iot-solution/>`__. In such structure, drivers are classified by the bus they belong to, including ``i2c_devices``, ``spi_devices``, and ``general``. For more information, please refer to `Drivers <./drivers>`__.
+The sensor driver code can be found in ``components/drivers``. ``drivers`` applies a file structure similar to that used in `esp-iot-solution <https://github.com/espressif/esp-iot-solution/>`__. In such structure, drivers are classified by the bus they belong to, including ``i2c_devices``, ``spi_devices``, and ``general``. For more information, see :doc:`Drivers <drivers>`.
 
 .. figure:: ../../_static/drivers_flie_struture.png
    :align: center
@@ -310,7 +310,7 @@ The values of g are generally different at various latitudes and altitudes of th
 2. Store 200 sets of accelerometer measurements to the Buffer.
 3. Calculate the value of g at rest by synthesizing the weight of g on three axes.
 
-For more information, see `g Values at Various Latitudes and Altitudes <https://baike.baidu.com/item/%E9%87%8D%E5%8A%9B%E5%8A%A0%E9%80%9F%E5%BA%A6/23553>`__\.
+For background on the conventional reference value, see `standard gravity <https://en.wikipedia.org/wiki/Standard_gravity>`__\.
 
 **Calculate g values at rest**
 
@@ -583,8 +583,8 @@ An INDI controller is a controller that immediately processes angle rates to det
 data reliability. This controller can be used together with a traditional PID controller,
 which provides a faster angle processing than a string-level PID controller.
 
-For your reference: `Adaptive Incremental Nonlinear Dynamic Inversion for Attitude Control of Micro Air
-Vehicles <https://arc.aiaa.org/doi/pdf/10.2514/1.G001490>`__.
+For your reference: *Adaptive Incremental Nonlinear Dynamic Inversion for Attitude Control of Micro Air
+Vehicles*, DOI ``10.2514/1.G001490``.
 
 PID Parameter Tuning
 ---------------------

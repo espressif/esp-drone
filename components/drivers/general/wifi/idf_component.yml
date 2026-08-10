@@ -1,5 +1,8 @@
 dependencies:
-  espressif/esp-now: "*"
+  espressif/esp-now:
+    version: "^2.5.3"
+    rules:
+      - if: "target != esp32p4 && target != esp32s31"
   idf:
-    version: ">=4.1.0"
-
+    # CMake enforces the exact supported release branches (5.5 and 6.1).
+    version: ">=5.5,<6.2"

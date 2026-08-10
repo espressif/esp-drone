@@ -1,12 +1,38 @@
+set(crazyflie_transport_sources)
+set(crazyflie_transport_requires)
+
+idf_build_get_property(crazyflie_idf_target IDF_TARGET)
+
+# Component requirements are resolved before project Kconfig values are fully
+# available.  Use fixed SoC capabilities here and Kconfig only for sources.
+if(NOT crazyflie_idf_target STREQUAL "esp32p4")
+  list(APPEND crazyflie_transport_requires wifi esp_wifi)
+endif()
+
+if(NOT crazyflie_idf_target STREQUAL "esp32p4" AND
+   NOT crazyflie_idf_target STREQUAL "esp32s31")
+  list(APPEND crazyflie_transport_requires espressif__esp-now)
+endif()
+
+if(CONFIG_TRANSPORT_NATIVE_WIFI)
+  list(APPEND crazyflie_transport_sources "./hal/src/wifilink.c")
+elseif(CONFIG_TRANSPORT_REMOTE_WIFI)
+  list(APPEND crazyflie_transport_sources "./hal/src/wifilink.c")
+endif()
+
+if(CONFIG_ESPNOW_CONTROL)
+  list(APPEND crazyflie_transport_sources "./hal/src/espnow_ctrl.c")
+endif()
+
 idf_component_register(SRCS "./hal/src/buzzer.c" 
                 "./hal/src/freeRTOSdebug.c" 
                 "./hal/src/ledseq.c" 
                 "./hal/src/pm_esplane.c" 
                 "./hal/src/sensors_mpu6050_hm5883L_ms5611.c" 
                 "./hal/src/sensors.c" 
+                "./hal/src/transport.c"
                 "./hal/src/usec_time.c" 
-                "./hal/src/wifilink.c"
-                "./hal/src/espnow_ctrl.c"
+                ${crazyflie_transport_sources}
                 "./modules/src/app_handler.c" 
                 "./modules/src/app_channel.c" 
                 "./modules/src/attitude_pid_controller.c"
@@ -69,7 +95,7 @@ idf_component_register(SRCS "./hal/src/buzzer.c"
                 "./utils/src/version.c"
                 "./utils/src/rateSupervisor.c"
                 INCLUDE_DIRS "./hal/interface" "./modules/interface" "./utils/interface"
-                REQUIRES i2c_bus deck mpu6050 ms5611 hmc5883l pmw3901 vl53l1 vl53l0 platform config led eeprom dsp_lib motors wifi adc esp_timer)
+                REQUIRES i2c_bus deck mpu6050 ms5611 hmc5883l pmw3901 vl53l1 vl53l0 platform config led eeprom dsp_lib motors adc esp_timer esp_driver_gpio ${crazyflie_transport_requires})
 
 idf_component_get_property( FREERTOS_ORIG_INCLUDE_PATH freertos ORIG_INCLUDE_PATH)
 target_include_directories(${COMPONENT_TARGET} PUBLIC

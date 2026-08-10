@@ -38,6 +38,7 @@
 #include "debug_cf.h"
 
 static bool motorSetEnable = false;
+static bool motorInitSucceeded = false;
 
 static struct {
   uint32_t m1;
@@ -61,12 +62,12 @@ static uint32_t idleThrust = DEFAULT_IDLE_THRUST;
 
 void powerDistributionInit(void)
 {
-  motorsInit(platformConfigGetMotorMapping());
+  motorInitSucceeded = motorsInit(platformConfigGetMotorMapping());
 }
 
 bool powerDistributionTest(void)
 {
-  bool pass = true;
+  bool pass = motorInitSucceeded;
 
   pass &= motorsTest();
 

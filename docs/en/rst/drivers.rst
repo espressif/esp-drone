@@ -261,7 +261,7 @@ The VL53L0X/VL53L1X chip is internally integrated with a laser transmitter and a
 
 The VL53L0X/VL53L1X measures the shortest distance in the measurement area, which can be zoomed in or out depending on actual scenario. But a large detection range may cause fluctuations in the measurement.
 
-For more information about configuration on measurement area, see the sections 2.4 Ranging Description and 2.8 Sensing Array Optical Center in `VL53LXX Datasheet <https://www.st.com/resource/en/datasheet/vl53l1x.pdf>`_.
+For the current datasheet and details about ranging and the sensing-array optical center, see the `VL53L1X product page <https://www.st.com/en/imaging-and-photonics-solutions/vl53l1x.html>`_.
 
 .. figure:: ../../_static/vl53lxx_roi.png
    :align: center
@@ -310,7 +310,7 @@ For more information about configuration on measurement area, see the sections 2
 **Measurement Frequency**
 
 - The VL53L0X ranging frequency is up to 50 Hz, with a measurement error of ±5%.
-- The VL53L1X I2C has a maximum clock frequency of 400 kHz, and the pull-up resistor needs to be selected based on voltage and bus capacitance values. For more information, see `VL53LXX Datasheet <https://www.st.com/resource/en/datasheet/vl53l1x.pdf>`__\.
+- The VL53L1X I2C has a maximum clock frequency of 400 kHz, and the pull-up resistor needs to be selected based on voltage and bus capacitance values. For the current datasheet, see the `VL53L1X product page <https://www.st.com/en/imaging-and-photonics-solutions/vl53l1x.html>`__\.
 
 .. figure:: ../../_static/vl53l1x_typical_circuit.png
    :align: center
@@ -523,7 +523,7 @@ STM has provided a PC GUI to configure and calibrate the sensor.
    PC GUI Calibration
 
 
-For more information, see `STSW-IMG008: Windows Graphical User Interface (GUI) for VL53L1X Nucleo packs. Works with P-NUCLEO-53L1A1 <https://www.st.com/content/st_com/en/products/embedded-software/proximity-sensors-software/stsw-img008.html>`__\.
+For more information, see `STSW-IMG008: Windows GUI for VL53L1X Nucleo packs <https://www.st.com/en/embedded-software/stsw-img008.html>`__\.
 
 VL53L1X Example
 ^^^^^^^^^^^^^^^^
@@ -531,7 +531,7 @@ VL53L1X Example
 **Example Description**
 
 - Implementation: VL53L1X detects the height changes (last for 1 second) and the red light turns on. Height returns to normal value (last for 1 second), and the green light turns on.
-- Parameters: set the I2C number, port number, LED port number via ``make menuconfig``.
+- Parameters: set the I2C number, port number, and LED port number via ``idf.py menuconfig``.
 - Example analysis can be found in code notes and user manual.
 
 **Notes**
@@ -544,11 +544,11 @@ VL53L1X Example
 
 **Example Repository**
 
-Click `esp32-vl53l1x-test <https://github.com/qljz1993/esp32-vl53l1x-test/tree/master>`__ to check the example, or download the example using git tool:
+Click `esp32-vl53l1x-test <https://github.com/leeebo/esp32-vl53l1x-test/tree/master>`__ to check the example, or download the example using git tool:
 
 .. code:: text
 
-   git clone https://github.com/qljz1993/esp32-vl53l1x-test.git
+   git clone https://github.com/leeebo/esp32-vl53l1x-test.git
 
 
 SPI Driver

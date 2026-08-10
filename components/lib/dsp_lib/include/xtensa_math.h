@@ -2227,7 +2227,7 @@ inline float invSqrt(float x) {
    * @param[out] pResult    is output value.
    */
   void xtensa_mean_f32(
-  float32_t * pSrc,
+  const float32_t * pSrc,
   uint32_t blockSize,
   float32_t * pResult);
 
@@ -2625,6 +2625,5 @@ inline float invSqrt(float x) {
  *
  * End of file.
  */
-
 
 
