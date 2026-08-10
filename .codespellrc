@@ -1,0 +1,2 @@
+[codespell]
+skip = *.gif,*.jpg,*.jpeg,*.pdf,*.png,*.svg,build

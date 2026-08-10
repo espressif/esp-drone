@@ -71,7 +71,7 @@ For the detailed usage, please refer to the code ``\components\drivers\general\w
 
 .. note::
 
-    Before Wi-Fi initialization, please use ``WIFI_INIT_CONFIG_DEFAULT`` to obtain the initialization configuration struct, and customize this struct first, then start the initialization. Be aware of problems caused by unitialized members of the struct, and pay special attention to this issue when new structure members are added to the ESP-IDF during update.
+    Before Wi-Fi initialization, please use ``WIFI_INIT_CONFIG_DEFAULT`` to obtain the initialization configuration struct, and customize this struct first, then start the initialization. Be aware of problems caused by uninitialized members of the struct, and pay special attention to this issue when new structure members are added to the ESP-IDF during update.
 
 **AP Mode Workflow**
 

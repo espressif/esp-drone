@@ -341,10 +341,10 @@ Tune Online Parameters
 
 .. figure:: ../../_static/cfclient_pid_tune.png
    :align: center
-   :alt: PID parameters tunning
+   :alt: PID parameters tuning
    :figclass: align-center
    
-   Cfclient PID Parameters Tunning
+   Cfclient PID Parameters Tuning
 
 
 **Note**

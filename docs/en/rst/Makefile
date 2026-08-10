@@ -167,7 +167,7 @@ gh-linkcheck:
 		'https://github.com/espressif/esp-idf/tree\|https://github.com/espressif/esp-idf/blob\|https://github.com/espressif/esp-idf/raw'\
 		); \
 	then \
-		echo "WARNINIG: Some .rst files contain hardcoded Github links."; \
+		echo "WARNING: Some .rst files contain hardcoded Github links."; \
 		echo "Please check above output and replace links with one of the following:"; \
 		echo "- :idf:\`dir\` - points to directory inside ESP-IDF"; \
 		echo "- :idf_file:\`file\` - points to file inside ESP-IDF"; \
