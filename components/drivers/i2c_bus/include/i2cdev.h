@@ -28,6 +28,7 @@
 #include <stdbool.h>
 
 #include "i2c_drv.h"
+#include "stm32_legacy.h"  // Compatibility for legacy sensor drivers using M2T.
 
 #define I2CDEV_NO_MEM_ADDR  0xFF
 
@@ -39,7 +40,7 @@ typedef I2cDrv    I2C_Dev;
 #define i2cdevWrite16 i2cdevWriteReg16
 #define i2cdevRead16  i2cdevReadReg16
 
-#define I2C_TIMEOUT 5
+#define I2C_TIMEOUT_MS 5
 #define I2CDEV_CLK_TS (1000000 / 100000)
 
 #define I2C_MASTER_ACK_EN   true    /*!< Enable ack check for master */
@@ -87,7 +88,7 @@ bool i2cdevReadReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
  *
  * @return TRUE if initialization went OK otherwise FALSE.
  */
-int i2cdevInit(I2C_Dev *dev);
+bool i2cdevInit(I2C_Dev *dev);
 
 /**
  * Read a byte from an I2C peripheral

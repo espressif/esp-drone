@@ -108,3 +108,29 @@ idf.py -B /tmp/esp-drone-v61-p4-r3b \
 - P4 的 `build.ninja` 不含 `wifi_esp32.c`、`wifilink.c` 或 `espnow_ctrl.c`；ELF 符号表不含 `wifiInit`、`wifilink*` 或 `espnow_ctrl*`。
 - P4 sdkconfig 确认为 `IDF_TARGET=esp32p4`、`TARGET_PORTABLE_SAFE=y`、`TRANSPORT_NONE=y`。
 - `git diff --check` 通过。
+
+## R4a：I2C master bus/device API 迁移
+
+状态：完成
+
+实施内容：
+
+- 删除项目对 EOL `driver/i2c.h`、command link、`i2c_param_config` 和 `i2c_driver_install` 的使用，改为 IDF 6.1 `driver/i2c_master.h`。
+- 每条物理总线持有 `i2c_master_bus_handle_t`，按 7-bit 地址惰性缓存 `i2c_master_dev_handle_t`；同一总线仍由 mutex 串行化，保留传感器层的同步语义。
+- 8/16-bit 寄存器读取使用 repeated-start `i2c_master_transmit_receive`，写入使用 multi-buffer transmit，避免动态拼包。
+- 初始化只有在 mutex 和 master bus 都创建成功后才标记完成；失败会释放 mutex 并向上返回 `false`。
+- 补上此前仅声明、未实现的无寄存器地址 `i2cdevWrite`；统一拒绝空指针、零长度和非法 7-bit 地址。
+- bit-field 读写统一校验 `bitStart/length`，避免负移位或超出 8-bit 寄存器。
+- I2C 组件改为直接依赖 `esp_driver_i2c`。旧传感器仍通过兼容头取得 `M2T`，后续清理 STM32 compatibility layer 时统一替换。
+
+验证结果：
+
+- 全仓库不再包含 `#include "driver/i2c.h"`。
+- ESP32-S2/native Wi-Fi 完整编译、链接和镜像生成通过；`ESPDrone.bin` 为 `0xe9050` 字节，app 分区剩余 9%。
+- ESP32-P4/no-radio 完整编译、链接和镜像生成通过；`ESPDrone.bin` 为 `0x3b0b0` 字节，app 分区剩余 77%。
+- `git diff --check` 通过。
+
+暂未覆盖：
+
+- I2C 设备在线读写与采样周期需要在 S2 硬件阶段验证。
+- EEPROM/NVS 和 motor LEDC 错误传播属于 R4b。
