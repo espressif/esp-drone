@@ -1,4 +1,5 @@
 #include <string.h>
+#include <unistd.h>
 
 #include "config.h"
 #include "freertos/FreeRTOS.h"
@@ -31,10 +32,12 @@
 
 static struct sockaddr_storage source_addr;
 
+#ifndef CONFIG_BEE_WIFI_STA
 static char WIFI_SSID[32] = "";
 static char WIFI_PWD[64] = CONFIG_WIFI_PASSWORD;
 static uint8_t WIFI_CH = CONFIG_WIFI_CHANNEL;
 #define WIFI_MAX_STA_CONN CONFIG_WIFI_MAX_STA_CONN
+#endif
 
 #ifndef MAC2STR
 #define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
@@ -67,6 +70,19 @@ static uint8_t calculate_cksum(void *data, size_t len)
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
 {
+#ifdef CONFIG_BEE_WIFI_STA
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+        ESP_ERROR_CHECK(esp_wifi_connect());
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        wifi_event_sta_disconnected_t *event = event_data;
+        isUDPConnected = false;
+        DEBUG_PRINT_LOCAL("Wi-Fi disconnected (reason %d), reconnecting", event->reason);
+        ESP_ERROR_CHECK(esp_wifi_connect());
+    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        ip_event_got_ip_t *event = event_data;
+        DEBUG_PRINT_LOCAL("Station address: " IPSTR ", UDP port %d", IP2STR(&event->ip_info.ip), UDP_SERVER_PORT);
+    }
+#else
     if (event_id == WIFI_EVENT_AP_STACONNECTED) {
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *) event_data;
         DEBUG_PRINT_LOCAL("station" MACSTR "join, AID=%d", MAC2STR(event->mac), event->aid);
@@ -75,6 +91,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *) event_data;
         DEBUG_PRINT_LOCAL("station" MACSTR "leave, AID=%d", MAC2STR(event->mac), event->aid);
     }
+#endif
 }
 
 bool wifiTest(void)
@@ -122,6 +139,8 @@ static esp_err_t udp_server_create(void *arg)
     int err = bind(sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
     if (err < 0) {
         DEBUG_PRINT_LOCAL("Socket unable to bind: errno %d", errno);
+        close(sock);
+        return ESP_FAIL;
     }
     DEBUG_PRINT_LOCAL("Socket bound, port %d", UDP_SERVER_PORT);
 
@@ -144,6 +163,9 @@ static void udp_server_rx_task(void *pvParameters)
         /* command step - receive  01 from Wi-Fi UDP */
         if (len < 0) {
             DEBUG_PRINT_LOCAL("recvfrom failed: errno %d", errno);
+            continue;
+        } else if (len < 2) {
+            // A CRTP frame needs at least a header and checksum.
             continue;
         } else if(len > WIFI_RX_TX_PACKET_SIZE) {
             DEBUG_PRINT_LOCAL("Received data length = %d > %d", len, WIFI_RX_TX_PACKET_SIZE);
@@ -202,6 +224,7 @@ static void udp_server_tx_task(void *pvParameters)
     }
 }
 
+#ifndef CONFIG_BEE_WIFI_STA
 static void espnow_ctrl_data_cb(espnow_attribute_t initiator_attribute,
                                        espnow_attribute_t responder_attribute,
                                        uint32_t status1,
@@ -249,6 +272,7 @@ static void app_espnow_event_handler(void *handler_args, esp_event_base_t base, 
     }
 }
 
+#endif
 void wifiInit(void)
 {
     if (isInit) {
@@ -261,11 +285,8 @@ void wifiInit(void)
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataTx);
 
     espnow_storage_init();
-    esp_netif_t *ap_netif = NULL;
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    ap_netif = esp_netif_create_default_wifi_ap();
-    uint8_t mac[6];
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -276,6 +297,36 @@ void wifiInit(void)
                     NULL,
                     NULL));
 
+#ifdef CONFIG_BEE_WIFI_STA
+    esp_netif_create_default_wifi_sta();
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
+                    IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL, NULL));
+    const char *ssid = CONFIG_BEE_WIFI_STA_SSID;
+    const char *password = CONFIG_BEE_WIFI_STA_PASSWORD;
+    if (strlen(ssid) == 0 || strlen(ssid) > 32 ||
+            strlen(password) < 8 || strlen(password) > 64) {
+        DEBUG_PRINT_LOCAL("Configure a station SSID (1-32 bytes) and password (8-64 bytes) in menuconfig");
+        return;
+    }
+    wifi_config_t wifi_config = {
+        .sta = {
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+        },
+    };
+    memcpy(wifi_config.sta.ssid, ssid, strlen(ssid));
+    memcpy(wifi_config.sta.password, password, strlen(password));
+    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
+    // The network selects the channel; do not initialize the AP's ESP-NOW controller.
+    uint8_t mac[6];
+    ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_STA, mac));
+    DEBUG_PRINT_LOCAL("Station MAC " MACSTR, MAC2STR(mac));
+#else
+    esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
+    uint8_t mac[6];
     ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, mac));
     sprintf(WIFI_SSID, "%s_%02X%02X%02X%02X%02X%02X", CONFIG_WIFI_BASE_SSID, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
@@ -312,7 +363,8 @@ void wifiInit(void)
     ESP_ERROR_CHECK(esp_netif_dhcps_stop(ap_netif));
     ESP_ERROR_CHECK(esp_netif_set_ip_info(ap_netif, &ip_info));
     ESP_ERROR_CHECK(esp_netif_dhcps_start(ap_netif));
-    DEBUG_PRINT_LOCAL("wifi_init_softap complete.SSID:%s password:%s", WIFI_SSID, WIFI_PWD);
+    DEBUG_PRINT_LOCAL("wifi_init_softap complete.SSID:%s", WIFI_SSID);
+#endif
 
     if (udp_server_create(NULL) == ESP_FAIL) {
         DEBUG_PRINT_LOCAL("UDP server create socket failed");

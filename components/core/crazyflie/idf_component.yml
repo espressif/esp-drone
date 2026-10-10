@@ -1,4 +1,4 @@
 dependencies:
-  espressif/esp-now: "*"
+  espressif/esp-now: "==2.4.0"
   idf:
     version: ">=4.1.0"

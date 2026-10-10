@@ -51,24 +51,46 @@ menu "ESPDrone Config"
     endmenu
 
     menu "wireless config"
+        config BEE_WIFI_STA
+            bool "Join an existing Wi-Fi network (station mode)"
+            default y
+            help
+                Join the lab network using DHCP. Disable to use the upstream AP mode.
+        config BEE_WIFI_STA_SSID
+            string "Station network SSID"
+            depends on BEE_WIFI_STA
+            default ""
+            help
+                SSID of the 2.4 GHz lab network, at most 32 bytes.
+        config BEE_WIFI_STA_PASSWORD
+            string "Station network password"
+            depends on BEE_WIFI_STA
+            default ""
+            help
+                WPA2/WPA3 personal password, 8-63 bytes or 64 hexadecimal digits.
+                Credentials are stored in sdkconfig and compiled into the firmware.
         config WIFI_BASE_SSID
             string "Wi-Fi Base SSID"
+            depends on !BEE_WIFI_STA
             default "ESP-DRONE"
             help
                 Wi-Fi Base SSID, 1-16 characters. the final SSID will be BASE_SSID-MAC
         config WIFI_PASSWORD
             string "Wi-Fi Password"
+            depends on !BEE_WIFI_STA
             default "12345678"
             help
                 Wi-Fi Password, 8-64 characters
         config WIFI_CHANNEL
             int "Wi-Fi/ESP-Now Channel"
+            depends on !BEE_WIFI_STA
             range 1 13
             default 6
             help
                 Wi-Fi/ESP-Now Channel, 1-13
         config WIFI_MAX_STA_CONN
             int "Wi-Fi Max Station Connection"
+            depends on !BEE_WIFI_STA
             range 1 6
             default 3
             help
