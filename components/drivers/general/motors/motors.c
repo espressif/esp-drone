@@ -190,6 +190,15 @@ void motorsDeInit(const MotorPerifDef **motorMapSelect)
     motorMap = NULL;
 }
 
+/* Bypass the health guard so a fault can still force every PWM output low. */
+static void motorsForceStopAll(void)
+{
+    for (int i = 0; i < NBR_OF_MOTORS; i++) {
+        ledc_stop(motors_channel[i].speed_mode, motors_channel[i].channel, 0);
+        motor_ratios[i] = 0;
+    }
+}
+
 bool motorsTest(void)
 {
     if (!isInit || !isHealthy || motorMap == NULL) {
@@ -239,6 +248,7 @@ bool motorsSetRatio(uint32_t id, uint16_t ithrust)
         float volts = -0.0006239f * thrust * thrust + 0.088f * thrust;
         float supply_voltage = pmGetBatteryVoltage();
         if (supply_voltage <= 0.1f) {
+            motorsForceStopAll();
             isHealthy = false;
             return false;
         }
@@ -256,9 +266,7 @@ bool motorsSetRatio(uint32_t id, uint16_t ithrust)
                                motors_channel[id].channel);
     }
     if (err != ESP_OK) {
-        ledc_set_duty(motors_channel[id].speed_mode, motors_channel[id].channel, 0);
-        ledc_update_duty(motors_channel[id].speed_mode, motors_channel[id].channel);
-        motor_ratios[id] = 0;
+        motorsForceStopAll();
         isHealthy = false;
         DEBUG_PRINTW("Motor %"PRIu32" PWM update failed: %s", id, esp_err_to_name(err));
         return false;
@@ -299,9 +307,7 @@ void motorsBeep(int id, bool enable, uint16_t frequency, uint16_t ratio)
                       (uint32_t)motorsConv16ToBits(ratio)) != ESP_OK ||
         ledc_update_duty(motors_channel[id].speed_mode,
                          motors_channel[id].channel) != ESP_OK) {
-        ledc_set_duty(motors_channel[id].speed_mode, motors_channel[id].channel, 0);
-        ledc_update_duty(motors_channel[id].speed_mode, motors_channel[id].channel);
-        motor_ratios[id] = 0;
+        motorsForceStopAll();
         isHealthy = false;
     }
 }
