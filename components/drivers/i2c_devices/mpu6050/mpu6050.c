@@ -78,7 +78,10 @@ bool mpu6050Test(void)
 bool mpu6050TestConnection()
 {
     vTaskDelay(M2T(100));
-    return mpu6050GetDeviceID() == 0b110100;
+    uint8_t deviceID = mpu6050GetDeviceID();
+    // 0x34 = MPU6050 WHO_AM_I (son 6 bit)
+    // 0x38 = MPU9250 WHO_AM_I (son 6 bit)
+    return (deviceID == 0b110100 || deviceID == 0b111000);
 }
 
 /** Do a MPU6050 self test.
