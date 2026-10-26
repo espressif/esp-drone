@@ -33,7 +33,6 @@
 
 #include "config.h"
 #include "debug_cf.h"
-#include "i2cdev.h"
 #include "configblock.h"
 #include "eeprom.h"
 
@@ -123,8 +122,10 @@ int configblockInit(void)
   if(isInit)
     return 0;
 
-  i2cdevInit(I2C1_DEV);
-  eepromInit(I2C1_DEV);
+  if (!eepromInit(NULL))
+  {
+    return -1;
+  }
 
   // Because of strange behavior from I2C device during expansion port test
   // the first read needs to be discarded

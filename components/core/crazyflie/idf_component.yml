@@ -1,4 +1,4 @@
 dependencies:
-  espressif/esp-now: "*"
   idf:
-    version: ">=4.1.0"
+    # CMake enforces the exact supported release branches (5.5 and 6.1).
+    version: ">=5.5,<6.2"

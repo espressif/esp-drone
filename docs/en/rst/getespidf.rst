@@ -5,13 +5,15 @@ Set up Development Environment
 Set up ESP-IDF Environment
 ---------------------------------
 
-Please refer to `ESP-IDF Programming Guide <https://docs.espressif.com/projects/esp-idf/en/release-v5.0/esp32s2/get-started/index.html>`__\  and set up ESP-IDF environment step by step.
+Follow the `ESP-IDF v5.5 Programming Guide <https://docs.espressif.com/projects/esp-idf/en/release-v5.5/esp32s2/get-started/index.html>`__ to install the tools and create an ESP-IDF environment.
 
 .. note::
 
--  ESP-IDF branch ``release/v5.0`` is suggested.
--  Please follow and complete all setup steps.
--  Build an example of ESP-IDF to make sure the setup is successful.
+   -  The project supports only ``release/v5.5`` and ``release/v6.1``.
+   -  Use ``release/v5.5`` for the stable ESP32, ESP32-S2, ESP32-S3, and ESP32-P4 build baseline.
+   -  Use ``release/v6.1`` when building the ESP32-S31 preview target.
+   -  Please follow and complete all setup steps.
+   -  Build an example of ESP-IDF to make sure the setup is successful.
 
 
 Get Project Source Code
@@ -36,7 +38,7 @@ Get Project Source Code
    :alt: espdrone_file_structure
    :figclass: align-center
 
-    ESP-Drone File Structure
+   ESP-Drone File Structure
 
 ::
 
@@ -76,7 +78,7 @@ Get Project Source Code
    ├── README.md                        | project description
    └── sdkconfig.defaults            | default parameter
 
-**For more information, please refer to**: `espdrone_file_structure <./_static/espdrone_file_structure.pdf>`__.
+**For more information, see** `espdrone_file_structure <../../_static/espdrone_file_structure.pdf>`__.
 
 Source Code Style
 --------------------

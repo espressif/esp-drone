@@ -5,6 +5,7 @@
 
 // 32 bytes is enough for CRTP packets (30+1) + checksum 1
 #define WIFI_RX_TX_PACKET_SIZE   (32)
+#define WIFI_MAX_PAYLOAD_SIZE    (WIFI_RX_TX_PACKET_SIZE - 1)
 
 /* Structure used for in/out data via USB */
 typedef struct

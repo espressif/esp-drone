@@ -157,11 +157,10 @@ extern const MotorPerifDef *motorMapDefaultBrushed[NBR_OF_MOTORS];
 extern const uint16_t testsound[NBR_OF_MOTORS];
 /*** Public interface ***/
 
-bool pwm_timmer_init();
 /**
  * Initialisation. Will set all motors ratio to 0%
  */
-void motorsInit(const MotorPerifDef **motorMapSelect);
+bool motorsInit(const MotorPerifDef **motorMapSelect);
 
 /**
  * DeInitialisation. Reset to default
@@ -177,7 +176,7 @@ bool motorsTest(void);
 /**
  * Set the PWM ratio of the motor 'id'
  */
-void motorsSetRatio(uint32_t id, uint16_t ratio);
+bool motorsSetRatio(uint32_t id, uint16_t ratio);
 
 /**
  * Get the PWM ratio of the motor 'id'. Return -1 if wrong ID.
@@ -201,4 +200,3 @@ void motorsTestTask(void *params);
 void motorsBeep(int id, bool enable, uint16_t frequency, uint16_t ratio);
 
 #endif /* __MOTORS_H__ */
-

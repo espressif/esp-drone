@@ -27,9 +27,8 @@
 #include <stdbool.h>
 #include "i2cdev.h"
 
-#define EEPROM_IN_FLASH_ADDR  0x3d2000 //TODO: CHANGE 20200106 NEED TO TEST
-#define EEPROM_I2C_ADDR     0x50 //dont have a eeprom just for latency
-#define EEPROM_SIZE         0x1FFF   //EEPROM_IN_FLASH_ADDR
+#define EEPROM_SIZE_BYTES 0x2000
+#define EEPROM_PAGE_SIZE 32
 
 /**
  * Initialize the i2c eeprom module
@@ -72,9 +71,8 @@ bool eepromReadBuffer(uint8_t *buffer, size_t readAddr, size_t len);
  *
  * @return True on success, else false.
  */
-bool eepromWriteBuffer(uint8_t *buffer, size_t writeAddr, size_t len);
+bool eepromWriteBuffer(const uint8_t *buffer, size_t writeAddr, size_t len);
 
-// TODO
-bool eepromWritePage(uint8_t *buffer, uint16_t writeAddr);
+bool eepromWritePage(const uint8_t *buffer, uint16_t writeAddr);
 
 #endif // EERROM_H

@@ -32,7 +32,7 @@ Supported Distance      1 km under the Exclusive Agreement of Espressif
 Transfer Rate           20 Mbit/s TCP throughput, 30 Mbit/s UDP
 =====================   ================================================================================================
 
-For other parameters, see `ESP32 Wi-Fi Feature List <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/wifi.html#esp32-wi-fi-feature-list>`__\.
+For current capabilities and constraints, see the `ESP32 Wi-Fi programming guide <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/wifi.html>`__\.
 
 **ESP32-S2 Wi-Fi Performance**
 
@@ -47,7 +47,7 @@ Supported Distance      1 km under the Exclusive Agreement of Espressif
 Transfer Rate           20 Mbit/s TCP throughput, 30 Mbit/s UDP
 =====================   ============================================================
 
-For other parameters, see `ESP32-S2 Wi-Fi Feature List <https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-guides/wifi.html#esp32-s2-wi-fi-feature-list>`__\.
+For current capabilities and constraints, see the `ESP32-S2 Wi-Fi programming guide <https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-guides/wifi.html>`__\.
 
 Wi-Fi Programming Framework
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -189,7 +189,7 @@ cflib is a Python package supported by CRTP protocol,  and provides an applicati
 Each component in the firmware that uses the CRTP protocol has a script corresponding to it in cflib. 
 
 -  Source repository: `crazyflie-lib-python <https://github.com/bitcraze/crazyflie-lib-python>`__.
--  cflib repository specially for ESP-Drone: `qljz1993/crazyflie-lib-python <https://github.com/qljz1993/crazyflie-lib-python.git>`__. Please checkout to ``esplane`` branch.
+-  cflib repository specially for ESP-Drone: `leeebo/crazyflie-lib-python <https://github.com/leeebo/crazyflie-lib-python>`__. Please checkout to ``esplane`` branch.
 
 Application Development Based on CRTP Protocol
 ------------------------------------------------
@@ -210,7 +210,7 @@ Examples for Various Platform
 cfclient
 ~~~~~~~~
 
-cfclient is the upper PC for ``Crazeflie`` project, which has fully implemented the functions defined in ``CRTP`` Protocol, and speeds up the debug process for the drone. The ESP-Drone project tailors and adjusts the upper PC to meet functional design needs.
+cfclient is the desktop client for the ``Crazyflie`` project. It implements the functions defined by the ``CRTP`` protocol and speeds up drone debugging. ESP-Drone uses a tailored version of this client.
 
 .. figure:: ../../_static/cfclient.png
     :align: center
@@ -219,4 +219,4 @@ cfclient is the upper PC for ``Crazeflie`` project, which has fully implemented 
 
     Cfclient Control Interface
 
-For detailed information about cfclient, please refer to `cfclient <gettingstarted.html#pc-cfclient>`__.
+For detailed information about cfclient, see :doc:`Get Started <gettingstarted>`.

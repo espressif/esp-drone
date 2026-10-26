@@ -1,0 +1,6 @@
+# ESP32-P4 bootloader exceeds the space available before the legacy 0x8000
+# partition-table offset under ESP-IDF 6.1.
+CONFIG_PARTITION_TABLE_OFFSET=0x10000
+
+CONFIG_TRANSPORT_NONE=y
+CONFIG_TARGET_PORTABLE_SAFE=y

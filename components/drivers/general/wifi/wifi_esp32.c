@@ -1,7 +1,9 @@
 #include <string.h>
+#include <stdio.h>
 
 #include "config.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 #include "freertos/task.h"
 
 #include "esp_system.h"
@@ -22,9 +24,11 @@
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 0)
 #include "esp_mac.h"
 #endif
+#ifdef CONFIG_ESPNOW_CONTROL
 #include "espnow.h"
 #include "espnow_ctrl.h"
 #include "espnow_utils.h"
+#endif
 
 #define UDP_SERVER_PORT         2390
 #define UDP_SERVER_BUFSIZE      64
@@ -32,7 +36,7 @@
 static struct sockaddr_storage source_addr;
 
 static char WIFI_SSID[32] = "";
-static char WIFI_PWD[64] = CONFIG_WIFI_PASSWORD;
+static const char WIFI_PWD[] = CONFIG_WIFI_PASSWORD;
 static uint8_t WIFI_CH = CONFIG_WIFI_CHANNEL;
 #define WIFI_MAX_STA_CONN CONFIG_WIFI_MAX_STA_CONN
 
@@ -84,6 +88,10 @@ bool wifiTest(void)
 
 bool wifiGetDataBlocking(UDPPacket *in)
 {
+    if (in == NULL || udpDataRx == NULL) {
+        return false;
+    }
+
     /* command step - receive  02  from udp rx queue */
     while (xQueueReceive(udpDataRx, in, portMAX_DELAY) != pdTRUE) {
         vTaskDelay(M2T(10));
@@ -94,6 +102,10 @@ bool wifiGetDataBlocking(UDPPacket *in)
 
 bool wifiSendData(uint32_t size, uint8_t *data)
 {
+    if (data == NULL || size == 0 || size > WIFI_MAX_PAYLOAD_SIZE || udpDataTx == NULL) {
+        return false;
+    }
+
     UDPPacket outStage = {0};
     outStage.size = size;
     memcpy(outStage.data, data, size);
@@ -122,6 +134,9 @@ static esp_err_t udp_server_create(void *arg)
     int err = bind(sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
     if (err < 0) {
         DEBUG_PRINT_LOCAL("Socket unable to bind: errno %d", errno);
+        close(sock);
+        sock = -1;
+        return ESP_FAIL;
     }
     DEBUG_PRINT_LOCAL("Socket bound, port %d", UDP_SERVER_PORT);
 
@@ -145,8 +160,8 @@ static void udp_server_rx_task(void *pvParameters)
         if (len < 0) {
             DEBUG_PRINT_LOCAL("recvfrom failed: errno %d", errno);
             continue;
-        } else if(len > WIFI_RX_TX_PACKET_SIZE) {
-            DEBUG_PRINT_LOCAL("Received data length = %d > %d", len, WIFI_RX_TX_PACKET_SIZE);
+        } else if (len < 2 || len > WIFI_RX_TX_PACKET_SIZE) {
+            DEBUG_PRINT_LOCAL("Invalid UDP frame length: %d", len);
             continue;
         } else {
             uint8_t cksum = rx_buffer[len - 1];
@@ -182,6 +197,10 @@ static void udp_server_tx_task(void *pvParameters)
             continue;
         }
         if ((xQueueReceive(udpDataTx, &outPacket, portMAX_DELAY) == pdTRUE) && isUDPConnected) {
+            if (outPacket.size == 0 || outPacket.size > WIFI_MAX_PAYLOAD_SIZE) {
+                DEBUG_PRINT_LOCAL("Invalid UDP payload length: %u", outPacket.size);
+                continue;
+            }
             // append cksum to the packet
             outPacket.data[outPacket.size] = calculate_cksum(outPacket.data, outPacket.size);
             outPacket.size += 1;
@@ -202,6 +221,7 @@ static void udp_server_tx_task(void *pvParameters)
     }
 }
 
+#ifdef CONFIG_ESPNOW_CONTROL
 static void espnow_ctrl_data_cb(espnow_attribute_t initiator_attribute,
                                        espnow_attribute_t responder_attribute,
                                        uint32_t status1,
@@ -248,19 +268,45 @@ static void app_espnow_event_handler(void *handler_args, esp_event_base_t base, 
         break;
     }
 }
+#endif
 
 void wifiInit(void)
 {
     if (isInit) {
         return;
     }
+    const size_t password_len = strlen(WIFI_PWD);
+    const size_t base_ssid_len = strlen(CONFIG_WIFI_BASE_SSID);
+    if (base_ssid_len == 0 || base_ssid_len > 16) {
+        DEBUG_PRINT_LOCAL("Wi-Fi base SSID must be 1-16 characters");
+        return;
+    }
+    if (password_len != 0 && (password_len < 8 || password_len > 63)) {
+        DEBUG_PRINT_LOCAL("Wi-Fi password must be empty or 8-63 characters");
+        return;
+    }
+
     // This should probably be reduced to a CRTP packet size
     udpDataRx = xQueueCreate(16, sizeof(UDPPacket));
-    DEBUG_QUEUE_MONITOR_REGISTER(udpDataRx);
     udpDataTx = xQueueCreate(16, sizeof(UDPPacket));
+    if (udpDataRx == NULL || udpDataTx == NULL) {
+        if (udpDataRx != NULL) {
+            vQueueDelete(udpDataRx);
+            udpDataRx = NULL;
+        }
+        if (udpDataTx != NULL) {
+            vQueueDelete(udpDataTx);
+            udpDataTx = NULL;
+        }
+        DEBUG_PRINT_LOCAL("Unable to allocate Wi-Fi queues");
+        return;
+    }
+    DEBUG_QUEUE_MONITOR_REGISTER(udpDataRx);
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataTx);
 
+#ifdef CONFIG_ESPNOW_CONTROL
     espnow_storage_init();
+#endif
     esp_netif_t *ap_netif = NULL;
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -276,8 +322,13 @@ void wifiInit(void)
                     NULL,
                     NULL));
 
-    ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, mac));
-    sprintf(WIFI_SSID, "%s_%02X%02X%02X%02X%02X%02X", CONFIG_WIFI_BASE_SSID, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_AP, mac));
+    int ssid_len = snprintf(WIFI_SSID, sizeof(WIFI_SSID), "%s_%02X%02X%02X%02X%02X%02X",
+                            CONFIG_WIFI_BASE_SSID, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    if (ssid_len < 1 || (size_t)ssid_len >= sizeof(WIFI_SSID)) {
+        DEBUG_PRINT_LOCAL("Wi-Fi SSID is too long");
+        return;
+    }
 
     wifi_config_t wifi_config = {
         .ap = {
@@ -287,23 +338,25 @@ void wifiInit(void)
         },
     };
 
-    memcpy(wifi_config.ap.ssid, WIFI_SSID, strlen(WIFI_SSID) + 1) ;
-    wifi_config.ap.ssid_len = strlen(WIFI_SSID);
-    memcpy(wifi_config.ap.password, WIFI_PWD, strlen(WIFI_PWD) + 1) ;
+    memcpy(wifi_config.ap.ssid, WIFI_SSID, (size_t)ssid_len + 1);
+    wifi_config.ap.ssid_len = ssid_len;
+    memcpy(wifi_config.ap.password, WIFI_PWD, password_len + 1);
 
     if (strlen(WIFI_PWD) == 0) {
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;
     }
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
     esp_wifi_set_channel(WIFI_CH, WIFI_SECOND_CHAN_NONE);
+#ifdef CONFIG_ESPNOW_CONTROL
     espnow_config_t espnow_config = ESPNOW_INIT_CONFIG_DEFAULT();
     espnow_init(&espnow_config);
     esp_event_handler_register(ESP_EVENT_ESPNOW, ESP_EVENT_ANY_ID, app_espnow_event_handler, NULL);
     ESP_ERROR_CHECK(espnow_ctrl_responder_bind(30 * 1000, -55, NULL));
     espnow_ctrl_responder_data(espnow_ctrl_data_cb);
+#endif
     esp_netif_ip_info_t ip_info = {
         .ip.addr = ipaddr_addr("192.168.43.42"),
         .netmask.addr = ipaddr_addr("255.255.255.0"),

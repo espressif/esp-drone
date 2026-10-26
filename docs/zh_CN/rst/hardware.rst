@@ -52,8 +52,8 @@ ESP32-S2-Drone V1.2
 
    ESP32-S2-Drone V1.2 外观图
 
-- 主板原理图：`SCH_Mainboard_ESP32_S2_Drone_V1_2 <./_static/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
-- 主板 PCB：`PCB_Mainboard_ESP32_S2_Drone_V1_2 <./_static/ESP32_S2_Drone_V1_2/PCB_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
+- 主板原理图：`SCH_Mainboard_ESP32_S2_Drone_V1_2 <https://raw.githubusercontent.com/espressif/esp-drone/master/hardware/ESP32_S2_Drone_V1_2/SCH_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
+- 主板 PCB：`PCB_Mainboard_ESP32_S2_Drone_V1_2 <https://raw.githubusercontent.com/espressif/esp-drone/master/hardware/ESP32_S2_Drone_V1_2/PCB_Mainboard_ESP32_S2_Drone_V1_2.pdf>`__
 
 基础配置
 ~~~~~~~~
@@ -220,8 +220,8 @@ ESPlane-V2-S2
 
    ESPlane-V2-S2 外观图
 
-- 主板原理图：`SCH_ESPlane_V2_S2 <./_static/ESPlane_V2_S2/SCH_ESPlane_V2_S2.pdf>`__
-- 主板 PCB：`PCB_ESPlane_V2_S2 <./_static/ESPlane_V2_S2/PCB_ESPlane_V2_S2.pdf>`__
+- 主板原理图：`SCH_ESPlane_V2_S2 <https://raw.githubusercontent.com/espressif/esp-drone/master/hardware/ESPlane_V2_S2/SCH_ESPlane_V2_S2.pdf>`__
+- 主板 PCB：`PCB_ESPlane_V2_S2 <https://raw.githubusercontent.com/espressif/esp-drone/master/hardware/ESPlane_V2_S2/PCB_ESPlane_V2_S2.pdf>`__
 
 ESPlane-FC-V1
 -------------
@@ -234,8 +234,8 @@ ESPlane-FC-V1
    ESPlane-FC-V1 外观图
 
 
-- 主板原理图：`Schematic_ESPlane_FC_V1 <./_static/ESPlane_FC_V1/Schematic_ESPlane_FC_V1.pdf>`__
-- 主板 PCB：`PCB_ESPlane_FC_V1 <./_static/ESPlane_FC_V1/PCB_ESPlane_FC_V1.pdf>`__
+- 主板原理图：`Schematic_ESPlane_FC_V1 <https://raw.githubusercontent.com/espressif/esp-drone/master/hardware/ESPlane_FC_V1/Schematic_ESPlane_FC_V1.pdf>`__
+- 主板 PCB：`PCB_ESPlane_FC_V1 <https://raw.githubusercontent.com/espressif/esp-drone/master/hardware/ESPlane_FC_V1/PCB_ESPlane_FC_V1.pdf>`__
 
 .. _Basic_Component-1:
 

@@ -15,15 +15,12 @@
 # serve to show the default.
 
 import sys, os
-import re
-from subprocess import Popen, PIPE
-import shlex
 
 # Note: If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute
 
-from local_util import run_cmd_get_output, copy_if_modified
+from local_util import run_cmd_get_output
 
 builddir = '_build'
 builddir = builddir
@@ -60,6 +57,15 @@ if 'BUILDDIR' in os.environ:
 # 
 suppress_warnings = ['image.nonlocal_uri']
 
+# Cross-language links point into the sibling Read the Docs build and cannot
+# resolve inside a single-language local build. ST's documentation site also
+# rejects automated link checkers even though the linked product pages are
+# valid in a browser.
+linkcheck_ignore = [
+    r'\.\./\.\./(?:en|zh_CN)/.+\.html',
+    r'https://www\.st\.com/.+',
+]
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -68,15 +74,7 @@ suppress_warnings = ['image.nonlocal_uri']
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-                   'link-roles',
-                   'sphinxcontrib.blockdiag',
-                   'sphinxcontrib.seqdiag',
-                   'sphinxcontrib.actdiag',
-                   'sphinxcontrib.nwdiag',
-                   'sphinx_markdown_tables',
-                   'recommonmark'
-                  ]
+extensions = ['link-roles']
 
 # Set up font for blockdiag, nwdiag, rackdiag and packetdiag
 # blockdiag_fontpath = '../../_static/DejaVuSans.ttf'
@@ -86,23 +84,11 @@ extensions = [
 # rackdiag_fontpath = '../_static/DejaVuSans.ttf'
 # packetdiag_fontpath = '../_static/DejaVuSans.ttf'
 
-# Breathe extension variables
-
-# Doxygen regenerates files in 'xml/' directory every time,
-# but we copy files to 'xml_in/' only when they change, to speed up
-# incremental builds.
-breathe_projects = { "esp32-idf": "xml_in/" }
-breathe_default_project = "esp32-idf"
-
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
 # The suffix of source filenames.
-source_suffix = ['.rst', '.md']
-
-source_parsers = {
-       '.md': 'recommonmark.parser.CommonMarkParser',
-    }
+source_suffix = '.rst'
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -128,7 +114,7 @@ latex_elements = {
 # This is supposed to be "the short X.Y version", but it's the only version
 # visible when you open index.html.
 # Display full version to make things less confusing.
-version = run_cmd_get_output('git describe')
+version = run_cmd_get_output('git describe --always --dirty 2>/dev/null')
 # The full version, including alpha/beta/rc tags.
 # If needed, nearest tag is returned by 'git describe --abbrev=0'.
 release = version
@@ -328,16 +314,9 @@ texinfo_documents = [
 # ref. https://github.com/snide/sphinx_rtd_theme#using-this-theme-locally-then-building-on-read-the-docs
 #
 # on_rtd is whether we are on readthedocs.org
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-
-if not on_rtd:  # only import and set the theme if we're building docs locally
-    import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
-# otherwise, readthedocs.org uses their theme by default, so no need to specify it
+html_theme = 'sphinx_rtd_theme'
 
 # Override RTD CSS theme to introduce the theme corrections
 # https://github.com/rtfd/sphinx_rtd_theme/pull/432
 def setup(app):
-    app.add_stylesheet('theme_overrides.css')
+    app.add_css_file('theme_overrides.css')

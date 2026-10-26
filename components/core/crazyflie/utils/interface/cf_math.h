@@ -28,16 +28,9 @@
 
 #pragma once
 
-// Include "xtensa_math.h". This header generates some warnings, especially in
-// unit tests. We hide them to avoid noise.
-//TODO: NEED ESP32 SUPPORT
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include "xtensa_math.h"
-#pragma GCC diagnostic pop
+#include <stdint.h>
+
+#include "dsp_math.h"
 
 #include "cfassert.h"
 
@@ -45,47 +38,51 @@
 #define DEG_TO_RAD (PI/180.0f)
 #define RAD_TO_DEG (180.0f/PI)
 
+#ifndef MIN
 #define MIN(a, b) ((b) < (a) ? (b) : (a))
+#endif
+#ifndef MAX
 #define MAX(a, b) ((b) > (a) ? (b) : (a))
+#endif
 
 // Matrix data must be aligned on 4 byte bundaries
-static inline void assert_aligned_4_bytes(const xtensa_matrix_instance_f32 *matrix)
+static inline void assert_aligned_4_bytes(const dsp_matrix_instance_f32 *matrix)
 {
-    const uint32_t address = (uint32_t)matrix->pData;
+    const uintptr_t address = (uintptr_t)matrix->pData;
     ASSERT((address & 0x3) == 0);
 }
 
-static inline void mat_trans(const xtensa_matrix_instance_f32 *pSrc, xtensa_matrix_instance_f32 *pDst)
+static inline void mat_trans(const dsp_matrix_instance_f32 *pSrc, dsp_matrix_instance_f32 *pDst)
 {
     assert_aligned_4_bytes(pSrc);
     assert_aligned_4_bytes(pDst);
 
-    ASSERT(XTENSA_MATH_SUCCESS == xtensa_mat_trans_f32(pSrc, pDst));
+    ASSERT(DSP_MATH_SUCCESS == dsp_mat_trans_f32(pSrc, pDst));
 }
 
-static inline void mat_inv(const xtensa_matrix_instance_f32 *pSrc, xtensa_matrix_instance_f32 *pDst)
+static inline void mat_inv(const dsp_matrix_instance_f32 *pSrc, dsp_matrix_instance_f32 *pDst)
 {
     assert_aligned_4_bytes(pSrc);
     assert_aligned_4_bytes(pDst);
 
-    ASSERT(XTENSA_MATH_SUCCESS == xtensa_mat_inverse_f32(pSrc, pDst));
+    ASSERT(DSP_MATH_SUCCESS == dsp_mat_inverse_f32(pSrc, pDst));
 }
 
-static inline void mat_mult(const xtensa_matrix_instance_f32 *pSrcA, const xtensa_matrix_instance_f32 *pSrcB, xtensa_matrix_instance_f32 *pDst)
+static inline void mat_mult(const dsp_matrix_instance_f32 *pSrcA, const dsp_matrix_instance_f32 *pSrcB, dsp_matrix_instance_f32 *pDst)
 {
     assert_aligned_4_bytes(pSrcA);
     assert_aligned_4_bytes(pSrcB);
     assert_aligned_4_bytes(pDst);
 
-    ASSERT(XTENSA_MATH_SUCCESS == xtensa_mat_mult_f32(pSrcA, pSrcB, pDst));
+    ASSERT(DSP_MATH_SUCCESS == dsp_mat_mult_f32(pSrcA, pSrcB, pDst));
 }
 
-static inline float xtensa_sqrt(float32_t in)
+static inline float cf_sqrt(float in)
 {
-    float pOut = 0;
-    xtensa_status result = xtensa_sqrt_f32(in, &pOut);
-    ASSERT(XTENSA_MATH_SUCCESS == result);
-    return pOut;
+    float output = 0;
+    const dsp_status_t result = dsp_sqrt_f32(in, &output);
+    ASSERT(DSP_MATH_SUCCESS == result);
+    return output;
 }
 
 static inline float limPos(float in)

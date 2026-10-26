@@ -221,7 +221,7 @@ VL53L0X/VL53L1X 芯片内部集成了激光发射器和 SPAD 红外接收器。�
 
 VL53L0X/VL53L1X 的测量值为测量区域中的最短距离，测量区域可以根据使用场景进行放大或缩小，较大的探测范围可能会引起测量值的波动。
 
-测量区域的配置参见 `VL53LXX Datasheet <https://www.st.com/resource/en/datasheet/vl53l1x.pdf>`__ 中 2.4 Ranging Description 和 2.8 Sensing Array Optical Center。
+测量区域配置和最新数据手册见 `VL53L1X 产品页面 <https://www.st.com/en/imaging-and-photonics-solutions/vl53l1x.html>`__。
 
 .. figure:: ../../_static/vl53lxx_roi.png
    :align: center
@@ -250,7 +250,7 @@ VL53L0X/VL53L1X 的测量值为测量区域中的最短距离，测量区域可�
 **测量频率**
 
 -  VL53L0X 响应频率最快可达 50 Hz，测量误差 ±5%。
--  VL53L1X I2C 最高时钟频率可达 400 kHz，上拉电阻需要根据电压和总线电容值选择。具体信息请参考 `VL53LXX Datasheet <https://www.st.com/resource/en/datasheet/vl53l1x.pdf>`__\ 。
+-  VL53L1X I2C 最高时钟频率可达 400 kHz，上拉电阻需要根据电压和总线电容值选择。最新数据手册见 `VL53L1X 产品页面 <https://www.st.com/en/imaging-and-photonics-solutions/vl53l1x.html>`__\ 。
 
 .. figure:: ../../_static/vl53l1x_typical_circuit.png
    :align: center
@@ -453,7 +453,7 @@ VL53LXX 传感器校准
 
       STSW-IMG008
 
-更多信息，可参考 `STSW-IMG008: Windows Graphical User Interface (GUI) for VL53L1X Nucleo packs. Works with P-NUCLEO-53L1A1 <https://www.st.com/content/st_com/en/products/embedded-software/proximity-sensors-software/stsw-img008.html>`__\ 。
+更多信息可参考 `STSW-IMG008：VL53L1X Nucleo 套件 Windows GUI <https://www.st.com/en/embedded-software/stsw-img008.html>`__\ 。
 
 
 VL53L1X 例程
@@ -462,7 +462,7 @@ VL53L1X 例程
 **例程说明**
 
 1. 实现功能：通过 VL53L1X 检测到高度变化（持续 1 秒），红灯亮起。高度恢复正常值（持续 1 秒），绿灯亮起。
-2. 可配置参数：通过 ``make menuconfig`` 设置 I2C 号码、端口号、LED 端口号。
+2. 可配置参数：通过 ``idf.py menuconfig`` 设置 I2C 号码、端口号和 LED 端口号。
 3. 例程解析见代码注释和用户手册。
 
 **注意事项**
@@ -475,11 +475,11 @@ VL53L1X 例程
 
 **例程仓库**
 
-点击 `esp32-vl53l1x-test <https://github.com/qljz1993/esp32-vl53l1x-test/tree/master>`__ 查看例程，或使用 git 工具下载例程：
+点击 `esp32-vl53l1x-test <https://github.com/leeebo/esp32-vl53l1x-test/tree/master>`__ 查看例程，或使用 git 工具下载例程：
 
 .. code:: text
 
-   git clone https://github.com/qljz1993/esp32-vl53l1x-test.git
+   git clone https://github.com/leeebo/esp32-vl53l1x-test.git
 
 
 SPI 设备驱动 (spi_devices)

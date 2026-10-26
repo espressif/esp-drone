@@ -7,8 +7,7 @@ Get Started
 ESP-Drone Overview
 ======================
 
-ESP-Drone is an ESP32/ESP32-S2/ESP32-S3 based flying development board provided by Espressif. ESP-Drone is equipped with Wi-Fi key features, which allows this drone to be connected to and controlled by an APP or a gamepad over a Wi-Fi network. This drone comes with simple-structured hardware, clear codes, and supports functional extension. Therefore, ESP-Drone can be used in STEAM education. Part of the codes is from Crazyflie open source project under GPL3.0
-license.
+ESP-Drone is an open-source flying development platform for Espressif SoCs. Validated flight hardware can be controlled by a mobile app or gamepad over Wi-Fi. The modular hardware and extensible firmware make the project suitable for STEAM education and prototyping. The flight-control core is derived from the Crazyflie project and licensed under GPL-3.0.
 
 .. figure:: ../../_static/espdrone_s2_v1_2_2.png
    :align: center
@@ -27,7 +26,7 @@ ESP-Drone has the following features:
 - Height-hold mode: control thrust output to keep the drone flying at a fixed height.
 - Position-hold mode: keep the drone flying at a fixed position.
 - PC debugging: use cfclient for static/dynamic debugging.
-- Controlled by APP: easily controlled over Wi-Fi by your mobile APP.
+- Controlled by app: controlled over Wi-Fi by the ESP-Drone mobile app.
 - Controlled by gamepad: easily controlled via the gamepad by cfclient.
 
 Main Components
@@ -87,7 +86,7 @@ ESP-IDF is the IoT Development Framework provided by Espressif for ESP32/ESP32-S
 
 
 For more information, please check `ESP-IDF
-Programming Guide <https://docs.espressif.com/projects/esp-idf/en/release-v5.0/esp32s2/get-started/index.html>`__.
+Programming Guide <https://docs.espressif.com/projects/esp-idf/en/release-v5.5/esp32s2/get-started/index.html>`__.
 
 Crazyflie Overview
 =======================
@@ -204,7 +203,8 @@ Establish Wi-Fi connection
 
 ::
 
-   SSID: ESP-DRONE_XXXX (XXXX is configured based on MAC) PASSWORD: 12345678
+   SSID: ESP-DRONE_XXXXXXXXXXXX (the suffix is derived from the MAC address)
+   Password: 12345678
 
 * Click this AP, connect your mobile to this AP.
 
@@ -217,7 +217,6 @@ In this step, you can customize the flight settings according to your applicatio
 
 ::
 
-   ```
    Default configuration:
 
    Flight control settings 
@@ -239,7 +238,6 @@ In this step, you can customize the flight settings according to your applicatio
        9. Screen rotation lock: true
        10. full screen mode:true
        11. show console: true   
-   ```
 
 Flight Control
 ---------------------
@@ -385,8 +383,8 @@ Configure real-time waveform drawing at Tab Plotter, to monitor gyro acceleromet
 Propeller Direction
 =======================
 
-- Install A and B propellers according to the figure below.
-- During the power-on self-test, check if the propellers spin properly.
+- Install A and B propellers according to the figure below only after completing motor checks with the propellers removed.
+- The default power-on self-test keeps every motor at zero duty. For a maintenance motor test, remove all propellers first and explicitly enable ``CONFIG_MOTORS_STARTUP_TEST``.
 
 .. figure:: ../../_static/espdrone_s2_v1_2_diretion2.png
    :align: center
@@ -403,7 +401,7 @@ Preflight Check
 - Check on the cfclient if the drone is placed level.
 - After the communication is established, check if the LED at the drone tail blinks GREEN fast.
 - Check if the LED on the drone head blinks RED, which indicates battery LOW.
-- Slide forward the Trust controller slightly at the left side of your APP (i.e. the commands controlled by your left finger), to check if the drone can respond the command quickly.
-- Move your finger at the right command area of the APP (i.e. the commands controlled by your right finger), to check if the direction control works well.
+- Keep the motors disarmed while checking that throttle, roll, pitch, and yaw inputs are shown correctly in the client.
+- Arm and fly only after the sensor self-test passes, the control directions are correct, and the flight area is clear.
 - Go fly and have fun!
 

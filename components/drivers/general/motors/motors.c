@@ -22,6 +22,9 @@
  */
 
 #include <stdbool.h>
+#include <inttypes.h>
+
+#include "esp_err.h"
 
 //FreeRTOS includes
 #include "freertos/FreeRTOS.h"
@@ -51,6 +54,7 @@ const uint16_t testsound[NBR_OF_MOTORS] = {A4, A5, F5, D5};
 
 static bool isInit = false;
 static bool isTimerInit = false;
+static bool isHealthy = false;
 
 ledc_channel_config_t motors_channel[NBR_OF_MOTORS] = {
     {
@@ -94,7 +98,7 @@ static uint16_t motorsConv16ToBits(uint16_t bits)
     return ((bits) >> (16 - MOTORS_PWM_BITS) & ((1 << MOTORS_PWM_BITS) - 1));
 }
 
-bool pwm_timmer_init()
+static bool pwmTimerInit(void)
 {
     if (isTimerInit) {
         // First to init will configure it
@@ -110,7 +114,7 @@ bool pwm_timmer_init()
         .freq_hz = 15000,					// frequency of PWM signal
         .speed_mode = LEDC_LOW_SPEED_MODE, // timer mode
         .timer_num = LEDC_TIMER_0,			// timer index
-        // .clk_cfg = LEDC_AUTO_CLK,              // Auto select the source clock
+        .clk_cfg = LEDC_AUTO_CLK,
     };
 
     // Set configuration of timer0 for high speed channels
@@ -125,40 +129,84 @@ bool pwm_timmer_init()
 /* Public functions */
 
 //Initialization. Will set all motors ratio to 0%
-void motorsInit(const MotorPerifDef **motorMapSelect)
+bool motorsInit(const MotorPerifDef **motorMapSelect)
 {
-    int i;
-
     if (isInit) {
-        // First to init will configure it
-        return;
+        return isHealthy;
+    }
+    if (motorMapSelect == NULL) {
+        return false;
+    }
+    for (int i = 0; i < NBR_OF_MOTORS; i++) {
+        if (motorMapSelect[i] == NULL) {
+            return false;
+        }
     }
 
     motorMap = motorMapSelect;
 
-    if (pwm_timmer_init() != TRUE) {
-        return;
+    if (!pwmTimerInit()) {
+        return false;
     }
 
-    for (i = 0; i < NBR_OF_MOTORS; i++) {
-        ledc_channel_config(&motors_channel[i]);
+    for (int i = 0; i < NBR_OF_MOTORS; i++) {
+        esp_err_t err = ledc_channel_config(&motors_channel[i]);
+        if (err == ESP_OK) {
+            err = ledc_set_duty(motors_channel[i].speed_mode,
+                                motors_channel[i].channel, 0);
+        }
+        if (err == ESP_OK) {
+            err = ledc_update_duty(motors_channel[i].speed_mode,
+                                   motors_channel[i].channel);
+        }
+        if (err != ESP_OK) {
+            DEBUG_PRINTW("Motor %d PWM init failed: %s", i, esp_err_to_name(err));
+            for (int configured = 0; configured <= i; configured++) {
+                ledc_stop(motors_channel[configured].speed_mode,
+                          motors_channel[configured].channel, 0);
+            }
+            motorMap = NULL;
+            return false;
+        }
     }
 
     isInit = true;
+    isHealthy = true;
+    return true;
 }
 
 void motorsDeInit(const MotorPerifDef **motorMapSelect)
 {
+    (void)motorMapSelect;
+    if (!isInit) {
+        return;
+    }
     for (int i = 0; i < NBR_OF_MOTORS; i++) {
         ledc_stop(motors_channel[i].speed_mode, motors_channel[i].channel, 0);
+        motor_ratios[i] = 0;
+    }
+    isInit = false;
+    isHealthy = false;
+    motorMap = NULL;
+}
+
+/* Bypass the health guard so a fault can still force every PWM output low. */
+static void motorsForceStopAll(void)
+{
+    for (int i = 0; i < NBR_OF_MOTORS; i++) {
+        ledc_stop(motors_channel[i].speed_mode, motors_channel[i].channel, 0);
+        motor_ratios[i] = 0;
     }
 }
 
 bool motorsTest(void)
 {
-    int i;
+    if (!isInit || !isHealthy || motorMap == NULL) {
+        return false;
+    }
 
-    for (i = 0; i < sizeof(MOTORS) / sizeof(*MOTORS); i++) {
+#ifdef CONFIG_MOTORS_STARTUP_TEST
+    for (size_t i = 0; i < sizeof(MOTORS) / sizeof(*MOTORS); i++) {
         if (motorMap[i]->drvType == BRUSHED) {
 #ifdef ACTIVATE_STARTUP_SOUND
             motorsBeep(MOTORS[i], true, testsound[i], (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / A4) / 20);
@@ -166,61 +214,86 @@ bool motorsTest(void)
             motorsBeep(MOTORS[i], false, 0, 0);
             vTaskDelay(M2T(MOTORS_TEST_DELAY_TIME_MS));
 #else
-            motorsSetRatio(MOTORS[i], MOTORS_TEST_RATIO);
+            if (!motorsSetRatio(MOTORS[i], MOTORS_TEST_RATIO)) {
+                return false;
+            }
             vTaskDelay(M2T(MOTORS_TEST_ON_TIME_MS));
-            motorsSetRatio(MOTORS[i], 0);
+            if (!motorsSetRatio(MOTORS[i], 0)) {
+                return false;
+            }
             vTaskDelay(M2T(MOTORS_TEST_DELAY_TIME_MS));
 #endif
         }
     }
+#endif
 
-    return isInit;
+    return isHealthy;
 }
 
 // Ithrust is thrust mapped for 65536 <==> 60 grams
-void motorsSetRatio(uint32_t id, uint16_t ithrust)
+bool motorsSetRatio(uint32_t id, uint16_t ithrust)
 {
-    if (isInit) {
-        uint16_t ratio;
+    if (!isInit || !isHealthy || id >= NBR_OF_MOTORS) {
+        return false;
+    }
 
-        ASSERT(id < NBR_OF_MOTORS);
+    uint16_t ratio;
 
-        ratio = ithrust;
+    ratio = ithrust;
 
 #ifdef ENABLE_THRUST_BAT_COMPENSATED
 
-        if (motorMap[id]->drvType == BRUSHED) {
-            float thrust = ((float)ithrust / 65536.0f) * 40; //根据实际重量修改
-            float volts = -0.0006239f * thrust * thrust + 0.088f * thrust;
-            float supply_voltage = pmGetBatteryVoltage();
-            float percentage = volts / supply_voltage;
-            percentage = percentage > 1.0f ? 1.0f : percentage;
-            ratio = percentage * UINT16_MAX;
-            motor_ratios[id] = ratio;
+    if (motorMap[id]->drvType == BRUSHED) {
+        float thrust = ((float)ithrust / 65536.0f) * 40; //根据实际重量修改
+        float volts = -0.0006239f * thrust * thrust + 0.088f * thrust;
+        float supply_voltage = pmGetBatteryVoltage();
+        if (supply_voltage <= 0.1f) {
+            motorsForceStopAll();
+            isHealthy = false;
+            return false;
         }
+        float percentage = volts / supply_voltage;
+        percentage = percentage > 1.0f ? 1.0f : percentage;
+        ratio = percentage * UINT16_MAX;
+    }
 
 #endif
-        ledc_set_duty(motors_channel[id].speed_mode, motors_channel[id].channel, (uint32_t)motorsConv16ToBits(ratio));
-        ledc_update_duty(motors_channel[id].speed_mode, motors_channel[id].channel);
-        motor_ratios[id] = ratio;
-#ifdef DEBUG_EP2
-        DEBUG_PRINT_LOCAL("motors ID = %d ,ithrust_10bit = %d", id, (uint32_t)motorsConv16ToBits(ratio));
-#endif
+    esp_err_t err = ledc_set_duty(motors_channel[id].speed_mode,
+                                  motors_channel[id].channel,
+                                  (uint32_t)motorsConv16ToBits(ratio));
+    if (err == ESP_OK) {
+        err = ledc_update_duty(motors_channel[id].speed_mode,
+                               motors_channel[id].channel);
     }
+    if (err != ESP_OK) {
+        motorsForceStopAll();
+        isHealthy = false;
+        DEBUG_PRINTW("Motor %"PRIu32" PWM update failed: %s", id, esp_err_to_name(err));
+        return false;
+    }
+    motor_ratios[id] = ratio;
+#ifdef DEBUG_EP2
+    DEBUG_PRINT_LOCAL("motors ID = %d ,ithrust_10bit = %d", id, (uint32_t)motorsConv16ToBits(ratio));
+#endif
+    return true;
 }
 
 int motorsGetRatio(uint32_t id)
 {
-    int ratio;
-    ASSERT(id < NBR_OF_MOTORS);
-    ratio = motorsConvBitsTo16((uint16_t)ledc_get_duty(motors_channel[id].speed_mode, motors_channel[id].channel));
-    return ratio;
+    if (!isInit || id >= NBR_OF_MOTORS) {
+        return -1;
+    }
+    return motorsConvBitsTo16((uint16_t)ledc_get_duty(motors_channel[id].speed_mode,
+                                                      motors_channel[id].channel));
 }
 
 void motorsBeep(int id, bool enable, uint16_t frequency, uint16_t ratio)
 {
     uint32_t freq_hz = 15000;
-    ASSERT(id < NBR_OF_MOTORS);
+    if (!isInit || !isHealthy || id < 0 || id >= NBR_OF_MOTORS ||
+        (enable && frequency == 0)) {
+        return;
+    }
     if (ratio != 0) {
         ratio = (uint16_t)(0.05*(1<<16));
     }
@@ -229,9 +302,14 @@ void motorsBeep(int id, bool enable, uint16_t frequency, uint16_t ratio)
         freq_hz = frequency;
     }
     
-    ledc_set_freq(LEDC_LOW_SPEED_MODE,LEDC_TIMER_0,freq_hz);
-    ledc_set_duty(motors_channel[id].speed_mode, motors_channel[id].channel, (uint32_t)motorsConv16ToBits(ratio));
-    ledc_update_duty(motors_channel[id].speed_mode, motors_channel[id].channel);
+    if (ledc_set_freq(LEDC_LOW_SPEED_MODE, LEDC_TIMER_0, freq_hz) == 0 ||
+        ledc_set_duty(motors_channel[id].speed_mode, motors_channel[id].channel,
+                      (uint32_t)motorsConv16ToBits(ratio)) != ESP_OK ||
+        ledc_update_duty(motors_channel[id].speed_mode,
+                         motors_channel[id].channel) != ESP_OK) {
+        motorsForceStopAll();
+        isHealthy = false;
+    }
 }
 
 // Play a tone with a given frequency and a specific duration in milliseconds (ms)

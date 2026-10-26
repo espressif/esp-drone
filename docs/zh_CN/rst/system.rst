@@ -12,7 +12,7 @@
 
 
 
-源文件见：`start_from_app_main <./_static/start_from_app_main.pdf>`__。
+源文件见：`start_from_app_main <../../_static/start_from_app_main.pdf>`__。
 
 系统任务管理
 ------------
@@ -186,7 +186,7 @@ TASK 具体描述如下：
 `esp-iot-solution <https://github.com/espressif/esp-iot-solution/>`__
 类似的文件结构，将驱动程序按照所属总线进行分类，包括
 ``i2c_devices``、``spi_devices``、``general``
-等。具体可参考：`驱动程序 <./drivers>`__。
+等。具体可参考：:doc:`驱动程序 <drivers>`。
 
 .. figure:: ../../_static/drivers_flie_struture.png
    :align: center
@@ -337,8 +337,7 @@ ESP-Drone 实现的传感器抽象接口在
 2. 使用 Buffer 保存 200 组加速度计测量值。
 3. 通过合成重力加速度在三个轴的分量，计算重力加速度在静止状态下的值。
 
-参考：`不同地球纬度和海拔下的重力加速度值
-g <https://baike.baidu.com/item/%E9%87%8D%E5%8A%9B%E5%8A%A0%E9%80%9F%E5%BA%A6/23553>`__。
+参考：`标准重力 <https://zh.wikipedia.org/wiki/%E6%A8%99%E6%BA%96%E9%87%8D%E5%8A%9B>`__。
 
 **计算静止状态下重力加速度值：**
 
@@ -442,7 +441,7 @@ be! <https://www.bitcraze.io/2020/01/state-estimation-to-be-or-not-to-be/>`__
 
    互补滤波
 
-互补滤波中文说明可参考 `飞控与姿态互补滤波器 <https://zhuanlan.zhihu.com/p/34323865>`__。
+互补滤波属于多传感器融合方法，相关背景可参考 `Sensor fusion <https://en.wikipedia.org/wiki/Sensor_fusion>`__。
 
 卡尔曼滤波
 ~~~~~~~~~~
@@ -454,7 +453,7 @@ be! <https://www.bitcraze.io/2020/01/state-estimation-to-be-or-not-to-be/>`__
 
    卡尔曼滤波
 
-卡尔曼滤波中文说明可参考 `图说卡尔曼滤波，一份通俗易懂的教程 <https://zhuanlan.zhihu.com/p/39912633>`__。
+卡尔曼滤波原理可参考 `卡尔曼滤波 <https://zh.wikipedia.org/wiki/%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2>`__。
 
 控制算法
 --------
@@ -620,9 +619,8 @@ INDI 控制器
 INDI 控制器是立即处理角速率以确定信任度的控制器，与传统的 PID
 控制器相结合，对于角度处理相比串级 PID 控制器组合的速度要快。
 
-详情可参考论文：`Adaptive Incremental Nonlinear Dynamic Inversion for
-Attitude Control of Micro Air
-Vehicles <https://arc.aiaa.org/doi/pdf/10.2514/1.G001490>`__。
+详情可参考论文：*Adaptive Incremental Nonlinear Dynamic Inversion for
+Attitude Control of Micro Air Vehicles*，DOI ``10.2514/1.G001490``。
 
 PID 参数整定
 ------------

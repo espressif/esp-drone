@@ -88,7 +88,7 @@ typedef struct {
 
   // The covariance matrix
   __attribute__((aligned(4))) float P[KC_STATE_DIM][KC_STATE_DIM];
-  xtensa_matrix_instance_f32 Pm;
+  dsp_matrix_instance_f32 Pm;
 
   // Indicates that the internal state is corrupt and should be reset
   bool resetEstimation;

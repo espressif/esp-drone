@@ -1,50 +1,131 @@
 /**
- *
  * ESP-Drone Firmware
  *
- * Copyright 2019-2020  Espressif Systems (Shanghai)
- * Copyright (C) 2011-2012 Bitcraze AB
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, in version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- *
- * i2cdev.c - Functions to write to I2C devices
+ * I2C device compatibility layer backed by the ESP-IDF master bus/device API.
  */
 #define DEBUG_MODULE "I2CDEV"
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
+#include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
 
-#include "stm32_legacy.h"
 #include "i2cdev.h"
-#include "i2c_drv.h"
-#include "nvicconf.h"
-#include "debug_cf.h"
 
-int i2cdevInit(I2C_Dev *dev)
+static bool transferArgumentsAreValid(I2C_Dev *dev, uint8_t devAddress,
+                                      uint16_t len, const uint8_t *data)
 {
-    i2cdrvInit(dev);
+    return dev != NULL && devAddress < I2C_7BIT_ADDRESS_COUNT &&
+           len > 0 && data != NULL;
+}
+
+static bool lockDevice(I2C_Dev *dev, uint8_t devAddress,
+                       i2c_master_dev_handle_t *deviceHandle)
+{
+    if (deviceHandle == NULL || devAddress >= I2C_7BIT_ADDRESS_COUNT ||
+        !i2cdrvInit(dev)) {
+        return false;
+    }
+
+    if (xSemaphoreTake(dev->isBusFreeMutex, pdMS_TO_TICKS(I2C_TIMEOUT_MS)) != pdTRUE) {
+        return false;
+    }
+
+    if (dev->deviceHandles[devAddress] == NULL) {
+        const i2c_device_config_t deviceConfig = {
+            .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+            .device_address = devAddress,
+            .scl_speed_hz = dev->def->i2cClockSpeed,
+        };
+        const esp_err_t err = i2c_master_bus_add_device(dev->busHandle, &deviceConfig,
+                                                        &dev->deviceHandles[devAddress]);
+        if (err != ESP_OK) {
+            xSemaphoreGive(dev->isBusFreeMutex);
+            return false;
+        }
+    }
+
+    *deviceHandle = dev->deviceHandles[devAddress];
     return true;
+}
+
+static void unlockDevice(I2C_Dev *dev)
+{
+    xSemaphoreGive(dev->isBusFreeMutex);
+}
+
+static bool readRegister(I2C_Dev *dev, uint8_t devAddress,
+                         const uint8_t *registerAddress, size_t registerAddressSize,
+                         uint16_t len, uint8_t *data)
+{
+    if (!transferArgumentsAreValid(dev, devAddress, len, data)) {
+        return false;
+    }
+
+    i2c_master_dev_handle_t deviceHandle = NULL;
+    if (!lockDevice(dev, devAddress, &deviceHandle)) {
+        return false;
+    }
+
+    esp_err_t err;
+    if (registerAddressSize == 0) {
+        err = i2c_master_receive(deviceHandle, data, len, I2C_TIMEOUT_MS);
+    } else {
+        err = i2c_master_transmit_receive(deviceHandle, registerAddress,
+                                          registerAddressSize, data, len,
+                                          I2C_TIMEOUT_MS);
+    }
+
+    unlockDevice(dev);
+    return err == ESP_OK;
+}
+
+static bool writeRegister(I2C_Dev *dev, uint8_t devAddress,
+                          const uint8_t *registerAddress, size_t registerAddressSize,
+                          uint16_t len, const uint8_t *data)
+{
+    if (!transferArgumentsAreValid(dev, devAddress, len, data)) {
+        return false;
+    }
+
+    i2c_master_dev_handle_t deviceHandle = NULL;
+    if (!lockDevice(dev, devAddress, &deviceHandle)) {
+        return false;
+    }
+
+    esp_err_t err;
+    if (registerAddressSize == 0) {
+        err = i2c_master_transmit(deviceHandle, data, len, I2C_TIMEOUT_MS);
+    } else {
+        i2c_master_transmit_multi_buffer_info_t buffers[] = {
+            {
+                .write_buffer = registerAddress,
+                .buffer_size = registerAddressSize,
+            },
+            {
+                .write_buffer = data,
+                .buffer_size = len,
+            },
+        };
+        err = i2c_master_multi_buffer_transmit(deviceHandle, buffers,
+                                               sizeof(buffers) / sizeof(buffers[0]),
+                                               I2C_TIMEOUT_MS);
+    }
+
+    unlockDevice(dev);
+    return err == ESP_OK;
+}
+
+bool i2cdevInit(I2C_Dev *dev)
+{
+    return i2cdrvInit(dev);
 }
 
 bool i2cdevRead(I2C_Dev *dev, uint8_t devAddress, uint16_t len, uint8_t *data)
 {
-    return i2cdevReadReg8(dev, devAddress, I2CDEV_NO_MEM_ADDR, len, data);
+    return readRegister(dev, devAddress, NULL, 0, len, data);
 }
 
 bool i2cdevReadByte(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
@@ -56,144 +137,61 @@ bool i2cdevReadByte(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
 bool i2cdevReadBit(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
                    uint8_t bitNum, uint8_t *data)
 {
-    uint8_t byte;
-    bool status;
+    if (data == NULL || bitNum > 7) {
+        return false;
+    }
 
-    status = i2cdevReadReg8(dev, devAddress, memAddress, 1, &byte);
-    *data = byte & (1 << bitNum);
-
-    return status;
+    uint8_t byte = 0;
+    if (!i2cdevReadByte(dev, devAddress, memAddress, &byte)) {
+        return false;
+    }
+    *data = byte & (1U << bitNum);
+    return true;
 }
 
 bool i2cdevReadBits(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
                     uint8_t bitStart, uint8_t length, uint8_t *data)
 {
-    bool status;
-    uint8_t byte;
-
-    if ((status = i2cdevReadByte(dev, devAddress, memAddress, &byte)) == true) {
-        uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
-        byte &= mask;
-        byte >>= (bitStart - length + 1);
-        *data = byte;
+    if (data == NULL || bitStart > 7 || length == 0 || length > 8 ||
+        length > bitStart + 1) {
+        return false;
     }
 
-    return status;
+    uint8_t byte = 0;
+    if (!i2cdevReadByte(dev, devAddress, memAddress, &byte)) {
+        return false;
+    }
+    const uint8_t shift = bitStart - length + 1;
+    const uint8_t mask = (uint8_t)(((1U << length) - 1U) << shift);
+    *data = (byte & mask) >> shift;
+    return true;
 }
 
 bool i2cdevReadReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
                     uint16_t len, uint8_t *data)
 {
-    if (xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) {
-        return false;
+    if (memAddress == I2CDEV_NO_MEM_ADDR) {
+        return readRegister(dev, devAddress, NULL, 0, len, data);
     }
-
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    if (memAddress != I2CDEV_NO_MEM_ADDR) {
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK_EN);
-        i2c_master_write_byte(cmd, memAddress, I2C_MASTER_ACK_EN);
-    }
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_READ, I2C_MASTER_ACK_EN);
-    i2c_master_read(cmd, data, len, I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmd);
-    esp_err_t err = i2c_master_cmd_begin(dev->def->i2cPort, cmd, (TickType_t)5);
-    i2c_cmd_link_delete(cmd);
-
-    xSemaphoreGive(dev->isBusFreeMutex);
-
-#if defined CONFIG_I2CBUS_LOG_READWRITES
-
-    if (!err) {
-        char str[length * 5 + 1];
-
-        for (size_t i = 0; i < length; i++) {
-            sprintf(str + i * 5, "0x%s%X ", (data[i] < 0x10 ? "0" : ""), data[i]);
-        }
-
-        I2CBUS_LOG_RW("[port:%d, slave:0x%X] Read_ %d bytes from register 0x%X, data: %s", port, devAddr, length, regAddr, str);
-    }
-
-#endif
-#if defined CONFIG_I2CBUS_LOG_ERRORS
-#if defined CONFIG_I2CBUS_LOG_READWRITES
-    else {
-#else
-
-    if (err) {
-#endif
-        I2CBUS_LOGE("[port:%d, slave:0x%X] Failed to read %d bytes from register 0x%X, error: 0x%X",
-                    port, devAddr, length, regAddr, err);
-    }
-
-#endif
-
-    if (err == ESP_OK) {
-        return TRUE;
-    } else {
-        return false;
-    }
-
+    return readRegister(dev, devAddress, &memAddress, sizeof(memAddress), len, data);
 }
 
 bool i2cdevReadReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
                      uint16_t len, uint8_t *data)
 {
-    if (xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) {
-        return false;
+    if (memAddress == I2C_NO_INTERNAL_ADDRESS) {
+        return readRegister(dev, devAddress, NULL, 0, len, data);
     }
+    const uint8_t address[] = {
+        (uint8_t)(memAddress >> 8),
+        (uint8_t)memAddress,
+    };
+    return readRegister(dev, devAddress, address, sizeof(address), len, data);
+}
 
-    uint8_t memAddress8[2];
-    memAddress8[0] = (uint8_t)((memAddress >> 8) & 0x00FF);
-    memAddress8[1] = (uint8_t)(memAddress & 0x00FF);
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    if (memAddress != I2C_NO_INTERNAL_ADDRESS) {
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK_EN);
-        i2c_master_write(cmd, memAddress8, 2, I2C_MASTER_ACK_EN);
-    }
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_READ, I2C_MASTER_ACK_EN);
-    i2c_master_read(cmd, data, len, I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmd);
-    esp_err_t err = i2c_master_cmd_begin(dev->def->i2cPort, cmd, (TickType_t)5);
-    i2c_cmd_link_delete(cmd);
-
-    xSemaphoreGive(dev->isBusFreeMutex);
-
-#if defined CONFIG_I2CBUS_LOG_READWRITES
-
-    if (!err) {
-        char str[length * 5 + 1];
-
-        for (size_t i = 0; i < length; i++) {
-            sprintf(str + i * 5, "0x%s%X ", (data[i] < 0x10 ? "0" : ""), data[i]);
-        }
-
-        I2CBUS_LOG_RW("[port:%d, slave:0x%X] Read_ %d bytes from register 0x%X, data: %s", port, devAddr, length, regAddr, str);
-    }
-
-#endif
-#if defined CONFIG_I2CBUS_LOG_ERRORS
-#if defined CONFIG_I2CBUS_LOG_READWRITES
-    else {
-#else
-
-    if (err) {
-#endif
-        I2CBUS_LOGE("[port:%d, slave:0x%X] Failed to read %d bytes from register 0x%X, error: 0x%X",
-                    port, devAddr, length, regAddr, err);
-    }
-
-#endif
-
-    if (err == ESP_OK) {
-        return TRUE;
-    } else {
-        return false;
-    }
-
+bool i2cdevWrite(I2C_Dev *dev, uint8_t devAddress, uint16_t len, uint8_t *data)
+{
+    return writeRegister(dev, devAddress, NULL, 0, len, data);
 }
 
 bool i2cdevWriteByte(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
@@ -205,138 +203,54 @@ bool i2cdevWriteByte(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
 bool i2cdevWriteBit(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
                     uint8_t bitNum, uint8_t data)
 {
-    uint8_t byte;
-    i2cdevReadByte(dev, devAddress, memAddress, &byte);
-    byte = (data != 0) ? (byte | (1 << bitNum)) : (byte & ~(1 << bitNum));
+    if (bitNum > 7) {
+        return false;
+    }
+
+    uint8_t byte = 0;
+    if (!i2cdevReadByte(dev, devAddress, memAddress, &byte)) {
+        return false;
+    }
+    byte = data != 0 ? byte | (1U << bitNum) : byte & ~(1U << bitNum);
     return i2cdevWriteByte(dev, devAddress, memAddress, byte);
 }
 
 bool i2cdevWriteBits(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
                      uint8_t bitStart, uint8_t length, uint8_t data)
 {
-    bool status;
-    uint8_t byte;
-
-    if ((status = i2cdevReadByte(dev, devAddress, memAddress, &byte)) == true) {
-        uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
-        data <<= (bitStart - length + 1); // shift data into correct position
-        data &= mask;                     // zero all non-important bits in data
-        byte &= ~(mask);                  // zero all important bits in existing byte
-        byte |= data;                     // combine data with existing byte
-        status = i2cdevWriteByte(dev, devAddress, memAddress, byte);
+    if (bitStart > 7 || length == 0 || length > 8 || length > bitStart + 1) {
+        return false;
     }
 
-    return status;
+    uint8_t byte = 0;
+    if (!i2cdevReadByte(dev, devAddress, memAddress, &byte)) {
+        return false;
+    }
+    const uint8_t shift = bitStart - length + 1;
+    const uint8_t mask = (uint8_t)(((1U << length) - 1U) << shift);
+    data = (data << shift) & mask;
+    byte = (byte & ~mask) | data;
+    return i2cdevWriteByte(dev, devAddress, memAddress, byte);
 }
-
 
 bool i2cdevWriteReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
                      uint16_t len, uint8_t *data)
 {
-    if (xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) {
-        return false;
+    if (memAddress == I2CDEV_NO_MEM_ADDR) {
+        return writeRegister(dev, devAddress, NULL, 0, len, data);
     }
-
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK_EN);
-    if (memAddress != I2CDEV_NO_MEM_ADDR) {
-        i2c_master_write_byte(cmd, memAddress, I2C_MASTER_ACK_EN);
-    }
-    i2c_master_write(cmd, (uint8_t *)data, len, I2C_MASTER_ACK_EN);
-    i2c_master_stop(cmd);
-    esp_err_t err = i2c_master_cmd_begin(dev->def->i2cPort, cmd, (TickType_t)5);
-    i2c_cmd_link_delete(cmd);
-
-    xSemaphoreGive(dev->isBusFreeMutex);
-
-#if defined CONFIG_I2CBUS_LOG_READWRITES
-
-    if (!err) {
-        char str[length * 5 + 1];
-
-        for (size_t i = 0; i < length; i++) {
-            sprintf(str + i * 5, "0x%s%X ", (data[i] < 0x10 ? "0" : ""), data[i]);
-        }
-
-        I2CBUS_LOG_RW("[port:%d, slave:0x%X] Write %d bytes to register 0x%X, data: %s",
-                      port, devAddr, length, regAddr, str);
-    }
-
-#endif
-#if defined CONFIG_I2CBUS_LOG_ERRORS
-#if defined CONFIG_I2CBUS_LOG_READWRITES
-    else {
-#else
-
-    if (err) {
-#endif
-        I2CBUS_LOGE("[port:%d, slave:0x%X] Failed to write %d bytes to__ register 0x%X, error: 0x%X",
-                    port, devAddr, length, regAddr, err);
-    }
-
-#endif
-
-    if (err == ESP_OK) {
-        return TRUE;
-    } else {
-        return false;
-    }
+    return writeRegister(dev, devAddress, &memAddress, sizeof(memAddress), len, data);
 }
 
 bool i2cdevWriteReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
                       uint16_t len, uint8_t *data)
 {
-    if (xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) {
-        return false;
+    if (memAddress == I2C_NO_INTERNAL_ADDRESS) {
+        return writeRegister(dev, devAddress, NULL, 0, len, data);
     }
-
-    uint8_t memAddress8[2];
-    memAddress8[0] = (uint8_t)((memAddress >> 8) & 0x00FF);
-    memAddress8[1] = (uint8_t)(memAddress & 0x00FF);
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK_EN);
-    if (memAddress != I2C_NO_INTERNAL_ADDRESS) {
-        i2c_master_write(cmd, memAddress8, 2, I2C_MASTER_ACK_EN);
-    }
-    i2c_master_write(cmd, (uint8_t *)data, len, I2C_MASTER_ACK_EN);
-    i2c_master_stop(cmd);
-    esp_err_t err = i2c_master_cmd_begin(dev->def->i2cPort, cmd, (TickType_t)5);
-    i2c_cmd_link_delete(cmd);
-
-    xSemaphoreGive(dev->isBusFreeMutex);
-#if defined CONFIG_I2CBUS_LOG_READWRITES
-
-    if (!err) {
-        char str[length * 5 + 1];
-
-        for (size_t i = 0; i < length; i++) {
-            sprintf(str + i * 5, "0x%s%X ", (data[i] < 0x10 ? "0" : ""), data[i]);
-        }
-
-        I2CBUS_LOG_RW("[port:%d, slave:0x%X] Write %d bytes to register 0x%X, data: %s",
-                      port, devAddr, length, regAddr, str);
-    }
-
-#endif
-
-#if defined CONFIG_I2CBUS_LOG_ERRORS
-#if defined CONFIG_I2CBUS_LOG_READWRITES
-    else {
-#else
-
-    if (err) {
-#endif
-        I2CBUS_LOGE("[port:%d, slave:0x%X] Failed to write %d bytes to__ register 0x%X, error: 0x%X",
-                    port, devAddr, length, regAddr, err);
-    }
-
-#endif
-
-    if (err == ESP_OK) {
-        return TRUE;
-    } else {
-        return false;
-    }
+    const uint8_t address[] = {
+        (uint8_t)(memAddress >> 8),
+        (uint8_t)memAddress,
+    };
+    return writeRegister(dev, devAddress, address, sizeof(address), len, data);
 }
